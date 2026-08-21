@@ -13,6 +13,10 @@ test("production security headers are complete and exclude unsafe eval", async (
   assert.doesNotMatch(headers["Content-Security-Policy"], /unsafe-eval/);
   assert.equal(headers["X-Content-Type-Options"], "nosniff");
   assert.equal(headers["X-Frame-Options"], "DENY");
+  assert.equal(headers["Cross-Origin-Opener-Policy"], "same-origin");
+  assert.equal(headers["Cross-Origin-Resource-Policy"], "same-origin");
+  assert.equal(headers["Origin-Agent-Cluster"], "?1");
+  assert.equal(headers["X-DNS-Prefetch-Control"], "off");
   assert.equal(headers["X-Robots-Tag"], "noindex, nofollow, noarchive");
   assert.match(headers["Strict-Transport-Security"], /max-age=63072000/);
 });

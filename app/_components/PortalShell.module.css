@@ -170,6 +170,30 @@
   color: #fff;
 }
 
+.pilotNavCopy {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pilotNavLive,
+.pilotNavMock {
+  flex: 0 0 auto;
+  padding: 2px 5px;
+  border-radius: 999px;
+  font-family: var(--font-mono), monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.pilotNavLive { background: rgba(66, 200, 138, .12); color: #61d29d; }
+.pilotNavMock { background: #282f3b; color: #aeb7c5; }
+
 .safetyNote {
   display: flex;
   gap: 10px;
@@ -297,6 +321,50 @@
   background: #24a874;
 }
 
+.pilotFlag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #c9dbf2;
+  border-radius: 999px;
+  background: #f0f6fd;
+  color: #245f9e;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pilotFlag i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2f75bd;
+}
+
+.pilotSessionControls {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--shell-line);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .02);
+}
+
+.pilotSessionControls a {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
+  color: #515b69;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.pilotSessionControls a + a { border-left: 1px solid var(--shell-line); }
+.pilotSessionControls a:hover { background: #f7f8fa; color: var(--shell-brand); }
+.pilotSessionControls a:focus-visible { position: relative; outline: 3px solid rgba(36, 104, 180, .23); outline-offset: -3px; }
+
 .demoRoleControl {
   display: flex;
   align-items: center;
@@ -392,6 +460,32 @@
 }
 
 .mockBanner p { margin: 0; font-size: 10px; line-height: 1.45; }
+
+.pilotBanner {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 18px;
+  padding: 10px 13px;
+  border: 1px solid #bcdcca;
+  border-radius: 10px;
+  background: #f1faf5;
+  color: #245d43;
+}
+
+.pilotBadge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #bce7ce;
+  color: #174a32;
+  font-family: var(--font-mono), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+
+.pilotBanner p { margin: 0; font-size: 11px; line-height: 1.45; }
 
 .accessNotice {
   min-height: 390px;
@@ -517,6 +611,7 @@
   .navItem, .navItemActive { flex: 0 0 auto; margin: 0; padding: 8px 10px; font-size: 10px; }
   .navItem:hover { transform: none; }
   .navIcon { display: none; }
+  .pilotNavCopy { gap: 6px; }
   .workspace { margin-left: 0; }
   .skipLink { left: 12px; }
   .topbar { min-height: 78px; padding: 14px 20px; }
@@ -528,13 +623,17 @@
   .topbar { align-items: flex-start; flex-direction: column; gap: 10px; }
   .titleBlock h1 { font-size: 18px; }
   .titleBlock > span { display: block; }
-  .quickSearch, .demoFlag, .headerActionsSlot { display: none; }
+  .quickSearch, .demoFlag, .pilotFlag, .headerActionsSlot { display: none; }
   .topbarActions { width: 100%; }
+  .pilotSessionControls { width: 100%; }
+  .pilotSessionControls a { flex: 1; justify-content: center; }
   .demoRoleControl { width: 100%; }
   .demoRoleSwitcher { min-width: 0; flex: 1; }
   .main { padding-inline: 14px; }
   .mockBanner { align-items: flex-start; }
   .mockBanner p { font-size: 9px; }
+  .pilotBanner { align-items: flex-start; }
+  .pilotBanner p { font-size: 9px; }
   .accessNotice { min-height: 330px; grid-template-columns: 1fr; padding: 28px 18px; }
   .accessNotice h2 { font-size: 18px; }
   .accessNotice dl { grid-template-columns: 1fr; }

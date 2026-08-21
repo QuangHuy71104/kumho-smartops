@@ -3,6 +3,7 @@ import Link from "next/link";
 import { portalRouteFor, type PortalPath } from "../../lib/access-control";
 import Can from "./access/Can";
 import DemoNavigation from "./access/DemoNavigation";
+import PilotNavigation from "./access/PilotNavigation";
 import DemoRoleSwitcher from "./access/DemoRoleSwitcher";
 import DemoRouteBoundary from "./access/DemoRouteBoundary";
 import QuickSearch from "./QuickSearch";
@@ -25,6 +26,7 @@ export default function PortalShell({
   headerActions,
   children,
 }: PortalShellProps) {
+  const pilotMode = process.env.KSOPS_MODE === "pilot";
   const activeRoute = portalRouteFor(activePath);
   const headerPermission = "primaryActionPermission" in activeRoute
     ? activeRoute.primaryActionPermission
@@ -47,16 +49,20 @@ export default function PortalShell({
 
         <div className={styles.environmentPill}>
           <span className={styles.pulseDot} aria-hidden="true" />
-          Trung tâm điều phối demo
+          {pilotMode ? "Pilot nghiệp vụ đơn hàng" : "Trung tâm điều phối demo"}
         </div>
 
-        <DemoNavigation activePath={activePath} />
+        {pilotMode
+          ? <PilotNavigation activePath={activePath} />
+          : <DemoNavigation activePath={activePath} />}
 
         <div className={styles.safetyNote}>
           <span className={styles.shield} aria-hidden="true">✓</span>
           <div>
-            <strong>Dữ liệu mô phỏng</strong>
-            <p>Không sử dụng thông tin xe, khách hàng hoặc hành trình thực tế.</p>
+            <strong>{pilotMode ? "Phạm vi pilot giới hạn" : "Dữ liệu mô phỏng"}</strong>
+            <p>{pilotMode
+              ? "Chỉ phân hệ Đơn hàng dùng SSO và PostgreSQL. Các phân hệ khác vẫn là dữ liệu mẫu."
+              : "Không sử dụng thông tin xe, khách hàng hoặc hành trình thực tế."}</p>
           </div>
         </div>
       </aside>
@@ -69,32 +75,58 @@ export default function PortalShell({
             {subtitle ? <span>{subtitle}</span> : null}
           </div>
           <div className={styles.topbarActions}>
-            {headerActions ? (
+            {headerActions && pilotMode ? (
+              <div className={styles.headerActionsSlot}>{headerActions}</div>
+            ) : headerActions ? (
               <Can permission={headerPermission}>
                 <div className={styles.headerActionsSlot}>{headerActions}</div>
               </Can>
             ) : null}
-            <QuickSearch />
-            <span className={styles.demoFlag}>
-              <i aria-hidden="true" /> Demo
+            {pilotMode ? null : <QuickSearch />}
+            <span className={pilotMode ? styles.pilotFlag : styles.demoFlag}>
+              <i aria-hidden="true" /> {pilotMode ? "Pilot" : "Demo"}
             </span>
-            <DemoRoleSwitcher />
+            {pilotMode ? (
+              <nav className={styles.pilotSessionControls} aria-label="Điều khiển phiên SSO">
+                <a href={`/auth/login?returnTo=${encodeURIComponent(activePath)}`}>Đăng nhập SSO</a>
+                <a href={`/auth/logout?returnTo=${encodeURIComponent(activePath)}`}>Kết thúc phiên</a>
+              </nav>
+            ) : (
+              <DemoRoleSwitcher />
+            )}
           </div>
         </header>
 
         <main className={styles.main} id="noi-dung-chinh">
-          <div className={styles.mockBanner} role="note">
-            <span className={styles.mockBadge}>MOCK DATA</span>
-            <p>
-              <strong>Môi trường trình diễn độc lập.</strong> Toàn bộ xe, tài xế, khách hàng, hành trình và doanh thu đều là dữ liệu giả lập.
-            </p>
-          </div>
-          <DemoRouteBoundary activePath={activePath}>{children}</DemoRouteBoundary>
+          {pilotMode ? (
+            <div className={activePath === "/don-hang" ? styles.pilotBanner : styles.mockBanner} role="note">
+              <span className={activePath === "/don-hang" ? styles.pilotBadge : styles.mockBadge}>
+                {activePath === "/don-hang" ? "PILOT CARGO" : "DỮ LIỆU MẪU"}
+              </span>
+              <p>{activePath === "/don-hang" ? (
+                <><strong>Lát cắt nghiệp vụ có backend.</strong> API đơn hàng dùng SSO nội bộ, tenant RLS, PostgreSQL và kiểm soát phiên bản.</>
+              ) : (
+                <><strong>Phân hệ chưa chuyển sang pilot.</strong> Nội dung tại đây vẫn là dữ liệu giả lập và không được ghi vào PostgreSQL.</>
+              )}</p>
+            </div>
+          ) : (
+            <div className={styles.mockBanner} role="note">
+              <span className={styles.mockBadge}>MOCK DATA</span>
+              <p>
+                <strong>Môi trường trình diễn độc lập.</strong> Toàn bộ xe, tài xế, khách hàng, hành trình và doanh thu đều là dữ liệu giả lập.
+              </p>
+            </div>
+          )}
+          {pilotMode
+            ? children
+            : <DemoRouteBoundary activePath={activePath}>{children}</DemoRouteBoundary>}
         </main>
 
         <footer className={styles.footer}>
-          <p><strong>KSOps Transport Control</strong> · Đồ án thực tập lập trình viên, không phải hệ thống chính thức.</p>
-          <span>Fleet & order demo</span>
+          <p><strong>KSOps Transport Control</strong> · {pilotMode
+            ? "Pilot có kiểm soát; chỉ lát cắt Đơn hàng kết nối hệ thống doanh nghiệp."
+            : "Đồ án thực tập lập trình viên, không phải hệ thống chính thức."}</p>
+          <span>{pilotMode ? "Cargo pilot · Other modules synthetic" : "Fleet & order demo"}</span>
         </footer>
       </div>
     </div>

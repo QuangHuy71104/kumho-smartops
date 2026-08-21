@@ -1,0 +1,8 @@
+# Migration checksums are byte-for-byte release artifacts across Windows CI/dev
+# and Linux deployment environments.
+db/migrations/*.sql text eol=lf
+
+# Keep automation and deployment configuration deterministic.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf

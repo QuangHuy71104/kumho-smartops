@@ -1,63 +1,79 @@
 # KSOps — Transport Control
 
-KSOps là đồ án thực tập lập trình viên mô phỏng một nền tảng điều hành vận tải hợp nhất: quản lý đội xe, tài xế, đơn vận chuyển hàng hóa, điều phối chuyến, vé hành khách, thuê xe hợp đồng, khách hàng, bảo dưỡng, tài chính và báo cáo.
+KSOps là dự án thực tập lập trình viên mô phỏng một nền tảng điều hành vận tải hợp nhất cho đội xe, tài xế, đơn vận chuyển hàng hóa, điều phối, vé hành khách, thuê xe, bảo dưỡng, tài chính và báo cáo.
 
-> **Phạm vi an toàn:** đây là sản phẩm demo phục vụ học tập, không phải hệ thống chính thức của doanh nghiệp. Tất cả biển số, mã đơn, hành trình, người, khách hàng, giá trị tài chính và trạng thái đều là dữ liệu giả lập. Repository không chứa dữ liệu lấy từ tài liệu thực tập, hệ thống bán vé, thiết bị định vị hay hồ sơ nội bộ.
+> **Trạng thái an toàn:** [bản Vercel công khai](https://kumho-smartops.vercel.app) vẫn chạy ở chế độ `demo`, chỉ dùng fixture synthetic và trạng thái trình duyệt. Đây không phải hệ thống chính thức, không kết nối dữ liệu hoặc tài khoản doanh nghiệp và chưa được phép vận hành nghiệp vụ thật.
 
-## Trạng thái chương trình
+## Hiện trạng triển khai
 
-- **Hiện tại:** frontend demo responsive với fixture synthetic, bộ chuyển 8 vai trò để minh họa quyền UI và một số thao tác lưu ở `localStorage`; chưa có backend, database, đăng nhập/RBAC server-side, GPS, payment hoặc ERP thật.
-- **Pilot 12 tuần:** một lát cắt kiểm chứng quy trình, authorization, concurrency, audit, UAT và khả năng vận hành; không đồng nghĩa thay thế hệ thống hiện hữu.
-- **Mục tiêu 12–15 tháng:** nền tảng đa kênh gồm web điều hành, kênh khách hàng, driver PWA/mobile, transactional core, telemetry, tài chính/tích hợp và BI, triển khai theo gate/chi nhánh.
+Repository hiện có hai lớp khác nhau:
 
-Xem [Enterprise Blueprint](docs/ENTERPRISE_BLUEPRINT.md) để biết phạm vi mục tiêu và [ma trận RBAC](docs/RBAC_MATRIX.md) để biết ai được vận hành từng phân hệ.
+| Lớp | Đã có | Chưa được tuyên bố |
+|---|---|---|
+| Demo công khai | 11 màn hình responsive, 8 vai trò minh họa, dữ liệu giả lập, một số thao tác `localStorage` | đăng nhập thật, dữ liệu bền vững hoặc security boundary |
+| Nền tảng pilot trong mã nguồn | PostgreSQL migrations, RLS tenant, Auth0 session boundary, principal/role/scope nội bộ, cargo API, idempotency, optimistic concurrency, audit và outbox | đã provision production, đã kết nối bản Vercel công khai hoặc đã qua go-live gate |
 
-## Bài toán
+Lát cắt hàng hóa đã được triển khai theo cấu trúc domain → application service → PostgreSQL repository → HTTP API và có integration test với PostgreSQL thật trong CI. Route `/don-hang` đã có nhánh pilot gọi API thật khi runtime chọn pilot; deployment Vercel công khai vẫn chọn workspace demo.
 
-Một doanh nghiệp vận tải thường phải ghép thông tin từ nhiều luồng: nhu cầu khách hàng, đơn ký gửi, lịch xe, tài xế, ghế hành khách, hợp đồng, bảo dưỡng và đối soát. KSOps trình bày một thiết kế sản phẩm có thể gom các luồng đó vào một nguồn điều hành thống nhất, giúp:
+Trạng thái từng miền:
 
-- biết xe và tài xế nào đang sẵn sàng;
-- đưa đơn vào đúng chuyến, đúng tải và đúng cam kết giao nhận;
-- phát hiện xung đột điều phối, giấy tờ hoặc lịch bảo dưỡng;
-- truy vết doanh thu/công nợ theo đơn và chuyến;
-- đo tỷ lệ đúng giờ, hiệu suất sử dụng xe và chất lượng dịch vụ.
+- **Cargo:** có vertical slice backend đầu tiên cho list/get/create/transition.
+- **Organization/IAM/Fleet/Driver/Dispatch:** đã có schema nền tảng; Auth0 và principal directory có adapter server-side; dispatch có constraint chống trùng lịch ở database.
+- **Dispatch UI, vé, hợp đồng, CRM, bảo dưỡng, tài chính và báo cáo:** vẫn dùng fixture hoặc `localStorage`; chưa có application/API production tương ứng.
+- **GPS, payment, e-invoice, ERP, notification và object storage:** chưa tích hợp.
 
-## Phiên bản hiện tại
+Vì vậy dự án **chưa production-ready**. Xem [Production Readiness](docs/PRODUCTION_READINESS.md) để biết blocker và gate bắt buộc.
 
-Ứng dụng Next.js responsive gồm 11 màn hình sản phẩm:
+## Năng lực giao diện
 
-| Route | Năng lực |
+| Route | Năng lực demo |
 |---|---|
 | `/` | trung tâm điều hành và KPI theo ca |
-| `/don-hang` | đơn hàng hóa, tìm kiếm/lọc, chi tiết, tạo đơn demo và workflow |
-| `/dieu-phoi` | bàn điều phối chuyến, xe, tài xế và cảnh báo xung đột |
-| `/doi-xe` | danh mục xe, trạng thái, tải/ghế và hồ sơ khai thác |
-| `/tai-xe` | ca làm, mức sẵn sàng, giấy phép và tuân thủ |
+| `/don-hang` | đơn hàng hóa, tìm kiếm/lọc, chi tiết và workflow mô phỏng |
+| `/dieu-phoi` | bàn điều phối xe, tài xế và cảnh báo xung đột |
+| `/doi-xe` | danh mục xe, tải/ghế và trạng thái khai thác |
+| `/tai-xe` | ca làm, mức sẵn sàng và tuân thủ |
 | `/ve-xe` | tra cứu chuyến, sơ đồ ghế và đặt chỗ mô phỏng |
-| `/hop-dong` | pipeline báo giá/thuê xe và yêu cầu hợp đồng |
-| `/khach-hang` | hồ sơ CRM và lịch sử giao dịch tổng hợp |
-| `/bao-duong` | work order, lịch, cảnh báo và checklist kỹ thuật |
-| `/tai-chinh` | hóa đơn, công nợ, doanh thu và chi phí khai thác |
-| `/bao-cao` | KPI đa kỳ, hiệu quả dịch vụ/tuyến và xuất CSV |
+| `/hop-dong` | pipeline báo giá và thuê xe |
+| `/khach-hang` | CRM tổng hợp bằng dữ liệu giả lập |
+| `/bao-duong` | work order, lịch và checklist mô phỏng |
+| `/tai-chinh` | hóa đơn, công nợ và chỉ số mô phỏng |
+| `/bao-cao` | KPI đa kỳ và xuất CSV an toàn |
 
-Các thao tác demo có thể dùng `localStorage` để duy trì trên chính trình duyệt đang xem. Database, API nghiệp vụ, SSO/RBAC, thanh toán và GPS thật không được bật trong bản công khai.
+Bộ chuyển vai trò trên giao diện chỉ minh họa UX. Khi chạy pilot, quyền được lấy từ Auth0 session đã xác minh rồi ánh xạ tới principal, permission và scope trong PostgreSQL; client không được tự khai role hoặc tenant.
 
-Bộ chọn vai trò chỉ giúp xem navigation và thao tác của từng vị trí nghiệp vụ. Đây không phải đăng nhập hay security boundary; hệ thống production vẫn phải xác thực và kiểm tra quyền trên server cho mọi truy vấn/mutation.
+## API đã triển khai
 
-## Công nghệ
+Base path: `/api/v1`.
 
-| Lớp | Bản demo | Định hướng pilot |
+| Endpoint | Chế độ | Mục đích |
 |---|---|---|
-| Giao diện | Next.js 16 App Router, React 19, TypeScript, CSS Modules | design system, schema form, E2E và accessibility regression |
-| Runtime | Node.js 22.x, Vercel | runtime theo tải, region và data-residency đã phê duyệt |
-| Dữ liệu | fixture synthetic + localStorage | PostgreSQL, migration, outbox và object storage |
-| Danh tính | không bật | OIDC/SSO, MFA theo IdP, RBAC server-side |
-| Tích hợp | không kết nối hệ thống thật | adapter cho vé, GPS, thông báo, thanh toán và kế toán |
-| Quan sát | trạng thái mô phỏng | structured logs, metrics, traces và alert routing |
+| `GET /health/live` | demo và pilot | process liveness |
+| `GET /health/ready` | demo và pilot | pilot kiểm tra migration checksum, runtime grants, tenant context và RLS read |
+| `GET /system/capabilities` | demo và pilot | snapshot bảo thủ về capability đã xác minh |
+| `GET /me` | pilot | principal, permission và scope phía server |
+| `GET /reference-data` | pilot | chi nhánh/địa điểm cargo active theo scope đọc |
+| `GET /cargo-orders` | pilot | danh sách theo scope và bộ lọc allowlist |
+| `GET /cargo-orders/{id}` | pilot | chi tiết đơn theo object-level scope |
+| `POST /cargo-orders` | pilot | tạo đơn idempotent trong transaction |
+| `POST /cargo-orders/{id}/transitions` | pilot | chuyển trạng thái bằng `If-Match` và idempotency |
 
-Mã demo dùng **feature-folder architecture**: mỗi route giữ `_components` và `_lib`; component client chỉ điều phối state/sự kiện; helper nghiệp vụ thuần được kiểm thử độc lập. Kiến trúc production đề xuất là **modular monolith**, tránh chi phí microservice trước khi có bằng chứng về tải hoặc ownership.
+Ở chế độ demo, các API nghiệp vụ không âm thầm dùng dữ liệu giả; chúng fail closed vì thiếu cấu hình pilot. Contract đầy đủ nằm tại [API Spec](docs/API_SPEC.md).
 
-## Chạy cục bộ
+## Công nghệ và kiến trúc
+
+- Next.js 16 App Router, React 19, TypeScript và Node.js 22.
+- Modular monolith với module identity, cargo và shared application errors.
+- PostgreSQL 16+; local/CI dùng PostgreSQL 17.
+- Drizzle schema cho runtime mapping; migration SQL được review là nguồn schema có thẩm quyền.
+- Auth0 SDK server-side; permission/scope cuối cùng lấy từ directory nội bộ.
+- UUIDv7, public code không chứa PII, RLS theo organization, composite FK chặn cross-tenant.
+- Transactional audit/outbox và HMAC-scoped idempotency.
+- Vercel Functions được cấu hình tại Singapore (`sin1`).
+
+Xem [Architecture](docs/ARCHITECTURE.md) để biết trust boundary và luồng giao dịch.
+
+## Chạy demo cục bộ
 
 Yêu cầu Node.js `22.x` và npm:
 
@@ -66,7 +82,9 @@ npm ci
 npm run dev
 ```
 
-Quality gate trước pull request:
+Không cần credential cho chế độ demo. Cấu hình mặc định fail closed về `demo`.
+
+Quality gate:
 
 ```bash
 npm run check
@@ -74,56 +92,95 @@ npm run build
 npm audit --audit-level=high
 ```
 
-Không tạo hoặc commit `.env` nếu chưa cần. Khi bổ sung backend, secrets phải nằm trong secret manager của nền tảng.
+## PostgreSQL cục bộ và integration test
 
-## Cấu trúc
+Các lệnh dưới đây giả định `MIGRATION_DATABASE_URL` và `TEST_DATABASE_URL` đã được đặt trong terminal cục bộ; không ghi giá trị vào source hoặc lịch sử shell dùng chung.
 
-```text
-app/                    # route, feature component và CSS Module
-  _components/          # shell và hành động dùng chung
-  _hooks/               # adapter trạng thái trình duyệt có runtime decoder
-  <feature>/            # page + client orchestration + _components + _lib
-lib/                    # dữ liệu tổng hợp dùng chung
-public/                 # social preview riêng của sản phẩm
-tests/                  # regression, helper, security và data-safety
-docs/                   # kiến trúc, API, bảo mật, test và roadmap
-.github/workflows/      # quality gate CI
+```bash
+docker compose up -d postgres
+npm run db:migrate:status
+npm run db:migrate
+npm run db:check
 ```
 
-## Triển khai
+Seed chỉ chứa dữ liệu synthetic và sẽ từ chối chạy nếu thiếu hai guard development. Thiết lập `PGOPTIONS` theo [hướng dẫn database](db/README.md), sau đó:
 
-Repository dùng Next.js native và được triển khai trên Vercel. Bản demo không cần biến môi trường. `NEXT_PUBLIC_SITE_URL` hoặc `VERCEL_PROJECT_PRODUCTION_URL` được dùng để tạo canonical/Open Graph URL tại build time.
+```bash
+psql "$MIGRATION_DATABASE_URL" -X -v ON_ERROR_STOP=1 -f db/seeds/dev/001_synthetic_pilot.sql
+npm run test:integration:postgres
+docker compose down
+```
 
-Với pilot có backend, preview, staging và production phải dùng project/database/secrets riêng. Build một lần, promote cùng artifact, migration có preflight và rollback/forward-fix được diễn tập.
+`db:migrate` chỉ chấp nhận `MIGRATION_DATABASE_URL`; nó cố ý không dùng `DATABASE_URL` của runtime.
 
-## Quyền riêng tư và dữ liệu
+Runtime role phải được tạo ngoài migration rồi nhận đúng bộ quyền cargo qua `db/admin/grant_runtime_role.sql` theo [hướng dẫn admin](db/admin/README.md). `DATABASE_URL` tới host từ xa bắt buộc dùng TLS hostname/certificate verification với `sslmode=verify-full`; runtime không được dùng owner/migration credential.
 
-- Chỉ sử dụng fixture do nhóm tự tạo, với tiền tố như `VEH-DEMO`, `ORD-DEMO`, `TRIP-DEMO`.
-- Không commit danh sách khách hàng, CCCD, bằng lái, số điện thoại, hành trình GPS, biển số thật, vé thật, hóa đơn thật hoặc ảnh nội bộ.
-- Không sao chép địa chỉ, IP, hostname, MAC, VLAN hoặc ảnh nhân viên từ tài liệu thực tập cũ.
-- Không xử lý thẻ thanh toán trong ứng dụng; dùng payment provider có tokenization khi triển khai thật.
-- Khi nghi ngờ lộ dữ liệu: ngắt tích hợp, thu hồi secret, bảo toàn bằng chứng, thông báo owner và xử lý theo runbook; chỉ xóa file trong commit mới là chưa đủ.
+## Biến môi trường
+
+Chỉ lưu trong secret manager của từng môi trường. Repository không cung cấp hoặc commit giá trị.
+
+| Nhóm | Tên biến |
+|---|---|
+| Chế độ/runtime | `KSOPS_MODE`, `APP_BASE_URL` |
+| Runtime database | `DATABASE_URL` |
+| Migration/test | `MIGRATION_DATABASE_URL`, `TEST_DATABASE_URL`, `PGOPTIONS` |
+| Auth0 | `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_SECRET` |
+| Tenant và HMAC | `KSOPS_ORGANIZATION_ID`, `KSOPS_IDEMPOTENCY_SECRET`, `KSOPS_IDENTITY_LOOKUP_SECRET` |
+| URL công khai | `NEXT_PUBLIC_SITE_URL`, `VERCEL_PROJECT_PRODUCTION_URL` |
+
+Khi `KSOPS_MODE` chọn chế độ pilot, toàn bộ cấu hình server phải hợp lệ; thiếu bất kỳ thành phần bắt buộc nào sẽ trả lỗi cấu hình an toàn thay vì tự hạ cấp sang backend giả.
+
+## Cấu trúc repository
+
+```text
+app/                    # UI routes và /api/v1 route handlers
+lib/server/             # config, Auth0, DB pool và HTTP safety boundary
+modules/                # identity/cargo domain, application và infrastructure
+db/                     # Drizzle mapping, SQL migrations và guarded dev seed
+scripts/                # checksum/advisory-lock migration runner
+tests/                  # unit, contract, schema và PostgreSQL integration
+docs/                   # blueprint, API, security, readiness và runbook
+.github/workflows/      # quality gate và PostgreSQL integration CI
+```
+
+## Triển khai đề xuất cho pilot
+
+- Vercel project riêng cho staging và pilot, compute `sin1`.
+- Neon project/branch riêng tại AWS Asia Pacific Singapore, cùng vùng với compute sau khi Data Owner phê duyệt residency.
+- Auth0 tenant/application do doanh nghiệp sở hữu, Universal Login, MFA theo rủi ro và callback/logout/origin chính xác, không wildcard.
+- Runtime DB role và migration DB role tách biệt; preview, staging và pilot dùng database, key và Auth0 application riêng.
+- Migration chạy trước promotion bằng identity chuyên dụng; runtime không có DDL privilege.
+
+Đây mới là topology khuyến nghị. Tài khoản, billing, DPA, IdP và backup production chưa được provision trong repository.
+
+## Quyền riêng tư
+
+- Chỉ sử dụng fixture do nhóm tự tạo; không nhập dữ liệu từ tài liệu thực tập hoặc hệ thống nội bộ.
+- Không commit danh sách khách hàng, số giấy tờ, điện thoại, biển số, GPS, vé, hóa đơn, credential hay database dump thật.
+- Schema dành cho PII được tách riêng với cột ciphertext/HMAC; KMS/envelope encryption và API PII chưa được triển khai, là gate trước khi xử lý dữ liệu thật.
+- Audit, outbox, logs và dashboard projection không chứa contact/address/token/raw GPS.
+- Ứng dụng không lưu PAN/CVV; payment thật phải dùng provider/tokenization và reconciliation.
 
 ## Tài liệu
 
 - [Enterprise Blueprint 12–15 tháng](docs/ENTERPRISE_BLUEPRINT.md)
-- [Ma trận role, permission và data scope](docs/RBAC_MATRIX.md)
-- [Kế hoạch pilot 12 tuần](docs/DEVELOPMENT_PLAN.md)
-- [Kiến trúc hệ thống](docs/ARCHITECTURE.md)
+- [Kế hoạch pilot](docs/DEVELOPMENT_PLAN.md)
+- [Ma trận RBAC](docs/RBAC_MATRIX.md)
+- [Kiến trúc hiện tại và mục tiêu](docs/ARCHITECTURE.md)
+- [API v1](docs/API_SPEC.md)
+- [Chiến lược kiểm thử](docs/TEST_PLAN.md)
+- [Production Readiness](docs/PRODUCTION_READINESS.md)
+- [Pilot Runbook](docs/RUNBOOK_PILOT.md)
 - [Bảo mật và threat model](docs/SECURITY.md)
-- [Hợp đồng API mục tiêu](docs/API_SPEC.md)
-- [Chiến lược kiểm thử và UAT](docs/TEST_PLAN.md)
 
 ## Quy trình đóng góp
 
-1. Tạo nhánh `feature/<ticket>-<mo-ta>` hoặc `fix/<ticket>-<mo-ta>` từ `main` mới nhất.
-2. Mỗi pull request liên kết backlog, có acceptance criteria, ảnh dùng dữ liệu demo và hướng dẫn kiểm thử.
-3. CI phải xanh; thay đổi workflow/permission/migration cần review độc lập.
-4. Không merge khi còn finding critical/high, thiếu authorization test hoặc thiếu kế hoạch rollback.
-5. Dùng Conventional Commits, ví dụ `feat(dispatch): add assignment conflict check`.
-
-Definition of Done chung: đúng acceptance criteria, test theo rủi ro đạt, responsive/a11y không thoái lui, không lộ dữ liệu, telemetry/audit/tài liệu được cập nhật và có thể rollback.
+1. Pull request phải có acceptance criteria, dữ liệu synthetic và hướng dẫn kiểm thử.
+2. CI typecheck, lint, test, build, dependency audit và PostgreSQL integration phải đạt.
+3. Thay đổi permission, migration, Auth0 hoặc workflow cần review độc lập.
+4. Không merge khi có security finding critical/high, thiếu authorization negative test hoặc thiếu rollback plan.
+5. Không sửa migration đã được áp dụng; dùng migration mới theo expand → migrate → contract.
 
 ## Giới hạn sử dụng
 
-Đây là đồ án học tập. Việc triển khai vào doanh nghiệp cần phê duyệt riêng về nghiệp vụ, dữ liệu cá nhân, an toàn giao thông, pháp lý, kế toán, thanh toán, tích hợp và vận hành.
+Dự án chưa được phê duyệt để thay thế hệ thống doanh nghiệp. Go-live chỉ được xem xét sau khi hoàn tất toàn bộ gate trong [Production Readiness](docs/PRODUCTION_READINESS.md), diễn tập [Pilot Runbook](docs/RUNBOOK_PILOT.md) và có chữ ký của Product, Operations, Security/Data, Legal và Platform owner.

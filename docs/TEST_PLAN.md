@@ -1,178 +1,163 @@
-# Chiến lược kiểm thử KSOps Transport Control
+# Kế hoạch kiểm thử KSOps
 
-## 1. Mục tiêu
+## 1. Trạng thái bằng chứng
 
-Chứng minh các luồng vận tải quan trọng hoạt động đúng, không tạo double booking/dispatch conflict/over-capacity, không lộ dữ liệu, có thể vận hành và rollback. Bản demo kiểm thử fixture/UI/config; pilot phải bổ sung backend integration, concurrency, payment/GPS contract, performance, security và UAT.
+Repository hiện có automated test cho demo UI/data helpers, server safety boundary, Auth0/internal authorization mapping, cargo domain/application/HTTP contract, SQL migration invariants và cargo transaction trên PostgreSQL thật.
 
-## 2. Nguyên tắc
+Điều này chứng minh vertical slice trong phạm vi test, **không chứng minh hệ thống production-ready**. Chưa có môi trường doanh nghiệp để kiểm thử end-to-end Auth0 + Vercel + Neon, UAT, load, penetration test, alert/on-call hoặc restore drill.
 
-- Test theo rủi ro, không theo số lượng case.
-- Mọi fixture synthetic, deterministic và không giống record thật.
-- Business rule nằm trong pure/domain helper để unit test được.
-- UI test critical journey; không snapshot toàn trang dễ vỡ.
-- Allow và deny path đều bắt buộc cho authorization.
-- Concurrency/idempotency là acceptance criteria, không phải kiểm thử “nâng cao”.
-- Test environment tách biệt; không gọi endpoint production.
+## 2. Quality gate hiện hành
 
-## 3. Test pyramid
+### Local/static suite
 
-| Lớp | Mục tiêu | Chạy |
-|---|---|---|
-| Static | TypeScript, ESLint, secret/data pattern, dependency audit | mọi PR |
-| Unit | pricing, volumetric weight, transition, capacity, overlap, decoder, CSV safety | mọi PR |
-| Integration | DB constraint, transaction, repository, outbox, RBAC policy | mọi PR có backend |
-| Contract | payment/GPS/ERP/notify adapter và API schema | PR + nightly |
-| Component | form validation, filter, table, modal, seat map, keyboard/focus | PR theo feature |
-| E2E | critical user journeys xuyên module | PR smoke + staging regression |
-| Non-functional | a11y, security, load, restore, resilience | staging/release gate |
-| UAT | đúng nghiệp vụ và vận hành | trước pilot |
+```bash
+npm ci
+npm run check
+npm run build
+npm audit --audit-level=high
+```
 
-## 4. Critical journeys
+`npm run check` chạy typecheck → lint → toàn bộ `tests/*.test.mjs`. `npm run build` và dependency audit là gate riêng.
 
-### Cargo order → delivery → billing
+### PostgreSQL integration
 
-1. Nhân viên tạo đơn với kiện hàng hợp lệ.
-2. Server tính cân nặng quy đổi và snapshot giá.
-3. Điều phối gán đơn vào chuyến đủ tải.
-4. Scan/mốc trạng thái theo transition matrix.
-5. POD được quét, phân quyền và gắn retention.
-6. Invoice sinh đúng snapshot; payment/COD được đối soát.
+Các biến `MIGRATION_DATABASE_URL` và `TEST_DATABASE_URL` phải trỏ tới database local/test cô lập; không dùng pilot database:
 
-Case âm: prohibited item, sai kích thước, duplicate idempotency, xe quá tải, transition nhảy bước, POD độc hại, caller ngoài scope, payment mismatch.
+```bash
+docker compose up -d postgres
+npm run db:migrate:status
+npm run db:migrate
+npm run db:check
+```
 
-### Passenger search → seat hold → booking → cancel/refund
+Seed development chỉ chứa synthetic data và cần hai guard qua `PGOPTIONS`; lệnh/điều kiện chuẩn nằm tại [db/README.md](../db/README.md). Sau khi migrate + seed:
 
-1. Tìm chuyến theo ngày/tuyến.
-2. Hai ghế được hold atomically có TTL.
-3. Booking tạo với cùng price snapshot.
-4. Signed payment callback xác nhận.
-5. Cancel theo policy snapshot; refund idempotent.
+```bash
+npm run test:integration:postgres
+docker compose down
+```
 
-Case âm: hai client giữ cùng ghế, hold hết hạn, callback replay/invalid signature, amount mismatch, booking retry, refund vượt quyền.
+### CI
 
-### Contract request → quote → trip
-
-1. Tiếp nhận nhu cầu đoàn/loại xe/lịch.
-2. Tạo quotation revision và approval đúng threshold.
-3. Accept tạo contract, invoice schedule và nhu cầu fleet.
-4. Điều phối chuyến không trùng xe/tài xế.
-
-Case âm: quote expired, sửa revision đã gửi, thiếu approval, fleet không đủ, lịch chồng lấn.
-
-### Maintenance safety gate
-
-1. Odometer/schedule tạo work order.
-2. Xe chuyển unavailable trong cửa sổ.
-3. Checklist/evidence/sign-off đầy đủ.
-4. Xe chỉ trở lại available khi policy đạt.
-
-Case âm: odometer giảm bất thường, đóng thiếu checklist, dispatch xe đang bảo dưỡng/giấy tờ hết hạn.
-
-## 5. Unit test matrix
-
-| Nhóm | Case bắt buộc |
+| Job | Bằng chứng |
 |---|---|
-| Pricing | weight vs volumetric, min fee, surcharge, rounding, currency |
-| Capacity | exact boundary, over, cancel/unload release, concurrent manifest |
-| Time overlap | adjacent allowed, overlap denied, timezone/DST policy, overnight |
-| Transition | allowed, denied, terminal state, actor/reason required |
-| Seat hold | acquire, contention, expiry, release, confirm, retry |
-| Idempotency | same key/same body, same key/different body, TTL/replay |
-| Money | integer only, negative deny, sum/tax/adjustment |
-| PII masking | role/scope variants, log/redact, export columns |
-| CSV | comma/quote/newline/BOM và formula prefixes `= + - @` |
-| localStorage demo | malformed JSON, wrong schema, blocked storage fallback, reset |
+| `quality` | forbidden tracked file guard, typecheck, lint, production build, source/unit/contract tests, dependency audit high |
+| `database` | PostgreSQL 17 service, numbered migrations, guarded synthetic seed, real PostgreSQL cargo integration |
 
-## 6. Integration và database
+CI không sử dụng production credential/endpoint. Một pipeline xanh chỉ có giá trị cho đúng artifact SHA đã chạy.
 
-- Unique public code và booking seat constraint.
-- Vehicle/driver schedule overlap constraint hoặc serialized policy transaction.
-- Optimistic version conflict trả `412`.
-- Entity + event history + audit + outbox commit/rollback cùng nhau.
-- Worker at-least-once không nhân đôi notification/payment/manifest.
-- Migration tiến trên schema N-1; app N tương thích trong rollout; forward-fix/rollback evidence.
-- Application role không update/delete audit; PII column/table permission tối thiểu.
-- Cursor pagination ổn định khi insert concurrent.
+## 3. Ma trận đã triển khai
 
-## 7. API/contract
+| Lớp | Phạm vi đang có | Giới hạn |
+|---|---|---|
+| Demo/domain helpers | order, fleet/driver/maintenance, dispatch simulation, booking/contract/finance decoder, CSV safety | chứng minh fixture/local behavior, không phải backend các miền đó |
+| Access demo | route/role registry, deny path, separation-of-duties minh họa | demo role switch không phải security boundary |
+| Server config/HTTP | fail-closed mode, TLS DB config, request ID, Problem Details, origin/body/idempotency HMAC | chưa có deployed WAF/rate-limit test |
+| Auth/IAM | Auth0 claim mapping, active internal directory, tenant context, permission-specific scopes, cross-role negative case | cần end-to-end test với tenant/IdP doanh nghiệp |
+| Cargo domain/application | create, list/get scope, transition matrix, exception permission, idempotency replay/conflict, evidence atomicity | adapter in-memory không thay PostgreSQL evidence |
+| HTTP cargo contract | strict body/query/UUID, body bounds, ETag/If-Match, safe presenter | source/handler contract; chưa có browser/deployed API E2E |
+| Database source | migration order/checksum, tenant FK, RLS, immutable audit/event, dispatch exclusion, guarded seed, Drizzle mapping | parser invariants không thay migration execution |
+| PostgreSQL integration | principal directory/RLS, atomic order+event+audit+outbox, replay/conflict, expired-key reuse và concurrent optimistic update | chưa có failover, large dataset hoặc long-running soak |
+| Resilience/UI | loading/error/not-found, capability honesty, bounded pilot response decoders | chưa có real-browser accessibility/network fault suite |
 
-- Request/response khớp OpenAPI/JSON Schema; unknown enum xử lý an toàn.
-- Error envelope không lộ stack, SQL, PII/existence ngoài scope.
-- Provider callbacks: signature, timestamp tolerance, replay, retry, out-of-order.
-- GPS: stale timestamp, impossible jump, duplicate event, missing device, adapter timeout.
-- ERP: partial failure, duplicate posting, rounding mismatch, reconciliation retry.
-- Notification: template escaping, opt-out/purpose, invalid destination, DLQ.
+## 4. Invariant cargo bắt buộc
 
-Consumer-driven contract chạy với sandbox/stub versioned; production endpoint bị deny trong test.
+Mọi thay đổi cargo phải giữ các case sau:
 
-## 8. UI, responsive và accessibility
+1. Create hợp lệ sinh `draft` version 1; order, cargo event, audit, outbox và idempotency result cùng commit hoặc cùng rollback.
+2. Cùng `Idempotency-Key` + payload replay cùng resource; key giống/payload khác trả `409`; record hết hạn được thu hồi atomically và key có thể dùng lại mà không replay stale resource.
+3. `cargo-order:create/read/transition/resolve-exception` kiểm tra scope riêng của chính permission đó; role khác có org scope không được mở rộng cargo scope.
+4. Read ngoài tenant/object scope không làm lộ resource tồn tại.
+5. Hai transition đồng thời với cùng ETag chỉ có một thành công; request còn lại trả version conflict/`412`.
+6. Thiếu `If-Match` trả `428`; transition sai state machine trả `422`; terminal state không cập nhật.
+7. Resolve từ `exception` yêu cầu đồng thời `cargo-order:transition` và `cargo-order:resolve-exception`; scope riêng của cả hai permission phải bao phủ branch.
+8. Public response không có `organizationId`, actor, Auth0 subject, raw idempotency key hoặc PII.
+9. RLS deny khi thiếu/sai tenant context; runtime role không update/delete audit/event.
+10. Query/body ngoài allowlist, JSON quá 64 KiB, Origin sai và request ID không an toàn đều bị từ chối.
 
-Viewports tối thiểu: 390×844, 768×1024, 1366×768, 1440×900. Không horizontal overflow ngoài table scroller có chủ đích; touch target và sticky/fixed UI không che nội dung.
+## 5. Database và migration test
 
-Kiểm tra:
+### Mỗi migration PR
 
-- navigation, active route, Ctrl/Meta+K, back/forward;
-- loading/empty/error/success/stale/offline state;
-- label/input association, table caption/header, button accessible name;
-- keyboard hoàn toàn cho modal, filters, seat map; focus trap/return/Escape;
-- live region cho create/update/export; reduced motion; zoom 200%; contrast;
-- screen reader critical journey; automated axe không serious/critical.
+- tên file tăng tuần tự; checksum mới được review, không sửa migration đã áp dụng;
+- chạy từ database rỗng và database ở phiên bản N-1;
+- chạy `db:migrate` hai lần để chứng minh idempotent runner/status;
+- kiểm tra composite FK chặn cross-tenant;
+- kiểm tra `ENABLE` + `FORCE RLS`, context deny-by-default và grants của runtime role;
+- kiểm tra audit/cargo event append-only;
+- kiểm tra GiST exclusion cho vehicle/driver với interval `[start,end)` và hai transaction cạnh tranh;
+- kiểm tra migration lock/checksum khi hai runner đồng thời hoặc source drift.
 
-## 9. Security testing
+### Trước pilot
 
-- RBAC matrix allow/deny và object-level scope; IDOR enumeration.
-- CSRF, CORS, cookie/session rotation/revoke, open redirect.
-- injection (SQL/HTML/CSV), mass assignment, oversized body/page/file.
-- upload polyglot/double extension/magic mismatch/malware fixture/path traversal.
-- payment webhook spoof/replay/tamper; rate-limit bypass; trusted proxy headers.
-- logs/metrics/traces không chứa token, contact, document, raw GPS/payment payload.
-- dependency/secret scan, SBOM, CI permissions, artifact provenance.
-- CSP/security headers validated trên production build/deployment.
+- test expand → compatible deploy → backfill → contract trên bản sao synthetic gần quy mô dự kiến;
+- đo lock duration, query plan/index và connection pool saturation;
+- PITR/restore vào môi trường cô lập; kiểm tra count, FK/RLS, cargo event/version, audit/idempotency/outbox;
+- chứng minh runtime/migration identity tách quyền; break-glass có MFA/time limit/audit.
 
-Finding critical/high block release. Medium cần owner/deadline và risk acceptance nếu chưa sửa.
+## 6. API và identity test trước pilot
 
-## 10. Performance và capacity
+- Auth0 login/callback/logout, rolling session, timeout/revoke và MFA với exact origin; reject issuer/subject/session giả.
+- Unknown/suspended/unlinked principal fail closed; external role/permission claims không cấp quyền.
+- Ma trận allow/deny theo named pilot user, permission và branch/object scope; IDOR enumeration.
+- Mutation kiểm tra same-origin, cookie/session, JSON content type/limit, mass assignment và injection.
+- Headers `Cache-Control`, `Vary`, `ETag`, `Location`, replay flag, request ID và `application/problem+json` khớp [API Spec](API_SPEC.md).
+- Log/trace/metric redaction: không token, contact/address, document, raw GPS/payment, SQL hoặc secret.
+- Logout/revoke/secret rotation và credential compromise tabletop theo [Pilot Runbook](RUNBOOK_PILOT.md).
 
-Scenario pilot dùng dataset synthetic gần quy mô dự kiến:
+## 7. UI, accessibility và browser
 
-- trip search p95 <500ms ở concurrency thỏa thuận;
-- create order/booking p95 <800ms không tính redirect provider;
-- 100 client tranh một ghế: tối đa một booking thành công;
-- dispatch board ngày cao điểm, fleet/order list với pagination;
-- report/export chạy read model/job, không làm cạn DB pool;
-- payment/GPS burst qua queue, kiểm tra backlog recovery/DLQ.
+Route public demo cần giữ honest labeling và không gọi backend thật. Trước pilot, cargo UI phải được test trên đúng mode/API:
 
-Đo latency/error/saturation/DB wait/queue depth; ramp có kiểm soát, timeout rõ, không load-test production khi chưa được phép.
+- Chrome/Edge/Safari hoặc browser matrix được phê duyệt; 390×844, 768×1024, 1366×768 và 1440×900;
+- loading/empty/error/unauthenticated/forbidden/conflict/offline/stale state;
+- keyboard-only, focus order/return, label/name, live region, zoom 200%, reduced motion, contrast;
+- automated axe không có serious/critical và screen-reader critical journey;
+- retry create không nhân đôi order; `412` refresh đúng aggregate mới nhất;
+- client decoder fail closed khi server payload sai/oversized; không render HTML không tin cậy.
 
-## 11. Resilience và DR
+Hiện chưa có Playwright/Cypress hoặc deployed browser suite; các mục này là blocker, không được đánh dấu đạt từ source tests.
 
-Fault injection staging: payment/GPS/notify timeout/5xx, queue delay, DB failover, object scan unavailable, duplicate/out-of-order events. Xác nhận UI hiển thị stale/pending, retry bounded và không mất/nhân đôi transaction.
+## 8. Performance, resilience và security
 
-Backup/restore drill: restore vào môi trường cô lập; checksum/count/business invariant; rotate restored secret; ghi thời gian đạt RPO/RTO; destroy môi trường theo retention.
+Ngưỡng chính thức phải được Product/SRE chốt từ lưu lượng pilot. Baseline đề xuất để đo ở staging synthetic:
 
-## 12. UAT
+- list/get cargo p95 ≤ 500 ms; create/transition p95 ≤ 800 ms tại concurrency pilot đã thỏa thuận;
+- 100 request cạnh tranh cùng expected version: đúng một update thành công;
+- DB failure/timeouts không tạo partial evidence; pool không cạn dưới burst bounded;
+- outbox backlog phục hồi sau worker outage mà không nhân đôi side effect;
+- restore đạt RPO/RTO đã được Data Owner phê duyệt.
 
-Đại diện phòng vé, hàng hóa, điều phối, bảo dưỡng, tài chính và quản lý thực hiện script với dữ liệu synthetic. Evidence gồm case ID, actor, environment/build SHA, steps, result, screenshot không PII, defect link và sign-off.
+Security release gate gồm threat model review, SAST/dependency/secret scan, IDOR/CSRF/session/injection test, WAF/rate-limit validation và penetration test theo phạm vi. Finding critical/high = release blocker; medium cần owner/deadline/risk acceptance.
 
-UAT xác nhận: thuật ngữ dễ hiểu, số liệu đối soát, cảnh báo có thể hành động, exception path thực tế, quyền đúng vai trò, runbook/support đủ dùng.
+Outbox worker, rate limit, integration adapter và observability chưa triển khai, nên các test tương ứng hiện là backlog chứ không phải bằng chứng đạt.
 
-## 13. CI và lịch chạy
+## 9. UAT cargo pilot
 
-- PR: typecheck, lint, unit, component chọn lọc, build, security config, audit.
-- Merge main: integration/contract, smoke deployment.
-- Nightly: full E2E, adapter contract, synthetic data safety.
-- Release candidate: regression, a11y, security, load baseline, migration/restore, UAT evidence.
-- Post-deploy: route/API smoke, SLO, queue, audit write và business reconciliation.
+Cargo Operations thực hiện script bằng dữ liệu synthetic trên staging:
 
-Test flaky bị quarantine có owner/deadline; không rerun mù để “xanh”.
+1. đăng nhập named user; xác nhận đúng chi nhánh và thao tác được cấp;
+2. tạo đơn ở từng service level/biên validation;
+3. tìm/list/get và chuyển toàn bộ happy path;
+4. exception → resolve bằng đúng role; user thường bị từ chối;
+5. retry, double-click và hai điều phối viên cập nhật cùng đơn;
+6. session hết hạn, DB/API lỗi, rollback/khôi phục UI;
+7. đối chiếu aggregate với event, audit và outbox;
+8. xác nhận thuật ngữ, SLA, thông báo lỗi và quy trình support.
 
-## 14. Exit criteria
+Evidence gồm case ID, build SHA, environment, named test role, kết quả, request ID và defect; screenshot/log phải không có PII/secret. Operations, Product, Security/Data và Platform cùng sign-off.
 
-Pilot chỉ đạt khi:
+## 10. Exit criteria
 
-- Must stories và critical journeys đạt;
-- Sev-1/2 = 0, critical/high security = 0;
-- double booking/dispatch conflict/over-capacity invariant đạt dưới concurrency;
-- RBAC negative test, audit, payment reconciliation, migration và restore đạt;
-- WCAG 2.2 AA luồng chính, performance budget và production smoke đạt;
-- known limitations, owner, support/runbook/rollback và sign-off đầy đủ.
+Cargo pilot chỉ được đề xuất `GO` khi:
+
+- mọi automated gate trên đúng release SHA xanh, không quarantine test quan trọng;
+- invariant cargo/RLS/permission-specific scope/concurrency đạt trên PostgreSQL;
+- UI/API Auth0 E2E, accessibility và UAT được ký;
+- migration, application rollback, backup/restore và rotation rehearsal đạt;
+- observability/SLO/alert/on-call được test;
+- không còn defect Sev-1/2 hoặc finding security critical/high;
+- limitation, owner, RPO/RTO, support/cutover/abort criteria và external integration exclusion được ghi rõ;
+- toàn bộ gate tương ứng trong [Production Readiness](PRODUCTION_READINESS.md) có evidence.
+
+Kết quả cargo không được dùng để tuyên bố dispatch, booking, maintenance, contract hoặc finance đã sẵn sàng; mỗi tranche cần test plan và sign-off riêng.
