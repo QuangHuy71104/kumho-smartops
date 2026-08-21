@@ -1,281 +1,281 @@
-# Kiến trúc KSOps
+# Kiến trúc KSOps Transport Control
 
-## 1. Trạng thái tài liệu
+## 1. Trạng thái và nguyên tắc
 
-- Loại: kiến trúc mục tiêu đề xuất cho pilot, chưa phải mô tả hạ tầng doanh nghiệp.
-- Phạm vi: KSOps IT Service Hub/CMDB.
-- Dữ liệu trong sơ đồ và ví dụ: hoàn toàn synthetic.
-- Nguyên tắc: không đưa IP, hostname, MAC, VLAN, topology, credential hay ảnh nội bộ vào repository.
+- Đây là kiến trúc mục tiêu cho pilot, không mô tả hạ tầng doanh nghiệp hiện tại.
+- Bản repository là frontend demo Next.js với fixture synthetic và localStorage.
+- Không kết nối GPS, bán vé, thanh toán, kế toán, kho hàng hoặc danh tính thật.
+- Không đưa biển số, số giấy tờ, vị trí GPS, PII, topology hay credential thật vào mã nguồn.
 
-## 2. Hiện trạng và kiến trúc mục tiêu
+Kiến trúc mục tiêu là **modular monolith**: một deployable web/API để giảm chi phí vận hành nhưng có ranh giới domain rõ. Chỉ tách service khi có nhu cầu scale, availability, security boundary hoặc ownership độc lập được đo bằng bằng chứng.
 
-Hiện tại repository là một web demo server-rendered bằng Next.js 16 App Router, React 19 và TypeScript. Bảy route sản phẩm đọc dữ liệu synthetic trong source; bộ lọc, xuất CSV, ticket và checklist là tương tác thật ở phía client. Thay đổi do người xem tạo chỉ lưu trong `localStorage`; repository không có database, API nghiệp vụ, SSO hoặc connector tới hệ thống doanh nghiệp.
-
-Mã demo tổ chức theo **feature folder**: mỗi route giữ `_components` cho khối trình bày và `_lib` cho type, cấu hình cùng hàm thuần; component `*Client` chỉ điều phối state và sự kiện. `PortalShell`, hành động header và hook `localStorage` nằm ở `app/_components`/`app/_hooks` để dùng chung. Cấu trúc này loại bỏ shell trùng lặp, giữ business helper độc lập với React và cho phép kiểm thử trực tiếp trước khi thay mock data bằng API.
-
-Mục tiêu pilot là một **modular monolith**: một deployable web/API để giảm chi phí vận hành, nhưng domain được tách module rõ để sau này có thể bóc tách khi có bằng chứng về tải hoặc ownership. Không bắt đầu bằng microservice vì sẽ làm tăng bề mặt bảo mật, distributed transaction và công sức quan sát.
-
-## 3. Bối cảnh hệ thống
+## 2. System context
 
 ```mermaid
 flowchart LR
-    Requester["Người yêu cầu"]
-    Agent["Nhân viên IT"]
-    Manager["Quản lý dịch vụ"]
-    Admin["Quản trị hệ thống"]
-    IdP["Nhà cung cấp danh tính OIDC"]
-    Monitor["Nguồn giám sát qua adapter được duyệt"]
-    Notify["Kênh thông báo qua adapter"]
-    KSOps["KSOps IT Service Hub"]
+    Passenger["Hành khách"]
+    Sender["Khách gửi hàng"]
+    Corporate["Khách thuê xe"]
+    Dispatcher["Điều phối viên"]
+    Driver["Tài xế"]
+    Ops["Bảo dưỡng / Tài chính / Quản lý"]
+    IdP["OIDC Identity Provider"]
+    Payment["Payment provider qua token"]
+    GPS["GPS/telemetry adapter"]
+    Notify["SMS/email/app adapter"]
+    Accounting["Kế toán/ERP adapter"]
+    KSOps["KSOps Transport Control"]
 
-    Requester -->|"Gửi và theo dõi yêu cầu"| KSOps
-    Agent -->|"Xử lý ticket, tài sản, bảo trì"| KSOps
-    Manager -->|"Theo dõi SLA, duyệt tri thức"| KSOps
-    Admin -->|"Quản trị quyền và danh mục"| KSOps
-    KSOps <-->|"Đăng nhập, claim tối thiểu"| IdP
-    Monitor -->|"Trạng thái dịch vụ đã chuẩn hóa"| KSOps
-    KSOps -->|"Sự kiện thông báo không chứa bí mật"| Notify
+    Passenger -->|"tìm chuyến, đặt/hủy vé"| KSOps
+    Sender -->|"tạo và theo dõi đơn"| KSOps
+    Corporate -->|"yêu cầu báo giá/hợp đồng"| KSOps
+    Dispatcher -->|"lập chuyến, phân công"| KSOps
+    Driver -->|"nhận chuyến, cập nhật mốc"| KSOps
+    Ops -->|"bảo dưỡng, đối soát, báo cáo"| KSOps
+    KSOps <-->|"SSO và claim tối thiểu"| IdP
+    KSOps <-->|"payment intent/callback"| Payment
+    GPS -->|"vị trí chuẩn hóa + freshness"| KSOps
+    KSOps -->|"thông báo đã redact"| Notify
+    KSOps -->|"bút toán/reference đã duyệt"| Accounting
 ```
 
-Adapter monitoring/notification mặc định là mock ở demo. Tích hợp thật cần data-flow review, tài khoản dịch vụ least privilege, allowlist egress và hợp đồng xử lý dữ liệu.
+Adapter bên ngoài mặc định là mock. Tích hợp thật cần data-flow review, least-privilege service account, allowlist egress, timeout, circuit breaker, reconciliation và cơ chế thu hồi quyền.
 
-## 4. Kiến trúc container đề xuất
+## 3. Container mục tiêu
 
 ```mermaid
 flowchart TB
-    Browser["Trình duyệt"]
-    CDN["CDN / WAF / TLS"]
-    Web["Web + API modular monolith\nReact / TypeScript / server routes"]
-    Worker["Background worker\njob có idempotency"]
+    Browser["Web/PWA"]
+    Edge["CDN · WAF · TLS · rate limit"]
+    Web["Next.js Web + API\nmodular monolith"]
+    Worker["Background workers\nidempotent jobs"]
     DB[("Managed PostgreSQL\ntransactional source of truth")]
-    Queue["Managed queue / scheduler"]
-    Object["Object storage\nattachment đã quét"]
-    IdP["OIDC Identity Provider"]
-    Obs["Logs / metrics / traces / alerts"]
+    Redis["Managed Redis\nseat hold, rate limit, short cache"]
+    Queue["Queue / scheduler"]
+    Object["Object storage\nattachment scanned"]
+    IdP["OIDC provider"]
+    Adapters["Payment · GPS · Notify · ERP adapters"]
+    Obs["Logs · metrics · traces · alerts"]
 
-    Browser -->|"HTTPS"| CDN --> Web
-    Web <-->|"OIDC Authorization Code + PKCE"| IdP
-    Web -->|"SQL qua ORM + RLS tùy đánh giá"| DB
-    Web -->|"enqueue outbox job"| Queue
-    Queue --> Worker
+    Browser -->|"HTTPS"| Edge --> Web
+    Web <-->|"Authorization Code + PKCE"| IdP
+    Web --> DB
+    Web --> Redis
+    Web -->|"transactional outbox"| Queue --> Worker
     Worker --> DB
-    Web -->|"signed upload/download"| Object
+    Worker --> Adapters
+    Web -->|"signed URL"| Object
     Web --> Obs
     Worker --> Obs
 ```
 
-### Quyết định triển khai
+Web/API chạy gần database; edge chỉ cache asset/read model an toàn. Preview/staging/production dùng project, database, key và adapter sandbox riêng. Không clone production PII về preview.
 
-- Web/API chạy cùng region với database để giảm latency và rủi ro data residency.
-- Edge chỉ phục vụ asset/cache an toàn; route cần session/transaction chạy trên runtime có kết nối database được hỗ trợ.
-- Bản demo dùng Next.js native trên Vercel, đã có build local và route smoke test. Khi bật backend, vẫn phải spike connection pooling, filesystem read-only, function timeout, region và giới hạn gói trước pilot.
-- Database không public internet nếu nền tảng hỗ trợ private networking; nếu không, bắt buộc TLS, credential ngắn hạn/rotation và allowlist phù hợp.
-- Preview/staging/production dùng project, database và secret tách biệt; không clone dữ liệu production về preview.
-
-## 5. Module và ranh giới trách nhiệm
+## 4. Module boundaries
 
 | Module | Sở hữu | Không được làm |
 |---|---|---|
-| Identity & Access | user mapping, role, permission, session, policy | tin cậy role gửi từ browser |
-| Asset/CMDB | asset, type, status, relationship, history | tự quét mạng hoặc lưu credential thiết bị |
-| Service Desk | incident, request, comment, assignment, transition | sửa trực tiếp audit/SLA history |
-| Maintenance | schedule, checklist, result, affected CI | thực thi lệnh hạ tầng trực tiếp trong pilot |
-| Knowledge | article, revision, review/publish | render HTML không sanitize |
-| Service Health | metric snapshot, freshness, adapter | truy cập nguồn monitoring ngoài allowlist |
-| Notification | template, preference, delivery job | giữ transaction mở khi gọi dịch vụ ngoài |
-| Audit | append-only security/business events | cung cấp endpoint update/delete thông thường |
-| Reporting | read model/KPI definitions | truy vấn không giới hạn trên OLTP path |
+| Identity & Access | user mapping, role, permission, scope, session | tin role/tenant gửi từ browser |
+| Fleet | vehicle, type, capacity, document, status history | lưu credential thiết bị hoặc GPS thô không cần thiết |
+| Driver & Workforce | qualification, availability, shift, assignment constraint | lưu bản chụp giấy tờ ngoài retention/purpose |
+| Cargo Order | parcel, sender/receiver ref, pricing snapshot, SLA, status | tự quyết định dispatch hoặc sửa audit history |
+| Trip & Dispatch | route, schedule, vehicle/driver assignment, manifest, capacity | bypass maintenance/qualification policy |
+| Passenger Booking | inventory, seat hold, booking, cancel/refund state | lưu PAN/CVV hoặc bán ghế ngoài transaction |
+| Contract Rental | lead, quote revision, approval, contract | thay giá đã chấp nhận mà không tạo revision |
+| Maintenance | trigger, work order, checklist, downtime, part usage | tự xóa lịch sử xe |
+| CRM | customer identity tối thiểu, consent/purpose, timeline | cung cấp PII ngoài scope role |
+| Billing | invoice snapshot, receivable, payment reference, reconciliation | xử lý dữ liệu thẻ trực tiếp |
+| Reporting | metric definition và read model | truy vấn OLTP không giới hạn |
+| Notification | template, preference, delivery job | giữ DB transaction khi gọi dịch vụ ngoài |
+| Audit | append-only security/business event | endpoint update/delete thông thường |
 
-Module trao đổi qua service interface nội bộ và domain event/outbox. Không import trực tiếp repository của module khác; dữ liệu tham chiếu qua ID và read model đã định nghĩa.
+Module trao đổi qua application service và domain event/outbox; không import repository của module khác. Mọi authorization quyết định ở server/application boundary.
 
-## 6. Cấu trúc mã mục tiêu
+## 5. Cấu trúc mã
 
-Cấu trúc bản demo hiện tại:
+Bản demo:
 
 ```text
 app/
-  _components/          # portal shell, action và dashboard dùng chung
-  _hooks/               # browser-state adapter có runtime decoder
+  _components/          # shell và control dùng chung
+  _hooks/               # local browser-state adapter
   <feature>/
-    page.tsx             # metadata + composition phía server
-    <Feature>Client.tsx  # state/event orchestration khi thật sự cần client
-    _components/         # component trình bày theo feature
-    _lib/                # type, mock config và pure helper
-lib/                     # dữ liệu synthetic được chia sẻ giữa nhiều route
-tests/                   # regression, data-safety, security config và unit helper
+    page.tsx             # metadata + server composition
+    <Feature>Client.tsx  # state/event orchestration khi cần
+    _components/         # presentation components
+    _lib/                # type, fixture, decoder, pure helper
+lib/                     # dashboard aggregate synthetic
+tests/                   # helper, config và regression
 ```
 
-Cấu trúc mục tiêu khi bổ sung backend production:
+Khi có backend:
 
 ```text
-app/
-  (authenticated)/       # page/layout đã bảo vệ
-  api/v1/                # transport: parse, validate, authorize, map response
+app/(authenticated)/
+app/api/v1/              # parse → validate → authorize → invoke → map
 modules/
-  assets/
-    domain/              # entity, rule, transition
-    application/         # use case, port
-    infrastructure/      # Drizzle repository, adapter
-  incidents/
-  maintenance/
-  knowledge/
-  identity/
-  audit/
-lib/
-  auth/ validation/ observability/ errors/
-db/
-  schema/ migrations/ seeds/  # seed chỉ synthetic
-tests/
-  unit/ integration/ contract/ e2e/
+  fleet/ driver/ order/ dispatch/ booking/ contract/
+  maintenance/ crm/ billing/ reporting/ identity/ audit/
+    domain/              # entity, value object, invariant
+    application/         # use case, port, policy
+    infrastructure/      # repository, outbox, adapter
+lib/auth/ validation/ errors/ observability/
+db/schema/ migrations/ seeds/
+tests/unit/ integration/ contract/ e2e/
 ```
 
-Server route chỉ làm nhiệm vụ transport; business rule nằm ở application/domain để unit test được. UI không gọi database trực tiếp và không tự quyết định authorization.
-
-## 7. Mô hình dữ liệu logic
+## 6. Mô hình dữ liệu logic
 
 ```mermaid
 erDiagram
-    USER ||--o{ USER_ROLE : has
-    ROLE ||--o{ USER_ROLE : assigned
-    ROLE ||--o{ ROLE_PERMISSION : grants
-    PERMISSION ||--o{ ROLE_PERMISSION : contains
-    USER ||--o{ INCIDENT : requests
-    USER ||--o{ INCIDENT : assigned_to
-    INCIDENT ||--o{ INCIDENT_COMMENT : has
-    INCIDENT ||--o{ INCIDENT_EVENT : changes
-    ASSET_TYPE ||--o{ ASSET : classifies
-    ASSET ||--o{ ASSET_RELATIONSHIP : source
-    ASSET ||--o{ ASSET_RELATIONSHIP : target
-    ASSET ||--o{ INCIDENT_ASSET : affected
-    INCIDENT ||--o{ INCIDENT_ASSET : links
-    ASSET ||--o{ MAINTENANCE_ASSET : maintained
-    MAINTENANCE ||--o{ MAINTENANCE_ASSET : includes
-    KNOWLEDGE_ARTICLE ||--o{ KNOWLEDGE_REVISION : versions
+    VEHICLE_TYPE ||--o{ VEHICLE : classifies
+    VEHICLE ||--o{ VEHICLE_DOCUMENT : has
+    VEHICLE ||--o{ MAINTENANCE_ORDER : receives
+    DRIVER ||--o{ DRIVER_QUALIFICATION : has
+    DRIVER ||--o{ DRIVER_SHIFT : works
+    ROUTE ||--o{ TRIP : schedules
+    VEHICLE ||--o{ TRIP : assigned
+    DRIVER ||--o{ TRIP : drives
+    TRIP ||--o{ SEAT_INVENTORY : offers
+    CUSTOMER ||--o{ BOOKING : creates
+    BOOKING ||--|{ BOOKING_SEAT : reserves
+    SEAT_INVENTORY ||--o| BOOKING_SEAT : allocated
+    CUSTOMER ||--o{ CARGO_ORDER : requests
+    CARGO_ORDER ||--|{ PARCEL : contains
+    TRIP ||--o{ MANIFEST_ITEM : carries
+    CARGO_ORDER ||--o{ MANIFEST_ITEM : loaded_as
+    CUSTOMER ||--o{ RENTAL_REQUEST : submits
+    RENTAL_REQUEST ||--o{ QUOTATION_REVISION : quoted
+    QUOTATION_REVISION ||--o| CONTRACT : accepted_as
+    BOOKING ||--o| INVOICE : billed
+    CARGO_ORDER ||--o| INVOICE : billed
+    CONTRACT ||--o{ INVOICE : billed
     USER ||--o{ AUDIT_EVENT : acts
 ```
 
-### Quy ước dữ liệu
+Quy ước:
 
-- Primary key dùng UUIDv7/ULID do server sinh; mã hiển thị (`INC-DEMO-0001`) là key riêng, không chứa thông tin địa điểm.
-- Mọi bảng mutable có `created_at`, `updated_at`, `version`; timestamp lưu UTC, hiển thị theo timezone người dùng.
-- Soft delete chỉ dùng khi có lý do retention; trạng thái nghiệp vụ `retired/archived` ưu tiên hơn cờ xóa mơ hồ.
-- Quan hệ tài sản có `relationship_type`, `source_asset_id`, `target_asset_id`, validity period và unique constraint phù hợp.
-- Audit event lưu actor, action, resource type/ID, outcome, request ID, timestamp và diff đã redact; không lưu token hoặc toàn bộ payload.
-- Attachment lưu object key và metadata, không lưu binary trong DB. Tên file được normalize; tải xuống qua URL ngắn hạn sau authorization.
+- UUIDv7/ULID server-side làm primary key; mã hiển thị là key riêng không chứa PII.
+- Timestamp UTC; UI hiển thị timezone người dùng.
+- Entity mutable có `version`; update cần optimistic concurrency.
+- Tiền lưu integer minor unit + currency; giá/cước/thuế snapshot bất biến.
+- PII tách khỏi event/log/read model rộng; field encryption theo threat model.
+- Attachment nằm object storage, quét malware, MIME sniffing, signed URL ngắn hạn.
+- Audit lưu actor/action/resource/outcome/requestId/time/diff đã redact; không lưu token/raw payload.
 
-## 8. Luồng ghi sự cố
+## 7. Luồng tạo đơn hàng hóa
 
 ```mermaid
 sequenceDiagram
-    actor U as Người dùng
-    participant W as Web/API
-    participant P as Policy
-    participant D as Database
-    participant Q as Outbox/Queue
-    participant N as Notification worker
+    actor U as Nhân viên tiếp nhận
+    participant A as API
+    participant P as Policy/Pricing
+    participant D as PostgreSQL
+    participant Q as Outbox
+    participant W as Notification worker
 
-    U->>W: POST /api/v1/incidents + Idempotency-Key
-    W->>W: Validate schema, normalize input
-    W->>P: authorize(incident:create, scope)
-    P-->>W: allow / deny
-    W->>D: transaction: incident + first event + audit + outbox
-    D-->>W: commit + version
-    W-->>U: 201 + Location + requestId
-    Q->>N: deliver outbox event
-    N->>N: redact, render template, retry có giới hạn
+    U->>A: POST /api/v1/cargo-orders + Idempotency-Key
+    A->>A: validate, normalize, classify data
+    A->>P: authorize + quote snapshot
+    P-->>A: allow + price/version
+    A->>D: transaction order + parcels + event + audit + outbox
+    D-->>A: commit + version
+    A-->>U: 201 + Location + requestId
+    Q->>W: order.confirmed
+    W->>W: redact + deliver + retry bounded
 ```
 
-Một transaction ghi entity, history/audit và outbox để tránh tình trạng dữ liệu đã commit nhưng notification event bị mất. Worker xử lý at-least-once; consumer phải idempotent.
+## 8. Luồng giữ và bán ghế
 
-## 9. API, consistency và concurrency
+```mermaid
+sequenceDiagram
+    actor U as Hành khách
+    participant A as Booking API
+    participant R as Redis hold store
+    participant D as Database
+    participant P as Payment provider
 
-- REST JSON version `/api/v1`; contract chi tiết tại `API_SPEC.md`.
-- Validation runtime ở boundary; TypeScript type không thay thế input validation.
-- `ETag`/`version` + `If-Match` cho update; phiên bản cũ trả `409 CONFLICT` hoặc `412 PRECONDITION_FAILED` theo contract thống nhất.
-- `Idempotency-Key` bắt buộc cho create có khả năng retry; key scope theo principal + route và có TTL.
-- Cursor pagination cho danh sách lớn; sort mặc định ổn định bằng `(created_at, id)`.
-- Transaction chỉ bao quanh thao tác database ngắn; không gọi IdP/email/object storage trong transaction.
-- Cache chỉ áp dụng read model không nhạy cảm; key phải bao gồm tenant/scope/role khi cần và invalidation dựa trên event.
+    U->>A: POST /seat-holds + Idempotency-Key
+    A->>R: atomic hold(seat, ttl, principal)
+    R-->>A: holdId + expiresAt
+    A-->>U: 201 hold
+    U->>A: POST /bookings {holdId}
+    A->>D: transaction validate hold + booking pending + outbox
+    A->>P: create payment intent (outside DB transaction)
+    P-->>A: token/reference
+    P-->>A: signed callback
+    A->>D: idempotent finalize booking + invoice + audit
+```
 
-## 10. Availability, performance và capacity
+Unique constraint trên `(trip_id, seat_code)` cho state booked và transaction/lock phù hợp là lớp cuối chống double-booking; UI disable ghế không phải cơ chế bảo vệ.
 
-Target ban đầu phải được PO/Ops hiệu chỉnh bằng baseline:
+## 9. Dispatch consistency
 
-| Thuộc tính | Mục tiêu pilot đề xuất |
-|---|---|
-| Availability web/API | 99,5% theo tháng, loại trừ maintenance đã thông báo |
-| API read p95 | < 500 ms ở tải dự kiến |
-| API write p95 | < 800 ms ở tải dự kiến |
-| Dashboard LCP p75 | < 2,5 s trên profile mạng được thống nhất |
-| Error rate | < 1% request hợp lệ trong cửa sổ 5 phút |
-| RPO/RTO | RPO 24 giờ, RTO 4 giờ cho pilot; xác nhận bằng restore drill |
+- Assignment kiểm tra overlap xe/tài xế bằng transaction và constraint/exclusion phù hợp.
+- `version` + `If-Match` cho thay đổi chuyến; bản cũ trả `412`.
+- Capacity tính từ manifest/booking active trong cùng transaction.
+- Xe bảo dưỡng/blocked/document-expired hoặc tài xế không qualification bị policy từ chối.
+- Manual override yêu cầu permission riêng, reason, expiry và audit; không cho override safety invariant cứng.
+- Mốc GPS/scan xử lý at-least-once, có event key idempotent và device timestamp sanity check.
 
-Không coi target là cam kết production enterprise. Capacity test dùng dữ liệu synthetic, ramp-up có kiểm soát và không chạy vào endpoint doanh nghiệp thật.
+## 10. API và async work
 
-### Cơ chế chống quá tải
+- REST JSON `/api/v1`, cursor pagination, sort ổn định `(created_at,id)`.
+- Runtime schema validation; TypeScript không thay thế validation boundary.
+- `Idempotency-Key` cho create/payment callback; scope theo principal+route, có TTL.
+- Error envelope ổn định, không trả stack/SQL/PII.
+- Transaction ngắn; không gọi payment/SMS/GPS/ERP khi đang giữ DB transaction.
+- Transactional outbox bảo đảm entity và event cùng commit; consumer idempotent, retry exponential+jitter, DLQ và replay có permission/audit.
 
-- giới hạn body, page size, file size và query complexity;
-- rate limit theo principal và IP đã chuẩn hóa, không tin `X-Forwarded-For` ngoài trusted proxy;
-- timeout cho DB/external adapter; retry chỉ cho lỗi transient và có exponential backoff + jitter;
-- circuit breaker/bulkhead với nguồn monitoring; dashboard hiển thị `stale` thay vì giả vờ dữ liệu mới;
-- job queue có dead-letter queue, max attempts và trang replay có phân quyền.
+## 11. Availability, performance và overload
 
-## 11. Observability
+Mục tiêu pilot: availability 99,5%/tháng; API read p95 <500ms; write p95 <800ms; valid error <1%/5 phút; dashboard LCP p75 <2,5s trên profile thống nhất; RPO 24h/RTO 4h được restore drill xác nhận.
 
-Mọi request nhận `request_id` do trusted edge/server sinh; trace context chỉ được chấp nhận sau validation. Log dạng JSON gồm timestamp, level, service, environment, route template, status, latency, request ID và pseudonymous actor ID. Không log authorization header, cookie, token, raw comment, nội dung attachment hoặc chi tiết tài sản nhạy cảm.
+Giới hạn bắt buộc: body/page/file/query complexity; rate limit principal/IP trusted; DB pool/timeout; external adapter timeout+circuit breaker; stale indicator cho GPS; queue max attempts/DLQ; report chạy read model/batch thay vì OLTP path.
 
-Golden signals:
+## 12. Observability
 
-- traffic theo route/status và active session;
-- latency p50/p95/p99, DB pool wait, slow query;
-- error rate theo error code, auth deny và validation reject;
-- saturation CPU/memory/concurrency/queue depth;
-- business metrics: incident backlog, SLA breach, stale health source;
-- security metrics: login failure burst, permission change, bulk export.
+Log JSON gồm timestamp, level, service/environment, route template, status, latency, requestId, traceId và actor pseudonymous. Không log cookie/token, CCCD/bằng lái, số điện thoại đầy đủ, raw location, comment/attachment hoặc payment payload.
 
-Alert phải có severity, threshold/window, owner, link runbook và cách xác nhận false positive. Không alert trực tiếp từ một sample đơn lẻ trừ sự kiện bảo mật trọng yếu.
+Golden signals và business signals:
 
-## 12. Backup, retention và disaster recovery
+- traffic, latency p50/p95/p99, error, saturation, DB pool, queue depth;
+- order backlog, delivery SLA, booking conflict, hold expiry, trip delay;
+- fleet utilization, maintenance overdue, driver/vehicle conflict;
+- payment callback/reconciliation mismatch, export volume, permission change;
+- adapter freshness/error và alert có owner+runbook.
 
-- Managed database bật point-in-time recovery nếu gói hỗ trợ; backup được mã hóa và tách quyền restore.
-- Restore test vào môi trường cô lập bằng dữ liệu synthetic hoặc đã phê duyệt; ghi thời gian và checksum/evidence.
-- Object storage bật versioning/lifecycle; attachment hết retention được xóa theo job có audit.
-- Retention từng loại dữ liệu do Data Owner và pháp lý quyết định, không hard-code dựa trên giả định.
-- Runbook bao gồm mất database, lỗi migration, lộ credential, queue backlog và lỗi IdP.
-
-## 13. CI/CD và supply chain
+## 13. CI/CD và data migration
 
 ```mermaid
 flowchart LR
-    PR["Pull request"] --> CI["Lint + type/build + tests + audit"]
-    CI --> Review["Review + branch protection"]
-    Review --> Artifact["Immutable artifact + provenance"]
-    Artifact --> Staging["Deploy staging + migration check + smoke"]
-    Staging --> Approval["Change approval"]
-    Approval --> Prod["Promote same artifact"]
-    Prod --> Verify["SLO + smoke + audit verification"]
-    Verify -->|"failed"| Rollback["Rollback / forward-fix"]
+    PR["Pull request"] --> CI["type · lint · test · build · audit"]
+    CI --> Review["review · branch protection"]
+    Review --> Artifact["immutable artifact · SBOM"]
+    Artifact --> Staging["staging · migration preflight · smoke"]
+    Staging --> Approval["change approval"]
+    Approval --> Prod["canary/promote same digest"]
+    Prod --> Verify["SLO · business reconciliation · audit"]
+    Verify -->|"fail"| Recovery["rollback / forward-fix"]
 ```
 
-- `npm ci` dựa trên lockfile; pin Node version; Dependabot/Renovate theo chính sách nhóm.
-- GitHub Actions dùng least-privilege permissions, môi trường protected và OIDC federation thay cho secret cloud dài hạn khi hỗ trợ.
-- Build một lần, promote cùng digest; không rebuild khác nhau giữa staging và production.
-- Migration chạy như job riêng có advisory lock và preflight; không tự động destructive migration.
-- Tạo SBOM và scan dependency/container ở giai đoạn hardening; critical/high là release blocker trừ waiver có hạn.
+Migration dùng expand→migrate→contract, advisory lock và backup/preflight. Không destructive migration tự động. Build provenance, dependency scan, least-privilege GitHub Actions và OIDC federation khi nền tảng hỗ trợ.
 
-## 14. Các ADR cần chốt trước pilot
+## 14. ADR cần chốt
 
-| ADR | Câu hỏi | Deadline |
+| ADR | Quyết định | Hạn |
 |---|---|---|
-| ADR-001 | modular monolith và ranh giới module | tuần 2 |
-| ADR-002 | hosting/runtime được hỗ trợ chính thức | tuần 2 |
-| ADR-003 | PostgreSQL provider, pooling, backup/data residency | tuần 3 |
-| ADR-004 | OIDC provider, claim mapping, session model | tuần 3 |
-| ADR-005 | permission model và data scope | tuần 3 |
-| ADR-006 | attachment storage/scanning/retention | trước tuần 6 |
-| ADR-007 | telemetry vendor và redaction policy | trước tuần 8 |
-| ADR-008 | deploy/migration/rollback strategy | trước tuần 10 |
+| ADR-001 | modular monolith và boundaries | tuần 2 |
+| ADR-002 | hosting/runtime/region/data residency | tuần 2 |
+| ADR-003 | PostgreSQL, pooling, backup | tuần 3 |
+| ADR-004 | OIDC/session/claim mapping | tuần 3 |
+| ADR-005 | permission + data scope | tuần 3 |
+| ADR-006 | seat hold/booking concurrency | trước tuần 7 |
+| ADR-007 | attachment scanning/retention | trước tuần 8 |
+| ADR-008 | payment/ERP/GPS adapter contracts | trước tuần 8 |
+| ADR-009 | observability/redaction vendor | trước tuần 9 |
+| ADR-010 | migration/promotion/rollback | trước tuần 10 |
 
-## 15. Nguyên tắc tiến hóa
+## 15. Tiến hóa
 
-Chỉ tách service khi có ít nhất một tín hiệu: ownership độc lập, tải/availability khác biệt rõ, nhu cầu scale riêng hoặc boundary bảo mật bắt buộc. Khi tách, contract event/API phải versioned, có consumer test, idempotency, trace và kế hoạch migration. Không biến dashboard thành hệ thống điều khiển hạ tầng; mọi automation có tác động cần phê duyệt, dry-run, audit và kill switch.
+Chỉ tách service khi có ownership, tải/availability, scaling hoặc security boundary rõ. Khi tách phải version contract, consumer test, idempotency, trace, replay và migration plan. Không biến dashboard thành cơ chế tự động điều khiển xe; automation có tác động cần approval, dry-run, audit và kill switch.

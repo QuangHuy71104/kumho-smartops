@@ -3,8 +3,8 @@ import PortalShell from "./_components/PortalShell";
 import DashboardOverview from "./_components/dashboard/DashboardOverview";
 
 export const metadata: Metadata = {
-  title: "Tổng quan · KSOps",
-  description: "Bảng điều hành IT Ops mô phỏng dành cho đồ án thực tập lập trình viên.",
+  title: "Tổng quan vận tải · KSOps",
+  description: "Bảng điều hành đội xe, đơn vận chuyển và chuyến đi mô phỏng.",
 };
 
 export default function HomePage() {
@@ -12,8 +12,8 @@ export default function HomePage() {
     <PortalShell
       activePath="/"
       eyebrow="Thứ Sáu, 21 tháng 08, 2026"
-      title="Trung tâm điều hành IT"
-      subtitle="Tình trạng vận hành tổng hợp"
+      title="Trung tâm điều phối vận tải"
+      subtitle="Đội xe, đơn hàng và hành trình theo thời gian thực"
     >
       <DashboardOverview />
     </PortalShell>

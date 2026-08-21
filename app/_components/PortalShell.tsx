@@ -5,19 +5,30 @@ import styles from "./PortalShell.module.css";
 
 const navigationSections = [
   {
-    label: "Vận hành",
+    label: "Trung tâm vận hành",
     items: [
       { short: "TQ", label: "Tổng quan", href: "/" },
-      { short: "TS", label: "Tài sản", href: "/tai-san" },
-      { short: "SC", label: "Sự cố", href: "/su-co" },
-      { short: "BT", label: "Bảo trì", href: "/bao-tri" },
-      { short: "GS", label: "Giám sát", href: "/giam-sat" },
-      { short: "TT", label: "Tri thức", href: "/tri-thuc" },
+      { short: "ĐH", label: "Đơn hàng", href: "/don-hang" },
+      { short: "ĐP", label: "Điều phối", href: "/dieu-phoi" },
+      { short: "DX", label: "Đội xe", href: "/doi-xe" },
+      { short: "TX", label: "Tài xế", href: "/tai-xe" },
     ],
   },
   {
-    label: "Dự án",
-    items: [{ short: "KH", label: "Kế hoạch", href: "/ke-hoach" }],
+    label: "Kinh doanh & dịch vụ",
+    items: [
+      { short: "VX", label: "Vé hành khách", href: "/ve-xe" },
+      { short: "HĐ", label: "Hợp đồng xe", href: "/hop-dong" },
+      { short: "KH", label: "Khách hàng", href: "/khach-hang" },
+    ],
+  },
+  {
+    label: "Kiểm soát",
+    items: [
+      { short: "BD", label: "Bảo dưỡng", href: "/bao-duong" },
+      { short: "TC", label: "Tài chính", href: "/tai-chinh" },
+      { short: "BC", label: "Báo cáo", href: "/bao-cao" },
+    ],
   },
 ] as const;
 
@@ -46,18 +57,18 @@ export default function PortalShell({
         Bỏ qua điều hướng
       </a>
 
-      <aside className={styles.sidebar} aria-label="Điều hướng KSOps">
-        <Link className={styles.brand} href="/" aria-label="KSOps - Trang tổng quan">
+      <aside className={styles.sidebar} aria-label="Điều hướng KSOps Transport Control">
+        <Link className={styles.brand} href="/" aria-label="KSOps Transport Control - Trang tổng quan">
           <span className={styles.brandMark} aria-hidden="true">KS</span>
           <span className={styles.brandCopy}>
             <strong>KSOps</strong>
-            <small>IT Service Hub</small>
+            <small>Transport Control</small>
           </span>
         </Link>
 
         <div className={styles.environmentPill}>
           <span className={styles.pulseDot} aria-hidden="true" />
-          Bản demo thực tập
+          Trung tâm điều phối demo
         </div>
 
         <nav className={styles.navigation} aria-label="Điều hướng chính">
@@ -89,8 +100,8 @@ export default function PortalShell({
         <div className={styles.safetyNote}>
           <span className={styles.shield} aria-hidden="true">✓</span>
           <div>
-            <strong>Dữ liệu an toàn</strong>
-            <p>Mọi mã, vị trí và chỉ số đều được tạo riêng cho bản demo.</p>
+            <strong>Dữ liệu mô phỏng</strong>
+            <p>Không sử dụng thông tin xe, khách hàng hoặc hành trình thực tế.</p>
           </div>
         </div>
       </aside>
@@ -108,8 +119,8 @@ export default function PortalShell({
             <span className={styles.demoFlag}>
               <i aria-hidden="true" /> Demo
             </span>
-            <span className={styles.avatar} title="Tài khoản quản trị mẫu" aria-label="Tài khoản quản trị mẫu">
-              DA
+            <span className={styles.avatar} title="Điều phối viên mẫu" aria-label="Điều phối viên mẫu">
+              ĐP
             </span>
           </div>
         </header>
@@ -118,15 +129,15 @@ export default function PortalShell({
           <div className={styles.mockBanner} role="note">
             <span className={styles.mockBadge}>MOCK DATA</span>
             <p>
-              <strong>Môi trường trình diễn độc lập.</strong> Không kết nối, đọc hoặc hiển thị dữ liệu hạ tầng thực tế của doanh nghiệp.
+              <strong>Môi trường trình diễn độc lập.</strong> Toàn bộ xe, tài xế, khách hàng, hành trình và doanh thu đều là dữ liệu giả lập.
             </p>
           </div>
           {children}
         </main>
 
         <footer className={styles.footer}>
-          <p><strong>KSOps</strong> · Đồ án thực tập lập trình viên, không phải hệ thống chính thức.</p>
-          <span>Demo build 1.0</span>
+          <p><strong>KSOps Transport Control</strong> · Đồ án thực tập lập trình viên, không phải hệ thống chính thức.</p>
+          <span>Fleet & order demo</span>
         </footer>
       </div>
     </div>

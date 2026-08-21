@@ -28,8 +28,8 @@ function resolveMetadataBase() {
 }
 
 const metadataBase = resolveMetadataBase();
-const title = "KSOps — IT Service Hub";
-const description = "Bản demo cổng quản trị tài sản, sự cố, bảo trì và giám sát CNTT cho đề tài thực tập lập trình viên.";
+const title = "KSOps — Transport Control";
+const description = "Bản demo quản lý đội xe, đơn vận chuyển, vé hành khách, hợp đồng và điều phối dành cho đề tài thực tập lập trình viên.";
 
 export const metadata: Metadata = {
   metadataBase,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     siteName: "KSOps",
     title,
     description,
-    images: [{ url: "/og.png", width: 1792, height: 907, alt: "KSOps IT Service Hub — Demo thực tập" }],
+    images: [{ url: "/og.png", width: 1659, height: 948, alt: "KSOps Transport Control — Demo quản lý vận tải" }],
   },
   twitter: {
     card: "summary_large_image",

@@ -109,7 +109,7 @@
   50% { box-shadow: 0 0 0 7px rgba(66, 200, 138, 0); }
 }
 
-.navigation { flex: 1; min-height: 0; }
+.navigation { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
 
 .navLabel {
   margin: 14px 12px 8px;
@@ -120,7 +120,7 @@
   text-transform: uppercase;
 }
 
-.projectLabel { margin-top: 24px; }
+.projectLabel { margin-top: 18px; }
 
 .navScroller { display: block; }
 
@@ -362,7 +362,14 @@
 
   .brandMark { width: 36px; height: 36px; border-radius: 10px; }
   .environmentPill, .safetyNote, .navLabel, .projectLabel { display: none; }
-  .navigation { margin-top: 12px; overflow-x: auto; scrollbar-width: thin; }
+  .navigation {
+    margin-top: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .navigation::-webkit-scrollbar { display: none; }
   .navScroller { display: contents; }
   .navigation { display: flex; gap: 4px; }
   .navItem, .navItemActive { flex: 0 0 auto; margin: 0; padding: 8px 10px; font-size: 10px; }

@@ -1,109 +1,117 @@
-# KSOps — IT Service Hub
+# KSOps — Transport Control
 
-KSOps là đồ án thực tập lập trình viên mô phỏng một cổng vận hành CNTT và CMDB (Configuration Management Database): theo dõi tài sản, tiếp nhận sự cố/yêu cầu, lập lịch bảo trì, quan sát sức khỏe dịch vụ và lưu tri thức xử lý.
+KSOps là đồ án thực tập lập trình viên mô phỏng một nền tảng điều hành vận tải hợp nhất: quản lý đội xe, tài xế, đơn vận chuyển hàng hóa, điều phối chuyến, vé hành khách, thuê xe hợp đồng, khách hàng, bảo dưỡng, tài chính và báo cáo.
 
-> **Phạm vi an toàn:** đây là sản phẩm demo phục vụ học tập, không phải hệ thống chính thức của doanh nghiệp. Mọi tên địa điểm, mã yêu cầu, số liệu, người phụ trách và trạng thái trên giao diện đều là dữ liệu giả lập. Repository không chứa IP, hostname, MAC, VLAN, tài khoản, ảnh nội bộ hoặc dữ liệu vận hành thật.
+> **Phạm vi an toàn:** đây là sản phẩm demo phục vụ học tập, không phải hệ thống chính thức của doanh nghiệp. Tất cả biển số, mã đơn, hành trình, người, khách hàng, giá trị tài chính và trạng thái đều là dữ liệu giả lập. Repository không chứa dữ liệu lấy từ tài liệu thực tập, hệ thống bán vé, thiết bị định vị hay hồ sơ nội bộ.
 
-## Hiện trạng
+## Bài toán
 
-Phiên bản hiện tại là ứng dụng Next.js 16 responsive, gồm:
+Một doanh nghiệp vận tải thường phải ghép thông tin từ nhiều luồng: nhu cầu khách hàng, đơn ký gửi, lịch xe, tài xế, ghế hành khách, hợp đồng, bảo dưỡng và đối soát. KSOps trình bày một thiết kế sản phẩm có thể gom các luồng đó vào một nguồn điều hành thống nhất, giúp:
 
-- chỉ số tổng quan tài sản, tuân thủ, sự cố và bảo trì;
-- danh mục 148 tài sản mẫu có tìm kiếm, lọc, sắp xếp, phân trang và xuất CSV;
-- hàng đợi sự cố có SLA, tạo ticket demo, đổi trạng thái và lưu cục bộ trên trình duyệt;
-- lịch bảo trì có checklist cục bộ, cửa sổ thay đổi và kiểm soát nghiệm thu;
-- dashboard giám sát, cảnh báo, service map và biểu đồ CSS dùng telemetry mô phỏng;
-- kho runbook có tìm kiếm, phân loại, quy trình xử lý và vòng đời tài liệu;
-- roadmap 12 tuần, kiến trúc mục tiêu, quality gate, risk register và bộ bàn giao;
-- metadata Open Graph riêng, security headers, semantic HTML và hỗ trợ truy cập;
-- feature-folder architecture với shell/hook dùng chung và pure helper có unit test;
-- pipeline typecheck, lint, build, test và dependency audit trên GitHub Actions.
+- biết xe và tài xế nào đang sẵn sàng;
+- đưa đơn vào đúng chuyến, đúng tải và đúng cam kết giao nhận;
+- phát hiện xung đột điều phối, giấy tờ hoặc lịch bảo dưỡng;
+- truy vết doanh thu/công nợ theo đơn và chuyến;
+- đo tỷ lệ đúng giờ, hiệu suất sử dụng xe và chất lượng dịch vụ.
 
-Database, API, SSO/RBAC và tích hợp giám sát thật không được bật trong bản demo công khai. Ticket và checklist do người xem tạo chỉ lưu trong `localStorage`; thiết kế production được mô tả trong thư mục `docs/`.
+## Phiên bản hiện tại
+
+Ứng dụng Next.js responsive gồm 11 màn hình sản phẩm:
+
+| Route | Năng lực |
+|---|---|
+| `/` | trung tâm điều hành và KPI theo ca |
+| `/don-hang` | đơn hàng hóa, tìm kiếm/lọc, chi tiết, tạo đơn demo và workflow |
+| `/dieu-phoi` | bàn điều phối chuyến, xe, tài xế và cảnh báo xung đột |
+| `/doi-xe` | danh mục xe, trạng thái, tải/ghế và hồ sơ khai thác |
+| `/tai-xe` | ca làm, mức sẵn sàng, giấy phép và tuân thủ |
+| `/ve-xe` | tra cứu chuyến, sơ đồ ghế và đặt chỗ mô phỏng |
+| `/hop-dong` | pipeline báo giá/thuê xe và yêu cầu hợp đồng |
+| `/khach-hang` | hồ sơ CRM và lịch sử giao dịch tổng hợp |
+| `/bao-duong` | work order, lịch, cảnh báo và checklist kỹ thuật |
+| `/tai-chinh` | hóa đơn, công nợ, doanh thu và chi phí khai thác |
+| `/bao-cao` | KPI đa kỳ, hiệu quả dịch vụ/tuyến và xuất CSV |
+
+Các thao tác demo có thể dùng `localStorage` để duy trì trên chính trình duyệt đang xem. Database, API nghiệp vụ, SSO/RBAC, thanh toán và GPS thật không được bật trong bản công khai.
 
 ## Công nghệ
 
-| Lớp | Hiện tại | Định hướng production |
+| Lớp | Bản demo | Định hướng pilot |
 |---|---|---|
-| Giao diện | Next.js 16 App Router, React 19, TypeScript, CSS Modules | Design system, schema validation, E2E và accessibility regression |
-| Runtime | Node.js 22.x, Vercel-compatible | Node runtime theo tải và yêu cầu kết nối dữ liệu |
-| Dữ liệu | Mock trong source + localStorage cho thao tác demo | PostgreSQL + ORM, migration có kiểm soát |
-| Xác thực | Không bật; bản demo công khai không có dữ liệu thật | SSO/OIDC, session bảo mật, RBAC server-side |
-| Quan sát | Telemetry tổng hợp mô phỏng | Structured logs, metrics, traces, alert routing |
-| Triển khai | Next.js native trên Vercel | Preview → staging → production, phê duyệt theo môi trường |
+| Giao diện | Next.js 16 App Router, React 19, TypeScript, CSS Modules | design system, schema form, E2E và accessibility regression |
+| Runtime | Node.js 22.x, Vercel | runtime theo tải, region và data-residency đã phê duyệt |
+| Dữ liệu | fixture synthetic + localStorage | PostgreSQL, migration, outbox và object storage |
+| Danh tính | không bật | OIDC/SSO, MFA theo IdP, RBAC server-side |
+| Tích hợp | không kết nối hệ thống thật | adapter cho vé, GPS, thông báo, thanh toán và kế toán |
+| Quan sát | trạng thái mô phỏng | structured logs, metrics, traces và alert routing |
+
+Mã demo dùng **feature-folder architecture**: mỗi route giữ `_components` và `_lib`; component client chỉ điều phối state/sự kiện; helper nghiệp vụ thuần được kiểm thử độc lập. Kiến trúc production đề xuất là **modular monolith**, tránh chi phí microservice trước khi có bằng chứng về tải hoặc ownership.
 
 ## Chạy cục bộ
 
-Yêu cầu Node.js `22.x` và npm đi kèm.
+Yêu cầu Node.js `22.x` và npm:
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Mở địa chỉ được in trong terminal. Các lệnh kiểm tra trước khi tạo pull request:
+Quality gate trước pull request:
 
 ```bash
-npm run typecheck
-npm run lint
+npm run check
 npm run build
-npm test
+npm audit --audit-level=high
 ```
 
-Không tạo `.env` nếu chưa cần. Khi bổ sung backend, biến môi trường phải được cấp qua secret manager của nền tảng; tuyệt đối không commit secret.
+Không tạo hoặc commit `.env` nếu chưa cần. Khi bổ sung backend, secrets phải nằm trong secret manager của nền tảng.
 
-## Cấu trúc chính
+## Cấu trúc
 
 ```text
-app/                    # giao diện và layout
-lib/                    # type và dữ liệu mô phỏng dùng chung
-public/                 # social preview đã kiểm tra
-tests/                  # automated tests
-docs/                   # kế hoạch và đặc tả kỹ thuật
-.github/workflows/      # CI quality gate
-next.config.ts          # security headers và cấu hình Next.js
-vercel.json             # cấu hình triển khai Vercel
+app/                    # route, feature component và CSS Module
+  _components/          # shell và hành động dùng chung
+  _hooks/               # adapter trạng thái trình duyệt có runtime decoder
+  <feature>/            # page + client orchestration + _components + _lib
+lib/                    # dữ liệu tổng hợp dùng chung
+public/                 # social preview riêng của sản phẩm
+tests/                  # regression, helper, security và data-safety
+docs/                   # kiến trúc, API, bảo mật, test và roadmap
+.github/workflows/      # quality gate CI
 ```
 
-## Triển khai Vercel
+## Triển khai
 
-Repository dùng Next.js native nên Vercel nhận diện trực tiếp. Với tài khoản đã đăng nhập:
+Repository dùng Next.js native và được triển khai trên Vercel. Bản demo không cần biến môi trường. `NEXT_PUBLIC_SITE_URL` hoặc `VERCEL_PROJECT_PRODUCTION_URL` được dùng để tạo canonical/Open Graph URL tại build time.
 
-```bash
-npx vercel@latest --prod
-```
+Với pilot có backend, preview, staging và production phải dùng project/database/secrets riêng. Build một lần, promote cùng artifact, migration có preflight và rollback/forward-fix được diễn tập.
 
-Không cần biến môi trường cho bản demo. Với pilot có backend, tạo project riêng cho preview/staging/production và cấp secret qua Vercel Environment Variables hoặc secret manager được phê duyệt.
+## Quyền riêng tư và dữ liệu
 
-Vercel tự cấp `VERCEL_PROJECT_PRODUCTION_URL` khi bật System Environment Variables; ứng dụng dùng giá trị này để tạo canonical/Open Graph URL ngay lúc build và giữ toàn bộ route ở dạng static. Với custom domain hoặc nền tảng khác, đặt `NEXT_PUBLIC_SITE_URL` thành URL HTTPS đầy đủ trước khi build.
+- Chỉ sử dụng fixture do nhóm tự tạo, với tiền tố như `VEH-DEMO`, `ORD-DEMO`, `TRIP-DEMO`.
+- Không commit danh sách khách hàng, CCCD, bằng lái, số điện thoại, hành trình GPS, biển số thật, vé thật, hóa đơn thật hoặc ảnh nội bộ.
+- Không sao chép địa chỉ, IP, hostname, MAC, VLAN hoặc ảnh nhân viên từ tài liệu thực tập cũ.
+- Không xử lý thẻ thanh toán trong ứng dụng; dùng payment provider có tokenization khi triển khai thật.
+- Khi nghi ngờ lộ dữ liệu: ngắt tích hợp, thu hồi secret, bảo toàn bằng chứng, thông báo owner và xử lý theo runbook; chỉ xóa file trong commit mới là chưa đủ.
 
-Bản trình diễn gửi chỉ thị `noindex, nofollow, noarchive` trong metadata và response header để hạn chế bị hiểu nhầm là hệ thống chính thức; người xem vẫn truy cập bình thường bằng liên kết trực tiếp.
-
-## Tài liệu dự án
+## Tài liệu
 
 - [Kế hoạch phát triển 12 tuần](docs/DEVELOPMENT_PLAN.md)
 - [Kiến trúc hệ thống](docs/ARCHITECTURE.md)
-- [Bảo mật, RBAC và threat model](docs/SECURITY.md)
-- [Hợp đồng API dự kiến](docs/API_SPEC.md)
+- [Bảo mật và threat model](docs/SECURITY.md)
+- [Hợp đồng API mục tiêu](docs/API_SPEC.md)
 - [Chiến lược kiểm thử và UAT](docs/TEST_PLAN.md)
 
 ## Quy trình đóng góp
 
-1. Tạo nhánh `feature/<ticket>-<mo-ta>` hoặc `fix/<ticket>-<mo-ta>` từ nhánh chính đã cập nhật.
-2. Giữ pull request nhỏ, liên kết backlog item, nêu thay đổi, ảnh chụp dữ liệu giả lập và cách kiểm thử.
-3. Chạy lint, build và test cục bộ; CI phải xanh và có ít nhất một lượt review.
-4. Không merge khi còn lỗi mức nghiêm trọng/cao, thiếu migration review hoặc thiếu kế hoạch rollback.
-5. Dùng Conventional Commits, ví dụ `feat(cmdb): add asset filters`.
+1. Tạo nhánh `feature/<ticket>-<mo-ta>` hoặc `fix/<ticket>-<mo-ta>` từ `main` mới nhất.
+2. Mỗi pull request liên kết backlog, có acceptance criteria, ảnh dùng dữ liệu demo và hướng dẫn kiểm thử.
+3. CI phải xanh; thay đổi workflow/permission/migration cần review độc lập.
+4. Không merge khi còn finding critical/high, thiếu authorization test hoặc thiếu kế hoạch rollback.
+5. Dùng Conventional Commits, ví dụ `feat(dispatch): add assignment conflict check`.
 
-Definition of Done chung: acceptance criteria đạt, kiểm thử tự động phù hợp, accessibility không thoái lui, log không lộ dữ liệu nhạy cảm, tài liệu/API/migration được cập nhật và có thể rollback.
+Definition of Done chung: đúng acceptance criteria, test theo rủi ro đạt, responsive/a11y không thoái lui, không lộ dữ liệu, telemetry/audit/tài liệu được cập nhật và có thể rollback.
 
-## Dữ liệu và quyền riêng tư
+## Giới hạn sử dụng
 
-- Chỉ dùng seed/mock do nhóm tự tạo, không sao chép dữ liệu từ tài liệu thực tập hoặc hệ thống công ty.
-- Không commit `.env`, DOC/DOCX, PDF, key/certificate, database dump, log thật hoặc ảnh chụp màn hình nội bộ.
-- Ví dụ định danh phải dùng giá trị hư cấu như `AST-DEMO-0001`, `INC-DEMO-0001` và `user@example.invalid`.
-- Nếu vô tình commit bí mật: dừng sử dụng, thu hồi/rotate ngay, báo người phụ trách và làm sạch lịch sử theo quy trình sự cố; chỉ xóa file khỏi commit mới là chưa đủ.
-
-## Giấy phép và sử dụng
-
-Đồ án nội bộ phục vụ thực tập/học tập. Việc triển khai vào môi trường doanh nghiệp cần được chủ sở hữu hệ thống phê duyệt, đánh giá bảo mật, pháp lý, dữ liệu và vận hành độc lập.
+Đây là đồ án học tập. Việc triển khai vào doanh nghiệp cần phê duyệt riêng về nghiệp vụ, dữ liệu cá nhân, an toàn giao thông, pháp lý, kế toán, thanh toán, tích hợp và vận hành.

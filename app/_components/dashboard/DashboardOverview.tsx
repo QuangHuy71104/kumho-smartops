@@ -1,9 +1,9 @@
 import Link from "next/link";
 import {
   dashboardMetrics,
+  fleetReadiness,
   nextMaintenance,
-  recentIncidents,
-  serviceHealth,
+  recentOrders,
 } from "../../../lib/dashboard-data";
 import styles from "./DashboardOverview.module.css";
 
@@ -22,41 +22,41 @@ function MetricGrid() {
   );
 }
 
-function RecentIncidents() {
+function RecentOrders() {
   return (
-    <section className={`${styles.panel} ${styles.incidentsPanel}`} aria-labelledby="incidents-title">
+    <section className={`${styles.panel} ${styles.ordersPanel}`} aria-labelledby="orders-title">
       <div className={styles.panelHeading}>
         <div>
-          <span className={styles.sectionKicker}>Cần hành động</span>
-          <h2 id="incidents-title">Sự cố gần đây</h2>
+          <span className={styles.sectionKicker}>Luồng công việc hôm nay</span>
+          <h2 id="orders-title">Đơn hàng cần theo dõi</h2>
         </div>
-        <Link href="/su-co">Xem tất cả <span aria-hidden="true">→</span></Link>
+        <Link href="/don-hang">Xem tất cả <span aria-hidden="true">→</span></Link>
       </div>
       <div className={styles.tableWrap}>
         <table>
-          <caption className="sr-only">Ba sự cố gần đây nhất trong dữ liệu mô phỏng</caption>
+          <caption className="sr-only">Ba đơn vận chuyển gần đây nhất trong dữ liệu mô phỏng</caption>
           <thead>
             <tr>
-              <th>Yêu cầu</th>
-              <th>Ưu tiên</th>
+              <th>Đơn vận chuyển</th>
+              <th>Dịch vụ</th>
               <th>Trạng thái</th>
-              <th>Phụ trách</th>
+              <th>ETA</th>
             </tr>
           </thead>
           <tbody>
-            {recentIncidents.map((incident) => (
-              <tr key={incident.id}>
+            {recentOrders.map((order) => (
+              <tr key={order.id}>
                 <td>
-                  <Link href={`/su-co?id=${incident.id}`}>{incident.title}</Link>
-                  <span>{incident.id} · {incident.site}</span>
+                  <Link href={`/don-hang?id=${order.id}`}>{order.title}</Link>
+                  <span>{order.id} · {order.assignee}</span>
                 </td>
                 <td>
-                  <span className={styles.priority} data-priority={incident.priority}>
-                    {incident.priority}
+                  <span className={styles.priority}>
+                    {order.service}
                   </span>
                 </td>
-                <td>{incident.status}</td>
-                <td>{incident.assignee}</td>
+                <td>{order.status}</td>
+                <td>{order.eta}</td>
               </tr>
             ))}
           </tbody>
@@ -66,28 +66,28 @@ function RecentIncidents() {
   );
 }
 
-function ServiceHealthPanel() {
+function FleetReadinessPanel() {
   return (
     <aside className={`${styles.panel} ${styles.healthPanel}`} aria-labelledby="health-title">
       <div className={styles.panelHeading}>
         <div>
-          <span className={styles.sectionKicker}>30 ngày gần nhất</span>
-          <h2 id="health-title">Sức khỏe dịch vụ</h2>
+          <span className={styles.sectionKicker}>Năng lực khai thác</span>
+          <h2 id="health-title">Mức sẵn sàng đội xe</h2>
         </div>
         <span className={styles.statusOk}><i aria-hidden="true" /> Ổn định</span>
       </div>
       <div className={styles.healthScore}>
-        <div className={styles.scoreRing} aria-label="Điểm sức khỏe dịch vụ 99,6 trên 100">
-          <strong>99,6</strong>
-          <span>điểm</span>
+        <div className={styles.scoreRing} aria-label="39 trên 48 xe sẵn sàng">
+          <strong>39/48</strong>
+          <span>xe sẵn sàng</span>
         </div>
         <div>
-          <strong>Trong ngưỡng mục tiêu</strong>
-          <p>Không ghi nhận gián đoạn nghiêm trọng.</p>
+          <strong>Đủ năng lực cho ca hiện tại</strong>
+          <p>Ba xe đang bảo dưỡng, sáu xe chờ điều phối.</p>
         </div>
       </div>
       <div className={styles.serviceList}>
-        {serviceHealth.map((service) => (
+        {fleetReadiness.map((service) => (
           <div className={styles.serviceRow} key={service.name}>
             <div>
               <strong>{service.name}</strong>
@@ -96,7 +96,7 @@ function ServiceHealthPanel() {
             <div
               className={styles.progressTrack}
               role="progressbar"
-              aria-label={`Mức sức khỏe ${service.name}`}
+              aria-label={`Mức sẵn sàng ${service.name}`}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={service.score}
@@ -125,7 +125,7 @@ function MaintenancePreview() {
           <p>{nextMaintenance.time} · {nextMaintenance.site} · {nextMaintenance.owner}</p>
         </div>
       </div>
-      <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/bao-tri">
+      <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/bao-duong">
         Chi tiết công việc
       </Link>
     </section>
@@ -137,21 +137,21 @@ export default function DashboardOverview() {
     <div className={styles.dashboard}>
       <section className={styles.heroPanel} aria-labelledby="welcome-title">
         <div>
-          <span className={styles.sectionKicker}>Tổng quan vận hành</span>
-          <h2 id="welcome-title">Chào buổi sáng, đội ngũ IT.</h2>
-          <p>Hệ thống đang hoạt động ổn định. Hai yêu cầu ưu tiên cao cần được phản hồi trong khung SLA hôm nay.</p>
+          <span className={styles.sectionKicker}>Ca vận hành 21/08</span>
+          <h2 id="welcome-title">Điều phối mọi chuyến đi từ một màn hình.</h2>
+          <p>Theo dõi đội xe, đơn hàng, tài xế và cam kết giao nhận trong cùng một luồng vận hành minh bạch.</p>
         </div>
         <div className={styles.heroActions}>
-          <Link className={`${styles.button} ${styles.buttonPrimary}`} href="/su-co?new=1">+ Tạo yêu cầu</Link>
-          <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/bao-tri">Xem lịch bảo trì</Link>
+          <Link className={`${styles.button} ${styles.buttonPrimary}`} href="/don-hang?new=1">+ Tạo đơn hàng</Link>
+          <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/dieu-phoi">Mở bàn điều phối</Link>
         </div>
       </section>
 
       <MetricGrid />
 
       <div className={styles.dashboardGrid}>
-        <RecentIncidents />
-        <ServiceHealthPanel />
+        <RecentOrders />
+        <FleetReadinessPanel />
       </div>
 
       <MaintenancePreview />

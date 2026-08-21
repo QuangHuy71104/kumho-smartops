@@ -1,437 +1,277 @@
-# Đặc tả API KSOps v1 (đề xuất)
+# KSOps API v1 — đặc tả mục tiêu
 
-## 1. Trạng thái và quy ước
+## 1. Trạng thái
 
-API dưới đây là contract mục tiêu cho giai đoạn pilot, **chưa được triển khai đầy đủ trong bản demo**. Khi bắt đầu backend, OpenAPI 3.1 phải trở thành nguồn chuẩn và được kiểm tra breaking change trong CI.
+API này là contract đề xuất cho pilot; repository demo hiện không chạy backend. Base path: `/api/v1`. JSON UTF-8, timestamp ISO-8601 UTC, tiền là integer minor unit + ISO currency, ID nội bộ UUIDv7/ULID và public code riêng.
 
-- Base path: `/api/v1`
-- Giao thức: HTTPS; JSON UTF-8
-- Media type: `application/json`
-- Timestamp: RFC 3339 UTC, ví dụ `2026-08-21T03:15:00Z`
-- ID: UUID/ULID opaque; client không suy luận thông tin từ ID
-- Mã hiển thị: synthetic trong demo, ví dụ `INC-DEMO-0001`
-- Field name: `camelCase`; enum là `snake_case`
-- Không truyền secret, IP, hostname, MAC, VLAN hoặc dữ liệu nội bộ thật trong fixture/example.
+## 2. Quy ước HTTP
 
-## 2. Authentication, authorization và header
+- `Authorization: Bearer <access token>`; authorization server-side theo permission và data scope.
+- `Idempotency-Key` bắt buộc cho create order/booking/invoice/payment/refund có retry.
+- `If-Match: "<version>"` bắt buộc cho update mutable resource.
+- `X-Request-Id` đầu vào chỉ nhận nếu hợp lệ; server luôn trả request ID trusted.
+- Cursor pagination: `?limit=50&after=<opaque>&sort=-createdAt`; limit tối đa cấu hình.
+- Filter allowlist, không cho client gửi SQL/expression tùy ý.
+- `application/problem+json` cho lỗi.
 
-Ứng dụng browser ưu tiên session `HttpOnly` same-origin. Machine integration dùng OAuth2 access token có audience/scope hẹp khi được phê duyệt. API không chấp nhận role/scope do client tự khai.
+Status chính: `200`, `201`, `202`, `204`, `400`, `401`, `403`, `404`, `409`, `412`, `422`, `429`, `503`.
 
-### Request header
+```json
+{
+  "type": "https://errors.example.invalid/dispatch-conflict",
+  "title": "Không thể phân công chuyến",
+  "status": 409,
+  "code": "DISPATCH_CONFLICT",
+  "detail": "Xe hoặc tài xế đã có lịch chồng lấn.",
+  "requestId": "req_demo_01",
+  "errors": [{ "field": "driverId", "code": "OVERLAP" }]
+}
+```
 
-| Header | Bắt buộc | Mục đích |
-|---|---:|---|
-| `Accept: application/json` | nên có | content negotiation |
-| `Content-Type: application/json` | với body JSON | kiểu payload |
-| `X-Request-ID` | tùy chọn | correlation ID hợp lệ; server có thể thay thế |
-| `Idempotency-Key` | create/action có retry | ngăn xử lý lặp; UUID ngẫu nhiên |
-| `If-Match` | update mutable resource | optimistic concurrency bằng ETag/version |
-| `X-CSRF-Token` | write dùng cookie session | chống CSRF |
+Không trả stack trace, SQL, policy internals, PII của resource khác hoặc existence detail khi caller không có quyền.
 
-### Response header
+## 3. Resource map
 
-| Header | Ý nghĩa |
+| Domain | Endpoint chính |
 |---|---|
-| `X-Request-ID` | ID dùng khi hỗ trợ/tra log |
-| `ETag` | version của resource, ví dụ `"7"` |
-| `Location` | URI resource vừa tạo |
-| `Retry-After` | thời gian retry với `429`/`503` khi xác định được |
+| Fleet | `/vehicle-types`, `/vehicles`, `/vehicles/{id}/documents`, `/vehicles/{id}/history` |
+| Driver | `/drivers`, `/drivers/{id}/qualifications`, `/driver-shifts` |
+| Cargo | `/cargo-orders`, `/cargo-orders/{id}/events`, `/cargo-orders/{id}/proof-of-delivery` |
+| Dispatch | `/routes`, `/trips`, `/trips/{id}/assignments`, `/trips/{id}/manifest` |
+| Passenger | `/trip-search`, `/seat-holds`, `/bookings`, `/bookings/{id}/cancel` |
+| Contract | `/rental-requests`, `/quotations`, `/contracts` |
+| Maintenance | `/maintenance-orders`, `/maintenance-schedules`, `/parts` |
+| CRM | `/customers`, `/customers/{id}/timeline`, `/complaints` |
+| Billing | `/invoices`, `/payments`, `/refunds`, `/reconciliation-runs` |
+| Reporting | `/reports/operations`, `/reports/finance`, `/exports` |
+| Identity/Audit | `/me`, `/roles`, `/permissions`, `/audit-events` |
 
-Authorization chạy ở object/action/scope level. Record ngoài scope trả `404` khi cần tránh existence oracle; `403` dành cho tài nguyên đã công khai sự tồn tại nhưng caller thiếu hành động.
+## 4. Fleet
 
-## 3. Response chuẩn
+### `POST /vehicles`
 
-### Một resource
+Permission `vehicle:create`; idempotent.
 
 ```json
 {
-  "data": {
-    "id": "01KSO...DEMO",
-    "displayId": "INC-DEMO-0001",
-    "version": 3
-  },
-  "meta": {
-    "requestId": "req_demo_01"
-  }
+  "displayCode": "VEH-DEMO-0048",
+  "vehicleTypeId": "vtype_01",
+  "registrationRef": "encrypted-or-tokenized-reference",
+  "seatCapacity": 45,
+  "cargoCapacityKg": 1200,
+  "status": "available",
+  "homeDepotId": "depot_demo_01"
 }
 ```
 
-### Danh sách phân trang cursor
+Server kiểm tra public code, type/capacity, trạng thái và reference uniqueness. Response `201` có `Location`, `version`, timestamps.
+
+### `PATCH /vehicles/{id}`
+
+`If-Match` bắt buộc. Cho phép trường allowlist. Status transition theo policy; không cho `maintenance → available` nếu work order chưa sign-off.
+
+### `GET /vehicles?status=available&type=coach&availableFrom=...&availableTo=...`
+
+Kết quả availability phải tính trip overlap, maintenance downtime, document policy và lock; không chỉ đọc cột status.
+
+## 5. Driver và ca
+
+### `POST /driver-shifts`
 
 ```json
 {
-  "data": [],
-  "page": {
-    "nextCursor": null,
-    "hasMore": false,
-    "limit": 25
-  },
-  "meta": {
-    "requestId": "req_demo_02"
-  }
+  "driverId": "drv_01",
+  "startsAt": "2026-08-22T00:00:00Z",
+  "endsAt": "2026-08-22T08:00:00Z",
+  "baseLocationId": "depot_demo_01"
 }
 ```
 
-Quy ước query:
+Validation: `endsAt > startsAt`, max duration/rest policy, no overlap, qualification/document validity. PII hồ sơ tài xế không nằm trong response danh sách mặc định.
 
-- `limit`: mặc định 25, tối đa 100;
-- `cursor`: opaque, không sửa/giải mã phía client;
-- `sort`: allowlist, ví dụ `-createdAt,displayId` (`-` là giảm dần);
-- filter rõ tên, ví dụ `status=open&priority=high`; không hỗ trợ SQL-like expression tùy ý;
-- date range có giới hạn; tìm kiếm `q` được normalize và giới hạn độ dài.
+## 6. Cargo order
 
-### Error envelope
+### `POST /cargo-orders`
+
+Permission `cargo-order:create`; `Idempotency-Key` bắt buộc.
 
 ```json
 {
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Dữ liệu gửi lên chưa hợp lệ.",
-    "details": [
-      {
-        "field": "priority",
-        "code": "invalid_enum",
-        "message": "Giá trị không được hỗ trợ."
-      }
-    ]
-  },
-  "meta": {
-    "requestId": "req_demo_03"
-  }
-}
-```
-
-Client message không chứa stack, SQL, path, secret hoặc chi tiết object ngoài quyền. `details` chỉ trả field caller đã gửi/được phép biết.
-
-### Status và error code
-
-| HTTP | Code điển hình | Khi dùng |
-|---:|---|---|
-| 200 | — | đọc/cập nhật/action thành công |
-| 201 | — | tạo resource; có `Location` |
-| 202 | — | job/export được nhận |
-| 204 | — | thao tác thành công không body |
-| 400 | `INVALID_REQUEST` | JSON/query/header sai định dạng |
-| 401 | `AUTHENTICATION_REQUIRED`, `SESSION_EXPIRED` | chưa/xác thực không còn hợp lệ |
-| 403 | `FORBIDDEN` | thiếu permission đã xác định |
-| 404 | `NOT_FOUND` | không tồn tại hoặc bị che theo scope |
-| 409 | `CONFLICT`, `INVALID_TRANSITION`, `DUPLICATE_RESOURCE` | xung đột trạng thái/unique |
-| 412 | `VERSION_MISMATCH` | `If-Match` cũ/thiếu theo policy |
-| 413 | `PAYLOAD_TOO_LARGE` | body/file vượt giới hạn |
-| 415 | `UNSUPPORTED_MEDIA_TYPE` | kiểu nội dung không hỗ trợ |
-| 422 | `VALIDATION_ERROR` | schema hợp lệ cú pháp nhưng sai rule |
-| 429 | `RATE_LIMITED` | vượt hạn mức |
-| 500 | `INTERNAL_ERROR` | lỗi không dự kiến, message tổng quát |
-| 503 | `DEPENDENCY_UNAVAILABLE` | dependency tạm thời unavailable |
-
-## 4. Idempotency và concurrency
-
-- `POST` tạo incident, maintenance, import, export và notification retry dùng `Idempotency-Key`.
-- Server lưu fingerprint method/path/principal/body cùng response trong TTL. Cùng key + cùng payload trả lại kết quả; cùng key + payload khác trả `409 IDEMPOTENCY_KEY_REUSED`.
-- Resource mutable trả `ETag: "<version>"`. `PATCH/PUT/transition` bắt buộc `If-Match`; mismatch trả `412` kèm current version nhưng không lộ field ngoài quyền.
-- Bulk operation là job; mỗi item có kết quả riêng, không hứa transaction toàn bộ nếu contract không ghi rõ.
-
-## 5. User/session
-
-### `GET /me`
-
-Trả identity tối thiểu và effective permissions để dựng UI. Không dùng response này thay authorization server-side.
-
-```json
-{
-  "data": {
-    "id": "usr_demo_01",
-    "displayName": "Demo User",
-    "email": "user@example.invalid",
-    "roles": ["service_agent"],
-    "permissions": ["incident:read", "incident:update"],
-    "scopes": [{ "type": "team", "id": "team_demo_01" }]
-  },
-  "meta": { "requestId": "req_demo_04" }
-}
-```
-
-### `POST /session/logout`
-
-Thu hồi session hiện tại, trả `204`. Với cookie session cần CSRF protection.
-
-## 6. Asset/CMDB
-
-### Asset representation
-
-```json
-{
-  "id": "ast_demo_01",
-  "displayId": "AST-DEMO-0001",
-  "name": "Thiết bị mẫu 01",
-  "type": { "id": "aty_demo_01", "name": "Thiết bị đầu cuối" },
-  "status": "in_service",
-  "criticality": "medium",
-  "ownerTeamId": "team_demo_01",
-  "siteId": "site_demo_01",
-  "tags": ["demo"],
-  "attributes": {},
-  "version": 4,
-  "createdAt": "2026-08-01T00:00:00Z",
-  "updatedAt": "2026-08-20T08:30:00Z"
-}
-```
-
-`attributes` phải được validate theo asset type schema, có allowlist và giới hạn dung lượng. Demo không thêm field định danh hạ tầng nhạy cảm.
-
-| Method/path | Permission | Mô tả |
-|---|---|---|
-| `GET /assets` | `asset:read` | list/filter `q,typeId,status,criticality,ownerTeamId,siteId` |
-| `POST /assets` | `asset:create` | tạo asset; idempotent |
-| `GET /assets/{assetId}` | `asset:read` + scope | chi tiết và link được phép |
-| `PATCH /assets/{assetId}` | `asset:update` + scope | partial update, cần `If-Match` |
-| `POST /assets/{assetId}/archive` | `asset:archive` | chuyển trạng thái, không hard delete |
-| `GET /assets/{assetId}/history` | `asset:history:read` | lịch sử thay đổi đã redact |
-| `GET /asset-types` | `asset:read` | danh mục type/schema |
-| `POST /asset-types` | `asset_type:manage` | tạo type có schema version |
-
-### Relationship
-
-```json
-{
-  "sourceAssetId": "ast_demo_01",
-  "targetAssetId": "ast_demo_02",
-  "relationshipType": "depends_on",
-  "validFrom": "2026-08-21T00:00:00Z",
-  "note": "Quan hệ mô phỏng"
-}
-```
-
-| Method/path | Permission | Ghi chú |
-|---|---|---|
-| `GET /assets/{assetId}/relationships` | `asset:read` | chỉ trả target caller được xem |
-| `POST /assets/{assetId}/relationships` | `asset_relationship:create` | chặn self-link/duplicate/cycle theo loại |
-| `DELETE /asset-relationships/{relationshipId}` | `asset_relationship:delete` | ghi audit, trả `204` |
-
-### Import
-
-`POST /asset-imports` tạo job import synthetic CSV sau upload/quarantine. Body gồm `objectKey`, `dryRun` và `mappingVersion`. Trả `202` cùng job URI. `GET /asset-imports/{jobId}` trả counts `received/valid/invalid/created/updated` và error file ngắn hạn đã phân quyền. Không hỗ trợ `upsert` mặc định nếu unique key chưa rõ.
-
-## 7. Incident và service request
-
-### Incident representation
-
-```json
-{
-  "id": "inc_demo_01",
-  "displayId": "INC-DEMO-0001",
-  "type": "incident",
-  "title": "Yêu cầu hỗ trợ mô phỏng",
-  "description": "Nội dung chỉ dùng cho demo.",
-  "priority": "medium",
-  "status": "triaged",
-  "requesterId": "usr_demo_01",
-  "assigneeId": null,
-  "assignmentGroupId": "team_demo_01",
-  "affectedAssetIds": ["ast_demo_01"],
-  "sla": {
-    "responseDueAt": "2026-08-21T06:00:00Z",
-    "resolutionDueAt": "2026-08-22T03:00:00Z",
-    "state": "running"
-  },
-  "version": 2,
-  "createdAt": "2026-08-21T03:00:00Z",
-  "updatedAt": "2026-08-21T03:10:00Z"
-}
-```
-
-Priority enum: `low | medium | high | critical`. Status tối thiểu: `new | triaged | in_progress | pending | resolved | closed | cancelled`. Transition matrix là rule server-side; `closed` không quay lại nếu không có action `reopen` được phép.
-
-| Method/path | Permission | Mô tả |
-|---|---|---|
-| `GET /incidents` | `incident:read` | list theo own/scope; filter status/priority/team/date/SLA |
-| `POST /incidents` | `incident:create` | tạo ticket; idempotent; server đặt requester từ session |
-| `GET /incidents/{incidentId}` | `incident:read` + object scope | chi tiết đã lọc field |
-| `PATCH /incidents/{incidentId}` | `incident:update` + scope | sửa field allowlist; `If-Match` |
-| `POST /incidents/{incidentId}/transitions` | `incident:transition` | action explicit, không PATCH status trực tiếp |
-| `POST /incidents/{incidentId}/assignments` | `incident:assign` | gán user/team hợp lệ trong scope |
-| `GET /incidents/{incidentId}/events` | `incident:history:read` | timeline immutable, phân trang |
-| `GET /incidents/{incidentId}/comments` | `incident:read` | lọc internal/public theo permission |
-| `POST /incidents/{incidentId}/comments` | `incident:comment` | plain text/markdown sanitize, idempotent |
-
-Transition request:
-
-```json
-{
-  "action": "start_progress",
-  "reason": "Bắt đầu xử lý bản ghi demo"
-}
-```
-
-Assignment request không cho caller chỉ định arbitrary scope:
-
-```json
-{
-  "assigneeId": "usr_demo_02",
-  "assignmentGroupId": "team_demo_01",
-  "reason": "Phân công theo queue mô phỏng"
-}
-```
-
-## 8. Maintenance
-
-```json
-{
-  "title": "Bảo trì định kỳ mô phỏng",
-  "description": "Checklist demo, không chứa cấu hình thật.",
-  "assetIds": ["ast_demo_01"],
-  "ownerTeamId": "team_demo_01",
-  "scheduledStartAt": "2026-08-24T02:00:00Z",
-  "scheduledEndAt": "2026-08-24T04:00:00Z",
-  "timezone": "Asia/Ho_Chi_Minh",
-  "checklist": [
-    { "id": "step_demo_01", "title": "Xác nhận phạm vi demo", "required": true }
-  ]
-}
-```
-
-| Method/path | Permission | Mô tả |
-|---|---|---|
-| `GET /maintenance` | `maintenance:read` | list/calendar, range bị giới hạn |
-| `POST /maintenance` | `maintenance:create` | tạo lịch; cảnh báo conflict |
-| `GET /maintenance/{maintenanceId}` | `maintenance:read` | chi tiết/checklist/result |
-| `PATCH /maintenance/{maintenanceId}` | `maintenance:update` | cần `If-Match` |
-| `POST /maintenance/{maintenanceId}/transitions` | `maintenance:transition` | schedule/start/complete/cancel |
-| `POST /maintenance/{maintenanceId}/checklist/{itemId}/complete` | `maintenance:execute` | actor/time/result immutable event |
-
-## 9. Knowledge base
-
-Status: `draft | in_review | published | archived`. Revision đã publish là immutable; edit tạo revision mới.
-
-| Method/path | Permission | Mô tả |
-|---|---|---|
-| `GET /knowledge-articles` | public/internal theo policy | list/search published; agent thấy draft trong scope |
-| `POST /knowledge-articles` | `knowledge:create` | tạo draft |
-| `GET /knowledge-articles/{articleId}` | `knowledge:read` | revision phù hợp quyền |
-| `PATCH /knowledge-articles/{articleId}` | `knowledge:update` | cập nhật draft, `If-Match` |
-| `POST /knowledge-articles/{articleId}/submit-review` | `knowledge:submit` | gửi duyệt |
-| `POST /knowledge-articles/{articleId}/publish` | `knowledge:publish` | publish revision, audit |
-| `POST /knowledge-articles/{articleId}/archive` | `knowledge:archive` | ngừng công bố |
-| `GET /knowledge-articles/{articleId}/revisions` | `knowledge:history:read` | lịch sử phiên bản |
-
-Nội dung markdown có size limit, sanitize phía render và không hỗ trợ HTML/script tùy ý.
-
-## 10. Service health và dashboard
-
-Đây là read model; mọi metric trả `observedAt`, `freshness` và nguồn dạng logical name, không lộ endpoint monitoring.
-
-### `GET /service-health`
-
-Filter: `serviceId`, `from`, `to`; range mặc định/ngưỡng tối đa theo policy.
-
-```json
-{
-  "data": [
+  "customerId": "cus_demo_12",
+  "senderContactRef": "contact_token_sender",
+  "receiverContactRef": "contact_token_receiver",
+  "originLocationId": "loc_demo_origin",
+  "destinationLocationId": "loc_demo_destination",
+  "serviceLevel": "same-day",
+  "paymentMethod": "prepaid",
+  "declaredValue": { "amount": 240000000, "currency": "VND" },
+  "parcels": [
     {
-      "serviceId": "svc_demo_01",
-      "name": "Dịch vụ mô phỏng",
-      "status": "healthy",
-      "score": 99.6,
-      "freshness": "fresh",
-      "observedAt": "2026-08-21T03:10:00Z"
+      "category": "consumer-goods",
+      "quantity": 2,
+      "weightGrams": 12500,
+      "dimensionsMm": { "length": 500, "width": 350, "height": 300 },
+      "fragile": false
     }
   ],
-  "meta": { "requestId": "req_demo_05" }
+  "prohibitedItemAcknowledged": true
 }
 ```
 
-Status: `healthy | degraded | unavailable | unknown`; `unknown` được dùng khi nguồn stale/unavailable, không tái sử dụng giá trị cũ mà thiếu nhãn.
+Response chứa `pricingSnapshot`, volumetric weight, SLA, public code và status `draft|quoted|confirmed`. Không echo contact plaintext nếu caller thiếu `cargo-order:read-pii`.
 
-### `GET /dashboard/summary`
+### `POST /cargo-orders/{id}/transitions`
 
-Query `from`, `to`, `scopeId` (scopeId vẫn được kiểm tra quyền). Trả KPI kèm `definitionVersion`, `calculatedAt`, `dataThrough` và filter đã áp dụng để có thể đối soát.
+```json
+{ "to": "loaded", "reasonCode": "MANIFEST_CONFIRMED", "occurredAt": "2026-08-21T10:20:00Z" }
+```
 
-## 11. Admin, role và audit
+Server quyết định allowed transition, actor, authoritative timestamp và trip/manifest condition. Event history immutable.
 
-| Method/path | Permission | Mô tả |
-|---|---|---|
-| `GET /admin/users` | `identity:read` | user mapping tối thiểu; không trả token |
-| `GET /admin/roles` | `role:read` | role/permission catalog |
-| `POST /admin/user-role-assignments` | `role:assign` | assignment có scope/expiry; re-auth |
-| `DELETE /admin/user-role-assignments/{id}` | `role:revoke` | revoke và invalidation session/policy |
-| `GET /audit-events` | `audit:read` | filter actor/action/resource/time/outcome theo mandate |
-| `POST /exports` | permission theo resource | tạo export job, có justification |
-| `GET /exports/{exportId}` | requester + scope | trạng thái và signed download URL ngắn hạn |
+### `POST /cargo-orders/{id}/proof-of-delivery`
 
-Role assignment request:
+Hai bước: xin signed upload → scan/quarantine → commit metadata. Không nhận raw file trong JSON. POD reveal có permission và retention.
+
+## 7. Trip và dispatch
+
+### `POST /trips`
 
 ```json
 {
-  "userId": "usr_demo_02",
-  "roleId": "role_service_agent",
-  "scope": { "type": "team", "id": "team_demo_01" },
-  "expiresAt": "2026-09-30T17:00:00Z",
-  "justification": "Phân quyền cho pilot mô phỏng"
+  "routeId": "route_demo_01",
+  "serviceType": "cargo",
+  "plannedDepartureAt": "2026-08-22T01:00:00Z",
+  "plannedArrivalAt": "2026-08-22T09:00:00Z",
+  "vehicleId": "veh_48",
+  "primaryDriverId": "drv_17"
 }
 ```
 
-Audit API là read-only; không cung cấp update/delete. Export audit phải có mandate, giới hạn thời gian, row cap và event audit riêng.
+Transaction kiểm tra vehicle/driver overlap, availability, qualification, maintenance/documents và capacity. Conflict trả `409 DISPATCH_CONFLICT` kèm field/retryable detail không lộ lịch ngoài scope.
 
-## 12. Job và attachment
+### `PATCH /trips/{id}/assignments`
 
-### Job
+`If-Match` bắt buộc. Override mềm:
 
-`GET /jobs/{jobId}` trả:
+```json
+{ "vehicleId": "veh_42", "override": { "reasonCode": "MANAGER_APPROVED_SWAP", "expiresAt": "..." } }
+```
+
+Server yêu cầu `trip:override`; hard safety constraint không override được.
+
+### `POST /trips/{id}/manifest-items`
+
+Idempotent theo order/booking+trip. Capacity/seat inventory update cùng transaction; load/unload/check-in tạo audit.
+
+## 8. Passenger booking
+
+### `GET /trip-search?origin=...&destination=...&date=2026-08-22&passengers=2`
+
+Chỉ trả inventory aggregate và ghế/giá khả dụng theo scope công khai, không trả hành khách khác.
+
+### `POST /seat-holds`
+
+```json
+{ "tripId": "trip_demo_01", "seatCodes": ["A01", "A02"] }
+```
+
+Atomic hold trong store có TTL. Response:
+
+```json
+{ "holdId": "hold_demo_01", "expiresAt": "2026-08-21T11:10:00Z", "priceSnapshot": { "amount": 76000000, "currency": "VND" } }
+```
+
+### `POST /bookings`
 
 ```json
 {
-  "data": {
-    "id": "job_demo_01",
-    "type": "asset_import",
-    "status": "completed",
-    "progress": { "processed": 10, "total": 10 },
-    "result": { "created": 9, "invalid": 1 },
-    "createdAt": "2026-08-21T03:00:00Z",
-    "completedAt": "2026-08-21T03:01:00Z"
-  },
-  "meta": { "requestId": "req_demo_06" }
+  "holdId": "hold_demo_01",
+  "customerId": "cus_demo_09",
+  "passengers": [{ "seatCode": "A01", "displayName": "Hành khách 1" }],
+  "paymentMethod": "provider-token"
 }
 ```
 
-Status: `queued | running | completed | failed | cancelled`. Error được sanitize; retry nội bộ không tạo duplicate nhờ idempotency.
+Transaction xác nhận hold/pricing/seat; booking ban đầu `payment_pending`. Payment callback signed/idempotent chuyển `confirmed`; unique constraint chống double sale.
 
-### Attachment two-step flow
+### `POST /bookings/{id}/cancel`
 
-1. `POST /attachments/intents`: khai metadata filename/size/mediaType/resource type; server validate permission và trả signed quarantine upload URL.
-2. Client upload trực tiếp.
-3. `POST /attachments/{attachmentId}/complete`: xác nhận checksum; server enqueue scan.
-4. `GET /attachments/{attachmentId}`: chỉ trả signed download khi status `available` và caller còn quyền resource.
+Snapshot policy quyết định fee/refund. High-value/manual refund dùng maker-checker.
 
-Status: `pending_upload | quarantined | scanning | available | rejected | expired`. Không cho client tự đặt object key/status.
+## 9. Rental request, quote và contract
 
-## 13. Webhook/integration (sau pilot)
+### `POST /rental-requests`
 
-Nếu cần outbound webhook:
+```json
+{
+  "customerId": "cus_demo_22",
+  "purpose": "employee-shuttle",
+  "pickupLocationId": "loc_demo_a",
+  "destinationLocationId": "loc_demo_b",
+  "startsAt": "2026-09-01T00:00:00Z",
+  "endsAt": "2026-09-30T12:00:00Z",
+  "passengerCount": 40,
+  "vehicleNeeds": [{ "type": "coach-45", "quantity": 1 }]
+}
+```
 
-- endpoint do admin chọn từ allowlist/integration catalog, không nhận URL tùy ý từ ticket;
-- payload versioned, ID opaque, dữ liệu tối thiểu; HMAC signature có timestamp và replay window;
-- retry exponential backoff, DLQ, delivery log đã redact và manual replay có audit;
-- event ví dụ: `incident.created.v1`, `incident.status_changed.v1`, `maintenance.scheduled.v1`;
-- không bảo đảm exactly-once; consumer deduplicate theo `eventId`.
+### `POST /quotations`
 
-Inbound integration dùng OAuth client credential/mTLS khi được duyệt, scope riêng cho từng adapter, rate limit và schema validation. Không dùng shared admin API key.
+Tạo revision bất biến với line items/tax/validity/terms snapshot. `POST /quotations/{id}/approve` theo threshold. Accept tạo contract; không update revision đã gửi.
 
-## 14. Versioning và compatibility
+## 10. Maintenance
 
-- Breaking change tạo major base path mới (`/api/v2`) hoặc theo policy OpenAPI được duyệt.
-- Additive optional field là compatible; client phải bỏ qua field không biết.
-- Không đổi semantics enum hiện có. Thêm enum value được coi là có rủi ro và cần consumer review.
-- Deprecation công bố trong tài liệu/header, có telemetry consumer và tối thiểu một chu kỳ release được thống nhất.
-- Database schema không phải public contract; response DTO tách khỏi ORM entity.
+### `POST /maintenance-orders`
 
-## 15. Contract verification
+Trigger `scheduled|odometer|inspection|defect`. Khi open/in-progress, downtime cập nhật availability. Checklist definition versioned; result có actor/time/evidence metadata. Close yêu cầu sign-off và điều kiện an toàn.
 
-CI tương lai cần:
+### `POST /vehicles/{id}/odometer-readings`
 
-- validate/lint OpenAPI và generate type ở chế độ kiểm tra drift;
-- breaking-change diff với version trên nhánh chính;
-- request/response schema test cho success và mọi error quan trọng;
-- consumer contract test cho adapter;
-- authorization matrix test, IDOR, pagination stability, idempotency và ETag;
-- fuzz/property test cho filter, transition và payload boundary;
-- đảm bảo example chỉ dùng domain `.invalid` và ID synthetic.
+Idempotent theo source/event ID; kiểm tra timestamp, monotonic/anomaly. Odometer không giảm nếu không có correction permission+audit.
+
+## 11. Billing và payment
+
+### `POST /invoices`
+
+Invoice lines snapshot từ order/booking/contract; tổng tiền server tính. Issued invoice không sửa line trực tiếp, dùng credit/debit adjustment.
+
+### `POST /payment-webhooks/{provider}`
+
+Không dùng bearer user token. Xác minh provider signature, timestamp, event ID, amount/currency/reference; log redact; xử lý idempotent; luôn đối soát asynchronous.
+
+### `POST /refunds`
+
+Permission, limit, maker-checker và idempotency. Response có trạng thái `requested|approved|processing|succeeded|failed`, không giả định synchronous.
+
+## 12. Reporting và export
+
+`GET /reports/operations?from=...&to=...&timezone=Asia/Ho_Chi_Minh` trả metric cùng `definitionVersion`, `generatedAt`, `freshness` và filter đã chuẩn hóa.
+
+Bulk export dùng `POST /exports` → `202`; job giới hạn cột/scope/time range, tạo file CSV đã chống formula injection, mã hóa, signed URL ngắn hạn, retention ngắn và audit download.
+
+## 13. Audit
+
+`GET /audit-events` chỉ cho auditor/admin scope. Cursor pagination, filter allowlist. Không có endpoint update/delete. Export audit là audit event mới.
+
+Event mẫu:
+
+```json
+{
+  "id": "aud_demo_01",
+  "occurredAt": "2026-08-21T10:20:00Z",
+  "actorId": "usr_pseudo_17",
+  "action": "trip.assignment.changed",
+  "resource": { "type": "trip", "id": "trip_demo_01" },
+  "outcome": "success",
+  "requestId": "req_demo_01",
+  "changes": [{ "field": "vehicleId", "from": "veh_pseudo_40", "to": "veh_pseudo_42" }]
+}
+```
+
+## 14. Compatibility và deprecation
+
+- Breaking change tạo API version mới hoặc compatibility window đã công bố.
+- Field mới optional; enum mở rộng cần client xử lý unknown an toàn.
+- Deprecation có header/tài liệu/telemetry và sunset date.
+- Consumer contract tests cho payment/GPS/ERP/notification adapter.
+- Không xóa field/schema trong cùng release với client migration; dùng expand→migrate→contract.
