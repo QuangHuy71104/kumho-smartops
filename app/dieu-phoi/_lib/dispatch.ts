@@ -18,6 +18,8 @@ export type DispatchTask = {
   routeCode: string;
   origin: string;
   destination: string;
+  vehicleId: string | null;
+  driverId: string | null;
   vehicleAlias: string;
   driverAlias: string;
   capacityLabel: string;
@@ -37,21 +39,31 @@ export type DispatchFilters = {
   shift: DispatchShift | "Tất cả ca";
 };
 
-export const demoVehicles = [
-  "Xe mẫu 01 · 29 chỗ",
-  "Xe mẫu 02 · 45 chỗ",
-  "Xe mẫu 03 · tải nhẹ",
-  "Xe mẫu 04 · tải trung",
-  "Xe mẫu 05 · hợp đồng",
+export const demoVehicleOptions = [
+  { id: "DX-DEMO-029-01", label: "Xe mẫu 01 · 29 chỗ" },
+  { id: "DX-DEMO-045-01", label: "Xe mẫu 02 · 45 chỗ" },
+  { id: "DX-DEMO-HH-03", label: "Xe mẫu 03 · tải nhẹ" },
+  { id: "DX-DEMO-HH-01", label: "Xe mẫu 04 · tải trung" },
+  { id: "DX-DEMO-045-02", label: "Xe mẫu 05 · hợp đồng" },
 ] as const;
 
-export const demoDrivers = [
-  "Tài xế demo A",
-  "Tài xế demo B",
-  "Tài xế demo C",
-  "Tài xế demo D",
-  "Tài xế demo E",
+export const demoDriverOptions = [
+  { id: "TX-DEMO-001", label: "Tài xế demo A" },
+  { id: "TX-DEMO-002", label: "Tài xế demo B" },
+  { id: "TX-DEMO-003", label: "Tài xế demo C" },
+  { id: "TX-DEMO-004", label: "Tài xế demo D" },
+  { id: "TX-DEMO-005", label: "Tài xế demo E" },
 ] as const;
+
+export const demoVehicles = demoVehicleOptions.map((vehicle) => vehicle.label);
+export const demoDrivers = demoDriverOptions.map((driver) => driver.label);
+
+function resourceIdForAlias(
+  options: readonly { id: string; label: string }[],
+  alias: string,
+) {
+  return options.find((option) => option.label === alias)?.id ?? null;
+}
 
 export const demoDispatchTasks: DispatchTask[] = [
   {
@@ -63,6 +75,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "CD-MAU-01",
     origin: "TP. Hồ Chí Minh",
     destination: "Bà Rịa – Vũng Tàu",
+    vehicleId: "DX-DEMO-045-01",
+    driverId: "TX-DEMO-001",
     vehicleAlias: "Xe mẫu 02 · 45 chỗ",
     driverAlias: "Tài xế demo A",
     capacityLabel: "38 / 45 ghế",
@@ -83,6 +97,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "HH-MAU-07",
     origin: "Bình Dương",
     destination: "Tây Ninh",
+    vehicleId: "DX-DEMO-HH-01",
+    driverId: "TX-DEMO-002",
     vehicleAlias: "Xe mẫu 04 · tải trung",
     driverAlias: "Tài xế demo B",
     capacityLabel: "3.680 / 4.000 kg",
@@ -103,6 +119,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "HD-MAU-03",
     origin: "TP. Hồ Chí Minh",
     destination: "Long An",
+    vehicleId: null,
+    driverId: null,
     vehicleAlias: "Chưa gán xe",
     driverAlias: "Chưa gán tài xế",
     capacityLabel: "24 / 29 ghế dự kiến",
@@ -123,6 +141,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "HH-MAU-09",
     origin: "Đồng Nai",
     destination: "Bình Phước",
+    vehicleId: "DX-DEMO-HH-03",
+    driverId: "TX-DEMO-003",
     vehicleAlias: "Xe mẫu 03 · tải nhẹ",
     driverAlias: "Tài xế demo C",
     capacityLabel: "1.420 / 2.000 kg",
@@ -143,6 +163,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "CD-MAU-04",
     origin: "Tây Ninh",
     destination: "TP. Hồ Chí Minh",
+    vehicleId: "DX-DEMO-029-01",
+    driverId: "TX-DEMO-004",
     vehicleAlias: "Xe mẫu 01 · 29 chỗ",
     driverAlias: "Tài xế demo D",
     capacityLabel: "27 / 29 ghế",
@@ -163,6 +185,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "HD-MAU-06",
     origin: "Biên Hòa, Đồng Nai",
     destination: "TP. Hồ Chí Minh",
+    vehicleId: "DX-DEMO-045-02",
+    driverId: "TX-DEMO-005",
     vehicleAlias: "Xe mẫu 05 · hợp đồng",
     driverAlias: "Tài xế demo E",
     capacityLabel: "31 / 45 ghế",
@@ -183,6 +207,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "HH-MAU-12",
     origin: "Long An",
     destination: "Tiền Giang",
+    vehicleId: null,
+    driverId: null,
     vehicleAlias: "Chưa gán xe",
     driverAlias: "Chưa gán tài xế",
     capacityLabel: "1.760 / 2.000 kg dự kiến",
@@ -203,6 +229,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "CD-MAU-08",
     origin: "Bình Phước",
     destination: "Bình Dương",
+    vehicleId: "DX-DEMO-045-01",
+    driverId: "TX-DEMO-002",
     vehicleAlias: "Xe mẫu 02 · 45 chỗ",
     driverAlias: "Tài xế demo B",
     capacityLabel: "35 / 45 ghế",
@@ -223,6 +251,8 @@ export const demoDispatchTasks: DispatchTask[] = [
     routeCode: "HD-MAU-10",
     origin: "TP. Hồ Chí Minh",
     destination: "Bình Dương",
+    vehicleId: null,
+    driverId: null,
     vehicleAlias: "Chưa gán xe",
     driverAlias: "Chưa gán tài xế",
     capacityLabel: "18 / 29 ghế dự kiến",
@@ -279,6 +309,16 @@ export function simulateAssignment(
   const target = tasks.find((task) => task.id === taskId);
   if (!target) return { tasks, hasConflict: true, message: "Không tìm thấy lệnh điều phối mẫu." };
 
+  const vehicleId = resourceIdForAlias(demoVehicleOptions, vehicleAlias);
+  const driverId = resourceIdForAlias(demoDriverOptions, driverAlias);
+  if (!vehicleId || !driverId) {
+    return {
+      tasks,
+      hasConflict: true,
+      message: "Xe hoặc tài xế không thuộc danh mục nguồn lực mô phỏng.",
+    };
+  }
+
   const overlapping = tasks.filter((task) => (
     task.id !== taskId
     && task.date === target.date
@@ -286,8 +326,8 @@ export function simulateAssignment(
     && task.status !== "Chờ điều phối"
   ));
   const warnings: string[] = [];
-  if (overlapping.some((task) => task.vehicleAlias === vehicleAlias)) warnings.push("Xe đã được dùng trong cùng ca mô phỏng");
-  if (overlapping.some((task) => task.driverAlias === driverAlias)) warnings.push("Tài xế đã có nhiệm vụ trong cùng ca mô phỏng");
+  if (overlapping.some((task) => task.vehicleId === vehicleId)) warnings.push("Xe đã được dùng trong cùng ca mô phỏng");
+  if (overlapping.some((task) => task.driverId === driverId)) warnings.push("Tài xế đã có nhiệm vụ trong cùng ca mô phỏng");
   if (getUtilization(target) >= 90) warnings.push(target.capacityUnit === "kg" ? "Tải dự kiến từ 90% trở lên" : "Mức lấp đầy dự kiến từ 90% trở lên");
 
   const hasConflict = warnings.some((warning) => warning.includes("đã"));
@@ -295,6 +335,8 @@ export function simulateAssignment(
   const risk: RiskLevel = hasConflict ? "Cao" : warnings.length ? "Theo dõi" : "Ổn định";
   const updated = tasks.map((task) => task.id === taskId ? {
     ...task,
+    vehicleId,
+    driverId,
     vehicleAlias,
     driverAlias,
     status: nextStatus,

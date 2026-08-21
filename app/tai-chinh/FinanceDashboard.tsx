@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useDemoAccess } from "../_components/access/DemoAccessProvider";
 import { useLocalStorageState } from "../_hooks/useLocalStorageState";
 import {
   cashFlow,
@@ -15,6 +16,8 @@ import styles from "./Finance.module.css";
 type Filter = "Tất cả" | InvoiceStatus;
 
 export default function FinanceDashboard() {
+  const { can } = useDemoAccess();
+  const canRecordPayment = can("invoice:record-payment");
   const [filter, setFilter] = useState<Filter>("Tất cả");
   const [message, setMessage] = useState("");
   const [paidIds, setPaidIds, resetPaidIds] = useLocalStorageState({
@@ -40,6 +43,10 @@ export default function FinanceDashboard() {
     .reduce((sum, invoice) => sum + invoice.amount, 0);
 
   function markPaid(id: string) {
+    if (!canRecordPayment) {
+      setMessage("Vai trò demo hiện tại không có quyền ghi nhận thanh toán.");
+      return;
+    }
     setPaidIds((current) => current.includes(id) ? current : [...current, id]);
     setMessage(`Đã ghi nhận thanh toán mô phỏng cho ${id}.`);
   }
@@ -117,7 +124,7 @@ export default function FinanceDashboard() {
                   <td><strong>{invoice.id}</strong><span>{invoice.reference}</span></td>
                   <td>{invoice.customer}</td><td>{invoice.service}</td><td>{formatCurrency(invoice.amount)}</td><td>{invoice.dueDate}</td>
                   <td><span className={styles.status} data-status={invoice.status}>{invoice.status}</span></td>
-                  <td>{invoice.status === "Đã thanh toán" ? <span className={styles.done}>Đã đối soát</span> : <button type="button" onClick={() => markPaid(invoice.id)}>Ghi nhận thu</button>}</td>
+                  <td>{invoice.status === "Đã thanh toán" ? <span className={styles.done}>Đã đối soát</span> : <button disabled={!canRecordPayment} title={canRecordPayment ? undefined : "Vai trò demo hiện tại không có quyền ghi nhận thanh toán."} type="button" onClick={() => markPaid(invoice.id)}>Ghi nhận thu</button>}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,8 +1,22 @@
-# Kế hoạch phát triển KSOps Transport Control trong 12 tuần
+# Kế hoạch pilot KSOps Transport Control trong 12 tuần
+
+> **Phạm vi:** đây là kế hoạch cho một lát cắt pilot, không phải kế hoạch hoàn thiện toàn bộ hệ thống doanh nghiệp. Lộ trình mục tiêu 12–15 tháng, operating model, kiến trúc đa kênh, effort và các gate mở rộng nằm trong [KSOps Enterprise Blueprint](ENTERPRISE_BLUEPRINT.md). Ma trận quyền mục tiêu nằm tại [RBAC_MATRIX.md](RBAC_MATRIX.md).
+
+## Vị trí trong chương trình 12–15 tháng
+
+| Blueprint | Phần được thực hiện trong 12 tuần | Phần chủ động để sau pilot |
+|---|---|---|
+| Discovery và baseline | process map, glossary, data map, KPI baseline và pilot boundary | discovery cho toàn bộ chi nhánh và migration lịch sử đầy đủ |
+| Foundation | IAM/RBAC spike, master data, audit, CI/CD, observability, DB/outbox design | hardening ở quy mô toàn công ty và automated provisioning hoàn chỉnh |
+| Operations pilot | fleet/driver, cargo order, dispatch/trip, maintenance gate, booking/contract slice | rollout diện rộng, driver native app và tối ưu điều phối |
+| Transactional production | payment/GPS/ERP chỉ ở contract/mock/sandbox khi được duyệt | payment/COD/e-invoice/ERP production, telemetry diện rộng và financial close đầy đủ |
+| Data/optimization | metric contract và read model tối thiểu | warehouse, forecast, predictive maintenance và route optimizer |
+
+12 tuần nhằm trả lời ba câu hỏi: quy trình mục tiêu có đúng không, invariant an toàn/giao dịch có chứng minh được không và tổ chức có sẵn sàng chạy pilot giới hạn không. Kết thúc tuần 12 chưa đồng nghĩa production-ready hoặc thay thế hệ thống hiện hữu.
 
 ## 1. Mục tiêu
 
-KSOps được phát triển như một sản phẩm nội bộ mẫu cho doanh nghiệp vận tải hành khách và hàng hóa. Mục tiêu 12 tuần là đi từ prototype dùng dữ liệu synthetic tới một pilot giới hạn có kiểm soát, không tuyên bố production-ready nếu chưa có UAT, security review, phê duyệt dữ liệu và operational readiness.
+KSOps được phát triển như một sản phẩm nội bộ mẫu cho doanh nghiệp vận tải hành khách, hàng hóa và thuê xe. Mục tiêu 12 tuần là đi từ prototype dùng dữ liệu synthetic tới **bằng chứng sẵn sàng cho một pilot giới hạn**. Chỉ được dùng dữ liệu/tích hợp pilot sau khi có UAT, security/privacy review, phê duyệt Data Owner và operational readiness; nếu các gate chưa đạt thì bàn giao vẫn là prototype/sandbox.
 
 Năng lực trọng tâm:
 
@@ -16,6 +30,8 @@ Năng lực trọng tâm:
 Nguyên tắc: dữ liệu an toàn trước tốc độ; server quyết định authorization; API versioned; thay đổi nhỏ có rollback; không tích hợp GPS, vé, thanh toán hay kế toán thật khi chưa được phê duyệt.
 
 ## 2. Phạm vi pilot
+
+Pilot phải được giới hạn bằng `region/branch/route/fleet/user cohort/time window` và có owner cụ thể. Con số, tuyến và chi nhánh không được chọn theo suy đoán từ website công khai; Product Owner quyết định sau khi đo volume, rủi ro và khả năng hỗ trợ. Khuyến nghị bắt đầu với một tuyến/nhóm văn phòng, 10–20 xe và nhóm người dùng được đào tạo, sau đó shadow 2–4 tuần trước cutover.
 
 ### Trong phạm vi
 
@@ -76,6 +92,19 @@ Một người có thể kiêm nhiều vai trong đồ án, nhưng bằng chứn
 | 10 — System readiness | kiểm thử liên mô-đun và DR | E2E, contract/load test, backup/restore, monitoring, runbooks | test exit criteria đạt; restore evidence hợp lệ |
 | 11 — UAT & pilot prep | xác nhận phù hợp nghiệp vụ | UAT script/evidence, training, support model, go/no-go report | Sev-1/2 bằng 0; PO/Ops/Security chấp thuận |
 | 12 — Release & handover | phát hành pilot giới hạn | tagged release, release notes, canary, rollback drill, handover | SLO/owner rõ; change approved; rollback diễn tập |
+
+### Gate sau tuần 12
+
+Kết quả tuần 12 chỉ được chuyển sang rollout tiếp theo khi:
+
+- Product/Ops xác nhận critical journey phù hợp và UAT đạt;
+- Security/Data/Legal xác nhận scope dữ liệu, retention, quyền và integration;
+- RBAC negative test, concurrency, reconciliation, migration và restore evidence đạt;
+- support window, alert/runbook/incident owner và rollback owner rõ;
+- shadow mode không có sai lệch vượt tolerance đã duyệt;
+- không còn Sev-1/2 hoặc security critical/high.
+
+Nếu chưa đạt, tiếp tục sandbox/hardening; không đổi nhãn thành production để chạy kịp thời hạn thực tập.
 
 ## 6. Backlog ưu tiên
 
@@ -164,7 +193,7 @@ Luồng: merge sau gate → artifact bất biến → deploy staging → migrati
 | Kỹ thuật | availability 99,5%, API read p95 < 500ms, write p95 < 800ms, valid error rate < 1% |
 | Phục hồi | pilot RPO 24 giờ, RTO 4 giờ; phải xác nhận bằng restore drill |
 
-Không dùng số dòng code/commit làm KPI thực tập.
+Các mục tiêu trên là gate pilot giới hạn. Khi có giao dịch production, blueprint đề xuất hướng tới API lõi 99,9%, booking/payment 99,95% trong giờ bán, RPO giao dịch lõi ≤5 phút và RTO ≤60 phút sau khi đo baseline và được Product/Engineering/SRE cùng phê duyệt. Không dùng số dòng code/commit làm KPI thực tập.
 
 ## 11. Rủi ro
 
@@ -188,3 +217,16 @@ Chỉ `go` khi Must stories hoàn tất hoặc có waiver đủ PO/Security/Ops;
 `No-go` khi không chứng minh được chống trùng ghế/chuyến, thiếu authorization/audit, dữ liệu không rõ nguồn, không restore/rollback được hoặc dashboard chưa đối soát.
 
 Bàn giao cuối kỳ gồm source/history PR, ADR/architecture/API/schema, migration, threat model, automated test/UAT evidence, CI/CD, environment inventory không chứa secret, runbook deploy/rollback/backup/incident, release notes, known limitations và kế hoạch 90 ngày.
+
+## 13. Sau pilot
+
+Thứ tự ưu tiên sau gate 12 tuần:
+
+1. chạy shadow 2–4 tuần và đóng mọi reconciliation/privacy/support gap;
+2. production hóa passenger booking, cargo scan/POD/COD và payment/refund theo từng capability;
+3. hoàn thiện contract, maintenance/parts, settlement và e-invoice/ERP;
+4. tích hợp telemetry qua lớp chuẩn hóa, không gắn domain trực tiếp với một provider;
+5. xây warehouse/BI và rollout theo chi nhánh;
+6. chỉ triển khai optimization/ML khi metric contract, data quality và human approval/kill switch đã đạt.
+
+Mỗi bước tuân theo gate G2–G5 trong [Enterprise Blueprint](ENTERPRISE_BLUEPRINT.md), không triển khai big-bang.

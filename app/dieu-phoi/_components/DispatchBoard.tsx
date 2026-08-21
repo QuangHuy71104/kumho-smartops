@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useMemo, useState } from "react";
+import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import {
   DISPATCH_DATES,
   DISPATCH_SHIFTS,
@@ -114,9 +115,13 @@ function DispatchCard({
 
 function AssignmentPanel({
   task,
+  canAssign,
+  onDenied,
   onAssign,
 }: {
   task: DispatchTask;
+  canAssign: boolean;
+  onDenied: () => void;
   onAssign: (task: DispatchTask, vehicle: string, driver: string) => void;
 }) {
   const vehicleDefault = demoVehicles.includes(task.vehicleAlias as (typeof demoVehicles)[number])
@@ -128,6 +133,10 @@ function AssignmentPanel({
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canAssign) {
+      onDenied();
+      return;
+    }
     const data = new FormData(event.currentTarget);
     const vehicle = data.get("vehicle");
     const driver = data.get("driver");
@@ -190,7 +199,14 @@ function AssignmentPanel({
             {demoDrivers.map((driver) => <option key={driver}>{driver}</option>)}
           </select>
         </label>
-        <button className={styles.primaryButton} type="submit">Xác nhận điều phối mô phỏng</button>
+        <button
+          className={styles.primaryButton}
+          disabled={!canAssign}
+          title={canAssign ? undefined : "Vai trò demo hiện tại không có quyền gán xe và tài xế."}
+          type="submit"
+        >
+          Xác nhận điều phối mô phỏng
+        </button>
         <small>Không gửi lệnh đến xe, tài xế hoặc hệ thống bên ngoài.</small>
       </form>
 
@@ -200,6 +216,9 @@ function AssignmentPanel({
 }
 
 export default function DispatchBoard() {
+  const { can } = useDemoAccess();
+  const canAssign = can("dispatch:assign");
+  const canAutoAssign = can("dispatch:auto-assign");
   const [tasks, setTasks] = useState(demoDispatchTasks);
   const [filters, setFilters] = useState(initialFilters);
   const [selectedId, setSelectedId] = useState(demoDispatchTasks[0].id);
@@ -215,6 +234,10 @@ export default function DispatchBoard() {
   }
 
   function assignTask(task: DispatchTask, vehicle: string, driver: string) {
+    if (!canAssign) {
+      setAnnouncement("Vai trò demo hiện tại không có quyền gán xe và tài xế.");
+      return;
+    }
     const result = simulateAssignment(tasks, task.id, vehicle, driver);
     setTasks(result.tasks);
     setSelectedId(task.id);
@@ -222,6 +245,10 @@ export default function DispatchBoard() {
   }
 
   function autoAssignNext() {
+    if (!canAutoAssign) {
+      setAnnouncement("Vai trò demo hiện tại không có quyền tự động xếp lệnh.");
+      return;
+    }
     const waiting = visibleTasks.find((task) => task.status === "Chờ điều phối");
     if (!waiting) {
       setAnnouncement("Không có lệnh chờ điều phối trong bộ lọc hiện tại.");
@@ -255,7 +282,13 @@ export default function DispatchBoard() {
         </div>
         <div className={styles.heroActions}>
           <button className={styles.ghostButtonDark} type="button" onClick={resetBoard}>Khôi phục kịch bản</button>
-          <button className={styles.heroButton} type="button" onClick={autoAssignNext}>
+          <button
+            className={styles.heroButton}
+            disabled={!canAutoAssign}
+            title={canAutoAssign ? undefined : "Vai trò demo hiện tại không có quyền tự động xếp lệnh."}
+            type="button"
+            onClick={autoAssignNext}
+          >
             <span aria-hidden="true">↯</span> Tự xếp lệnh tiếp theo
           </button>
         </div>
@@ -305,7 +338,14 @@ export default function DispatchBoard() {
               <div className={styles.emptyBoard}><span aria-hidden="true">◇</span><h3>Chưa có lệnh phù hợp</h3><p>Hãy chọn ngày khác hoặc xóa bớt bộ lọc.</p></div>
             ) : null}
           </div>
-          {selectedTask ? <AssignmentPanel task={selectedTask} onAssign={assignTask} /> : null}
+          {selectedTask ? (
+            <AssignmentPanel
+              task={selectedTask}
+              canAssign={canAssign}
+              onAssign={assignTask}
+              onDenied={() => setAnnouncement("Vai trò demo hiện tại không có quyền gán xe và tài xế.")}
+            />
+          ) : null}
         </div>
       </section>
     </div>

@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useDemoAccess } from "./access/DemoAccessProvider";
 import styles from "./PortalShell.module.css";
 
 const orderSearchHref = "/don-hang#order-search";
 
 export default function QuickSearch() {
   const router = useRouter();
+  const { can } = useDemoAccess();
+  const mayReadOrders = can("cargo-order:read");
 
   useEffect(() => {
+    if (!mayReadOrders) return;
+
     const openOrderSearch = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
@@ -26,7 +31,9 @@ export default function QuickSearch() {
 
     window.addEventListener("keydown", openOrderSearch);
     return () => window.removeEventListener("keydown", openOrderSearch);
-  }, [router]);
+  }, [mayReadOrders, router]);
+
+  if (!mayReadOrders) return null;
 
   return (
     <Link

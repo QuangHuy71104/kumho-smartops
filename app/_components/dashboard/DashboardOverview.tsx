@@ -1,5 +1,7 @@
 import Link from "next/link";
 import {
+  createOrderHref,
+  dashboardFleetSummary,
   dashboardMetrics,
   fleetReadiness,
   nextMaintenance,
@@ -40,14 +42,14 @@ function RecentOrders() {
               <th>Đơn vận chuyển</th>
               <th>Dịch vụ</th>
               <th>Trạng thái</th>
-              <th>ETA</th>
+              <th>Hạn SLA</th>
             </tr>
           </thead>
           <tbody>
             {recentOrders.map((order) => (
               <tr key={order.id}>
                 <td>
-                  <Link href={`/don-hang?id=${order.id}`}>{order.title}</Link>
+                  <Link href={order.href}>{order.title}</Link>
                   <span>{order.id} · {order.assignee}</span>
                 </td>
                 <td>
@@ -56,7 +58,7 @@ function RecentOrders() {
                   </span>
                 </td>
                 <td>{order.status}</td>
-                <td>{order.eta}</td>
+                <td>{order.deadline}</td>
               </tr>
             ))}
           </tbody>
@@ -77,13 +79,13 @@ function FleetReadinessPanel() {
         <span className={styles.statusOk}><i aria-hidden="true" /> Ổn định</span>
       </div>
       <div className={styles.healthScore}>
-        <div className={styles.scoreRing} aria-label="39 trên 48 xe sẵn sàng">
-          <strong>39/48</strong>
+        <div className={styles.scoreRing} aria-label={`${dashboardFleetSummary.ready} trên ${dashboardFleetSummary.total} xe sẵn sàng`}>
+          <strong>{dashboardFleetSummary.ready}/{dashboardFleetSummary.total}</strong>
           <span>xe sẵn sàng</span>
         </div>
         <div>
-          <strong>Đủ năng lực cho ca hiện tại</strong>
-          <p>Ba xe đang bảo dưỡng, sáu xe chờ điều phối.</p>
+          <strong>{dashboardFleetSummary.running} xe đang khai thác</strong>
+          <p>{dashboardFleetSummary.maintenance} xe bảo dưỡng · điểm sẵn sàng bình quân {dashboardFleetSummary.averageReadiness}%.</p>
         </div>
       </div>
       <div className={styles.serviceList}>
@@ -142,7 +144,7 @@ export default function DashboardOverview() {
           <p>Theo dõi đội xe, đơn hàng, tài xế và cam kết giao nhận trong cùng một luồng vận hành minh bạch.</p>
         </div>
         <div className={styles.heroActions}>
-          <Link className={`${styles.button} ${styles.buttonPrimary}`} href="/don-hang?new=1">+ Tạo đơn hàng</Link>
+          <Link className={`${styles.button} ${styles.buttonPrimary}`} href={createOrderHref}>+ Tạo đơn hàng</Link>
           <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/dieu-phoi">Mở bàn điều phối</Link>
         </div>
       </section>

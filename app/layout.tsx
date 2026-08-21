@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, IBM_Plex_Mono } from "next/font/google";
+import DemoAccessProvider from "./_components/access/DemoAccessProvider";
 import "./globals.css";
 
 const sans = Be_Vietnam_Pro({
@@ -57,7 +58,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi">
-      <body className={`${sans.variable} ${mono.variable}`}>{children}</body>
+      <body className={`${sans.variable} ${mono.variable}`}>
+        <DemoAccessProvider>{children}</DemoAccessProvider>
+      </body>
     </html>
   );
 }

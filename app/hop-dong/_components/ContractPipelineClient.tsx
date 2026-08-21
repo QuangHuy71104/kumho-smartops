@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useMemo, useState } from "react";
+import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
 import {
   buildContractRequest,
@@ -26,6 +27,9 @@ import {
 import styles from "../Contracts.module.css";
 
 export default function ContractPipelineClient() {
+  const { can } = useDemoAccess();
+  const canCreateContract = can("contract:create");
+  const canTransitionContract = can("contract:transition");
   const [created, setCreated, resetCreated] = useLocalStorageState({ key: CONTRACT_STORAGE_KEY, initialValue: EMPTY_CREATED_REQUESTS, decode: decodeCreatedContractRequests });
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof CONTRACT_FILTERS)[number]>("Tất cả");
@@ -44,6 +48,11 @@ export default function ContractPipelineClient() {
 
   function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!canCreateContract) {
+      setFormError("Vai trò demo hiện tại không có quyền tạo yêu cầu hợp đồng.");
+      setAnnouncement("Vai trò demo hiện tại không có quyền tạo yêu cầu hợp đồng.");
+      return;
+    }
     const error = validateContractDraft(draft);
     if (error) {
       setFormError(error);
@@ -59,6 +68,10 @@ export default function ContractPipelineClient() {
   }
 
   function advanceRequest(request: ContractRequest) {
+    if (!canTransitionContract) {
+      setAnnouncement("Vai trò demo hiện tại không có quyền chuyển trạng thái hợp đồng.");
+      return;
+    }
     const nextStage = nextContractStage(request.status);
     if (!nextStage) return;
     const updated = { ...request, status: nextStage };
@@ -105,7 +118,7 @@ export default function ContractPipelineClient() {
 
       <div className={styles.lowerGrid}>
         <section className={styles.detail} aria-labelledby="request-detail-title" aria-live="polite">
-          {selected ? <><div className={styles.detailHeading}><div><span>{selected.id}</span><h2 id="request-detail-title">{selected.title}</h2><p>{selected.groupType} · Tạo {selected.createdAt}</p></div><i data-status={selected.status}>{selected.status}</i></div><dl className={styles.detailGrid}><div><dt>Quy mô đoàn</dt><dd>{selected.passengerCount} khách</dd></div><div><dt>Phương án xe</dt><dd>{selected.vehicleCount} × {selected.vehicleType}</dd></div><div><dt>Thời gian</dt><dd>{formatContractDate(selected.startDate)} – {formatContractDate(selected.endDate)}</dd></div><div><dt>Chủ sở hữu</dt><dd>{selected.owner}</dd></div><div><dt>Điểm đón</dt><dd>{selected.pickup}</dd></div><div><dt>Điểm đến</dt><dd>{selected.destination}</dd></div></dl><div className={styles.capacity}><div><span>Nhu cầu ghế</span><strong>{selected.passengerCount}/{vehicleCapacity(selected.vehicleType) * selected.vehicleCount}</strong></div><div className={styles.capacityBar} role="progressbar" aria-label="Tỷ lệ sử dụng ghế dự kiến" aria-valuemin={0} aria-valuemax={vehicleCapacity(selected.vehicleType) * selected.vehicleCount} aria-valuenow={selected.passengerCount}><span style={{ width: `${Math.min(100, (selected.passengerCount / (vehicleCapacity(selected.vehicleType) * selected.vehicleCount)) * 100)}%` }} /></div></div><div className={styles.gates}><h3>Kiểm soát trước báo giá</h3>{["Xác nhận quy mô và thời gian", "Kiểm tra khả dụng loại xe", "Ước tính hành trình và chi phí", "Peer review trước khi gửi"].map((item, index) => <div key={item}><span>{index + 1}</span><p><strong>{item}</strong><small>{index < CONTRACT_STAGES.indexOf(selected.status) ? "Đã mô phỏng" : "Chờ thực hiện"}</small></p></div>)}</div>{nextStage ? <button className={styles.advanceButton} onClick={() => advanceRequest(selected)} type="button">Chuyển sang “{nextStage}”</button> : <div className={styles.confirmed}>Yêu cầu đã ở trạng thái xác nhận demo.</div>}</> : null}
+          {selected ? <><div className={styles.detailHeading}><div><span>{selected.id}</span><h2 id="request-detail-title">{selected.title}</h2><p>{selected.groupType} · Tạo {selected.createdAt}</p></div><i data-status={selected.status}>{selected.status}</i></div><dl className={styles.detailGrid}><div><dt>Quy mô đoàn</dt><dd>{selected.passengerCount} khách</dd></div><div><dt>Phương án xe</dt><dd>{selected.vehicleCount} × {selected.vehicleType}</dd></div><div><dt>Thời gian</dt><dd>{formatContractDate(selected.startDate)} – {formatContractDate(selected.endDate)}</dd></div><div><dt>Chủ sở hữu</dt><dd>{selected.owner}</dd></div><div><dt>Điểm đón</dt><dd>{selected.pickup}</dd></div><div><dt>Điểm đến</dt><dd>{selected.destination}</dd></div></dl><div className={styles.capacity}><div><span>Nhu cầu ghế</span><strong>{selected.passengerCount}/{vehicleCapacity(selected.vehicleType) * selected.vehicleCount}</strong></div><div className={styles.capacityBar} role="progressbar" aria-label="Tỷ lệ sử dụng ghế dự kiến" aria-valuemin={0} aria-valuemax={vehicleCapacity(selected.vehicleType) * selected.vehicleCount} aria-valuenow={selected.passengerCount}><span style={{ width: `${Math.min(100, (selected.passengerCount / (vehicleCapacity(selected.vehicleType) * selected.vehicleCount)) * 100)}%` }} /></div></div><div className={styles.gates}><h3>Kiểm soát trước báo giá</h3>{["Xác nhận quy mô và thời gian", "Kiểm tra khả dụng loại xe", "Ước tính hành trình và chi phí", "Peer review trước khi gửi"].map((item, index) => <div key={item}><span>{index + 1}</span><p><strong>{item}</strong><small>{index < CONTRACT_STAGES.indexOf(selected.status) ? "Đã mô phỏng" : "Chờ thực hiện"}</small></p></div>)}</div>{nextStage ? <button className={styles.advanceButton} disabled={!canTransitionContract} title={canTransitionContract ? undefined : "Vai trò demo hiện tại không có quyền chuyển trạng thái hợp đồng."} onClick={() => advanceRequest(selected)} type="button">Chuyển sang “{nextStage}”</button> : <div className={styles.confirmed}>Yêu cầu đã ở trạng thái xác nhận demo.</div>}</> : null}
         </section>
 
         <section className={styles.createPanel} id="tao-yeu-cau" aria-labelledby="create-request-title">
@@ -122,7 +135,7 @@ export default function ContractPipelineClient() {
             <label><span>Điểm đến demo</span><select value={draft.destination} onChange={(event) => patchDraft({ destination: event.target.value })}>{DESTINATION_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select></label>
             {formError ? <p className={styles.formError} role="alert">{formError}</p> : null}
             <div className={styles.estimate}><span>Ước tính demo được tính sau khi tạo</span><strong>Không phải báo giá chính thức</strong></div>
-            <button className={styles.submitButton} type="submit">Tạo yêu cầu demo</button>
+            <button className={styles.submitButton} disabled={!canCreateContract} title={canCreateContract ? undefined : "Vai trò demo hiện tại không có quyền tạo yêu cầu hợp đồng."} type="submit">Tạo yêu cầu demo</button>
           </form>
         </section>
       </div>

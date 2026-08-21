@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import PortalShell from "../_components/PortalShell";
 import OrderWorkspace from "./_components/OrderWorkspace";
 
@@ -15,7 +16,9 @@ export default function TransportOrdersPage() {
       title="Quản lý đơn vận tải"
       subtitle="SLA, tuyến hàng hóa và giao chặng cuối"
     >
-      <OrderWorkspace />
+      <Suspense fallback={<p role="status">Đang chuẩn bị không gian đơn hàng…</p>}>
+        <OrderWorkspace />
+      </Suspense>
     </PortalShell>
   );
 }

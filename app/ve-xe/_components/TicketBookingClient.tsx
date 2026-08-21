@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useMemo, useState } from "react";
+import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
 import {
   availableSeatCount,
@@ -23,6 +24,9 @@ import {
 import styles from "../Tickets.module.css";
 
 export default function TicketBookingClient() {
+  const { can } = useDemoAccess();
+  const canCreateBooking = can("booking:create");
+  const canCancelBooking = can("booking:cancel");
   const initialTrips = tripsFor(DEFAULT_ROUTE_ID, DEFAULT_TRAVEL_DATE);
   const [routeDraft, setRouteDraft] = useState(DEFAULT_ROUTE_ID);
   const [dateDraft, setDateDraft] = useState(DEFAULT_TRAVEL_DATE);
@@ -65,6 +69,10 @@ export default function TicketBookingClient() {
   }
 
   function confirmBooking() {
+    if (!canCreateBooking) {
+      setAnnouncement("Vai trò demo hiện tại không có quyền tạo đặt chỗ.");
+      return;
+    }
     if (!selectedTrip || selectedSeats.length === 0) {
       setAnnouncement("Hãy chọn ít nhất một ghế còn trống trước khi giữ chỗ.");
       return;
@@ -76,6 +84,10 @@ export default function TicketBookingClient() {
   }
 
   function cancelBooking(id: string) {
+    if (!canCancelBooking) {
+      setAnnouncement("Vai trò demo hiện tại không có quyền hủy đặt chỗ.");
+      return;
+    }
     setBookings((current) => current.map((booking) => booking.id === id ? { ...booking, status: "Đã hủy" } : booking));
     setAnnouncement(`Đã hủy bản ghi demo ${id}.`);
   }
@@ -154,7 +166,14 @@ export default function TicketBookingClient() {
               <div className={styles.summary}>
                 <div><span>Ghế đã chọn</span><strong>{selectedSeats.length ? [...selectedSeats].sort().join(", ") : "Chưa chọn"}</strong></div>
                 <div><span>Tạm tính mô phỏng</span><strong>{formatDemoPrice(estimate)}</strong></div>
-                <button disabled={selectedSeats.length === 0} onClick={confirmBooking} type="button">Giữ chỗ demo</button>
+                <button
+                  disabled={selectedSeats.length === 0 || !canCreateBooking}
+                  title={!canCreateBooking ? "Vai trò demo hiện tại không có quyền tạo đặt chỗ." : undefined}
+                  onClick={confirmBooking}
+                  type="button"
+                >
+                  Giữ chỗ demo
+                </button>
                 <p>Không phát sinh thanh toán, vé thật hoặc thông tin hành khách.</p>
               </div>
             </>
@@ -164,7 +183,7 @@ export default function TicketBookingClient() {
 
       <section className={styles.history} aria-labelledby="booking-history-title">
         <div className={styles.historyHeading}><div><span>Lưu cục bộ</span><h2 id="booking-history-title">Đặt chỗ demo gần đây</h2></div>{bookings.length > 0 ? <button type="button" onClick={clearBookingHistory}>Xóa lịch sử demo</button> : null}</div>
-        {bookings.length > 0 ? <div className={styles.historyList}>{bookings.map((booking) => <article key={booking.id}><div><span>{booking.id}</span><strong>{booking.routeLabel}</strong><small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small></div><div><strong>{formatDemoPrice(booking.total)}</strong><span data-status={booking.status}>{booking.status}</span>{booking.status === "Đã giữ chỗ" ? <button onClick={() => cancelBooking(booking.id)} type="button">Hủy bản ghi</button> : null}</div></article>)}</div> : <div className={styles.historyEmpty}><strong>Chưa có bản ghi đặt chỗ</strong><p>Các booking demo sẽ chỉ được lưu trong trình duyệt hiện tại.</p></div>}
+        {bookings.length > 0 ? <div className={styles.historyList}>{bookings.map((booking) => <article key={booking.id}><div><span>{booking.id}</span><strong>{booking.routeLabel}</strong><small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small></div><div><strong>{formatDemoPrice(booking.total)}</strong><span data-status={booking.status}>{booking.status}</span>{booking.status === "Đã giữ chỗ" ? <button disabled={!canCancelBooking} title={canCancelBooking ? undefined : "Vai trò demo hiện tại không có quyền hủy đặt chỗ."} onClick={() => cancelBooking(booking.id)} type="button">Hủy bản ghi</button> : null}</div></article>)}</div> : <div className={styles.historyEmpty}><strong>Chưa có bản ghi đặt chỗ</strong><p>Các booking demo sẽ chỉ được lưu trong trình duyệt hiện tại.</p></div>}
       </section>
     </div>
   );

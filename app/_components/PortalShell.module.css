@@ -297,6 +297,60 @@
   background: #24a874;
 }
 
+.demoRoleControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demoRoleSwitcher {
+  min-width: 188px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 6px 9px;
+  border: 1px solid var(--shell-line);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .02);
+}
+
+.demoRoleSwitcher > span {
+  color: #777f8d;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.demoRoleSwitcher b {
+  color: var(--shell-brand);
+}
+
+.demoRoleSwitcher select {
+  min-width: 0;
+  padding: 0 20px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--shell-ink);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.demoRoleSwitcher:focus-within {
+  border-color: #a8b2c1;
+  box-shadow: 0 0 0 3px rgba(42, 91, 215, .1);
+}
+
+.demoRoleSwitcher small {
+  color: #9299a5;
+  font-size: 7px;
+  line-height: 1.25;
+}
+
 .avatar {
   width: 38px;
   height: 38px;
@@ -338,6 +392,94 @@
 }
 
 .mockBanner p { margin: 0; font-size: 10px; line-height: 1.45; }
+
+.accessNotice {
+  min-height: 390px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 620px);
+  align-content: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 42px 24px;
+  border: 1px solid #dfe3e9;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(201, 21, 36, .07), transparent 32%),
+    #fff;
+  box-shadow: 0 10px 30px rgba(20, 29, 44, .04);
+}
+
+.accessNoticeIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: #fff0f1;
+  color: var(--shell-brand);
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.accessNotice p {
+  margin: 0;
+  color: var(--shell-muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+.accessNotice div > p:first-child {
+  color: var(--shell-brand);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.accessNotice h2 {
+  margin: 6px 0 10px;
+  font-size: 22px;
+  letter-spacing: -.035em;
+}
+
+.accessNotice dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.accessNotice dl > div {
+  padding: 10px 12px;
+  border: 1px solid #eceef2;
+  border-radius: 9px;
+  background: #f8f9fb;
+}
+
+.accessNotice dt {
+  color: #8a919d;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.accessNotice dd {
+  margin: 4px 0 0;
+  color: #343c49;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.accessNotice a {
+  display: inline-flex;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: var(--shell-brand);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
 
 .footer {
   display: flex;
@@ -383,13 +525,19 @@
 }
 
 @media (max-width: 620px) {
-  .topbar { align-items: flex-start; }
+  .topbar { align-items: flex-start; flex-direction: column; gap: 10px; }
   .titleBlock h1 { font-size: 18px; }
   .titleBlock > span { display: block; }
   .quickSearch, .demoFlag, .headerActionsSlot { display: none; }
+  .topbarActions { width: 100%; }
+  .demoRoleControl { width: 100%; }
+  .demoRoleSwitcher { min-width: 0; flex: 1; }
   .main { padding-inline: 14px; }
   .mockBanner { align-items: flex-start; }
   .mockBanner p { font-size: 9px; }
+  .accessNotice { min-height: 330px; grid-template-columns: 1fr; padding: 28px 18px; }
+  .accessNotice h2 { font-size: 18px; }
+  .accessNotice dl { grid-template-columns: 1fr; }
   .footer { align-items: flex-start; flex-direction: column; padding-inline: 16px; }
 }
 

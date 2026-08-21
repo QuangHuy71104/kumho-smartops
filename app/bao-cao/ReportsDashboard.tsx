@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useDemoAccess } from "../_components/access/DemoAccessProvider";
 import {
   buildReportCsv,
   routePerformance,
@@ -13,12 +14,18 @@ import styles from "./Reports.module.css";
 const periods = ["7 ngày", "30 ngày", "Quý 3"] satisfies ReportPeriod[];
 
 export default function ReportsDashboard() {
+  const { can } = useDemoAccess();
+  const canExportReport = can("report:export");
   const [period, setPeriod] = useState<ReportPeriod>("30 ngày");
   const [message, setMessage] = useState("");
   const snapshot = snapshots[period];
   const maxTrend = useMemo(() => Math.max(...snapshot.trend), [snapshot.trend]);
 
   function exportCsv() {
+    if (!canExportReport) {
+      setMessage("Vai trò demo hiện tại không có quyền xuất báo cáo.");
+      return;
+    }
     const blob = new Blob([buildReportCsv(period)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -37,7 +44,7 @@ export default function ReportsDashboard() {
           <h2 id="report-title">Từ từng chuyến xe đến quyết định vận hành.</h2>
           <p>Đối chiếu doanh thu, hiệu suất đội xe, đúng giờ và trải nghiệm khách hàng trên cùng bộ chỉ số.</p>
         </div>
-        <button type="button" onClick={exportCsv}>Xuất CSV</button>
+        <button disabled={!canExportReport} title={canExportReport ? undefined : "Vai trò demo hiện tại không có quyền xuất báo cáo."} type="button" onClick={exportCsv}>Xuất CSV</button>
       </section>
 
       <div className={styles.toolbar}>

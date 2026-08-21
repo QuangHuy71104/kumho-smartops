@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
 import CreateOrderDialog from "./CreateOrderDialog";
 import {
@@ -63,9 +65,11 @@ function SlaBadge({ state }: { state: SlaState }) {
 function OrderDetail({
   order,
   onAdvance,
+  canAdvance,
 }: {
   order: TransportOrder;
   onAdvance: (order: TransportOrder) => void;
+  canAdvance: boolean;
 }) {
   const nextStatus = getNextOrderStatus(order.status);
   const activeIndex = workflow.indexOf(order.status);
@@ -131,7 +135,8 @@ function OrderDetail({
         <button
           className={styles.primaryButton}
           type="button"
-          disabled={!nextStatus}
+          disabled={!nextStatus || !canAdvance}
+          title={!canAdvance ? "Vai trò demo hiện tại không có quyền chuyển trạng thái đơn" : undefined}
           onClick={() => onAdvance(order)}
         >
           {nextStatus ? `Chuyển sang “${nextStatus}”` : "Đơn đã hoàn tất"}
@@ -143,22 +148,56 @@ function OrderDetail({
 }
 
 export default function OrderWorkspace() {
+  const { can } = useDemoAccess();
+  const canCreateOrder = can("cargo-order:create");
+  const searchParams = useSearchParams();
+  const requestedOrderId = searchParams.get("id")?.trim() ?? "";
+  const requestedOrder = /^DH-(?:MAU|DEMO)-[A-Z0-9-]{1,24}$/u.test(requestedOrderId)
+    ? demoOrders.find((order) => order.id === requestedOrderId)
+    : undefined;
+  const initialSelectedId = requestedOrder?.id ?? demoOrders[0].id;
+  const shouldOpenCreateDialog = searchParams.get("new") === "1";
   const [orders, setOrders, resetOrders] = useLocalStorageState({
     key: ORDER_STORAGE_KEY,
     initialValue: demoOrders,
     decode: decodeStoredOrders,
   });
   const [filters, setFilters] = useState(initialFilters);
-  const [selectedId, setSelectedId] = useState(demoOrders[0].id);
-  const [announcement, setAnnouncement] = useState("Dữ liệu vận tải mẫu đã sẵn sàng.");
+  const [selectedId, setSelectedId] = useState(initialSelectedId);
+  const [announcement, setAnnouncement] = useState(
+    requestedOrder
+      ? `Đã mở đơn ${initialSelectedId} từ liên kết tổng quan.`
+      : requestedOrderId
+        ? "Không tìm thấy mã đơn trong dữ liệu mô phỏng; đang hiển thị đơn đầu tiên."
+        : "Dữ liệu vận tải mẫu đã sẵn sàng.",
+  );
   const dialogRef = useRef<HTMLDialogElement>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
+  const openedCreateIntentRef = useRef(false);
 
   const summary = useMemo(() => getOrderSummary(orders), [orders]);
   const visibleOrders = useMemo(() => filterOrders(orders, filters), [filters, orders]);
   const selectedOrder = visibleOrders.find((order) => order.id === selectedId) ?? visibleOrders[0] ?? null;
 
+  useEffect(() => {
+    if (!shouldOpenCreateDialog || !canCreateOrder) {
+      openedCreateIntentRef.current = false;
+      return;
+    }
+    if (openedCreateIntentRef.current) return;
+
+    const dialog = dialogRef.current;
+    if (!dialog || dialog.open) return;
+    openedCreateIntentRef.current = true;
+    dialog.showModal();
+    window.requestAnimationFrame(() => dialog.querySelector<HTMLInputElement>("input")?.focus());
+  }, [canCreateOrder, shouldOpenCreateDialog]);
+
   function openCreateDialog() {
+    if (!canCreateOrder) {
+      setAnnouncement("Vai trò demo hiện tại không có quyền tạo đơn hàng.");
+      return;
+    }
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
@@ -166,6 +205,10 @@ export default function OrderWorkspace() {
   }
 
   function handleCreate(input: CreateOrderInput) {
+    if (!canCreateOrder) {
+      setAnnouncement("Không thể tạo đơn: vai trò demo hiện tại không có quyền.");
+      return;
+    }
     const order = createDemoOrder(input);
     setOrders((current) => [order, ...current]);
     setFilters(initialFilters);
@@ -174,6 +217,13 @@ export default function OrderWorkspace() {
   }
 
   function handleAdvance(order: TransportOrder) {
+    const permission = order.status === "Cần xử lý"
+      ? "cargo-order:resolve-exception"
+      : "cargo-order:transition";
+    if (!can(permission)) {
+      setAnnouncement("Không thể chuyển trạng thái: vai trò demo hiện tại không có quyền.");
+      return;
+    }
     const nextStatus = getNextOrderStatus(order.status);
     if (!nextStatus) return;
     setOrders((current) => current.map((item) => item.id === order.id ? { ...item, status: nextStatus } : item));
@@ -201,7 +251,14 @@ export default function OrderWorkspace() {
         </div>
         <div className={styles.heroActions}>
           <button className={styles.ghostButtonDark} type="button" onClick={handleReset}>Khôi phục mẫu</button>
-          <button className={styles.heroButton} ref={createButtonRef} type="button" onClick={openCreateDialog}>
+          <button
+            className={styles.heroButton}
+            ref={createButtonRef}
+            type="button"
+            disabled={!canCreateOrder}
+            title={!canCreateOrder ? "Vai trò demo hiện tại không có quyền tạo đơn" : undefined}
+            onClick={openCreateDialog}
+          >
             <span aria-hidden="true">＋</span> Tạo đơn demo
           </button>
         </div>
@@ -314,7 +371,13 @@ export default function OrderWorkspace() {
               </div>
             )}
           </div>
-          {selectedOrder ? <OrderDetail order={selectedOrder} onAdvance={handleAdvance} /> : null}
+          {selectedOrder ? (
+            <OrderDetail
+              order={selectedOrder}
+              onAdvance={handleAdvance}
+              canAdvance={can(selectedOrder.status === "Cần xử lý" ? "cargo-order:resolve-exception" : "cargo-order:transition")}
+            />
+          ) : null}
         </div>
       </section>
 

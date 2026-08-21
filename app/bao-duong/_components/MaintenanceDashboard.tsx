@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
 import { CHECKLIST_STORAGE_KEY, decodeChecklistStore, EMPTY_CHECKLIST_STORE, filterWorkOrders, maintenanceSchedule, maintenanceSummary, mileageAlerts, priorityOptions, statusOptions, workOrders } from "../_lib/maintenance";
 import type { ChecklistStore, WorkOrder, WorkOrderPriority, WorkOrderStatus } from "../_lib/maintenance";
@@ -27,6 +28,8 @@ function effectiveChecklist(order: WorkOrder, store: ChecklistStore) {
 }
 
 export default function MaintenanceDashboard() {
+  const { can } = useDemoAccess();
+  const canUpdateChecklist = can("maintenance:update-checklist");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("Tất cả");
   const [priority, setPriority] = useState("Tất cả");
@@ -49,6 +52,7 @@ export default function MaintenanceDashboard() {
   function resetFilters() { setSearch(""); setStatus("Tất cả"); setPriority("Tất cả"); }
 
   function toggleChecklist(itemId: string) {
+    if (!canUpdateChecklist) return;
     const currentOrderState = Object.fromEntries(selectedChecklist.map((item) => [item.id, item.done]));
     setChecklistStore((current) => ({ ...current, [selectedOrder.id]: { ...currentOrderState, [itemId]: !currentOrderState[itemId] } }));
   }
@@ -111,7 +115,8 @@ export default function MaintenanceDashboard() {
           <section className={styles.checklist} aria-labelledby="checklist-title">
             <div className={styles.checklistHeading}><div><h3 id="checklist-title">Checklist công việc</h3><span aria-live="polite">{completedItems}/{selectedChecklist.length} hoàn tất</span></div><button type="button" onClick={resetChecklist}>Khôi phục mẫu</button></div>
             <div className={styles.progressTrack} role="progressbar" aria-label="Tiến độ checklist" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion} aria-valuetext={`${completion} phần trăm`}><span style={{ "--progress": `${completion}%` } as CSSProperties} /></div>
-            <div className={styles.checkItems}>{selectedChecklist.map((item) => <label key={item.id}><input type="checkbox" checked={item.done} onChange={() => toggleChecklist(item.id)} /><span aria-hidden="true">✓</span><strong>{item.label}</strong></label>)}</div>
+            <p className={styles.srOnly} id="maintenance-checklist-permission">Vai trò demo hiện tại không có quyền cập nhật checklist bảo dưỡng.</p>
+            <div className={styles.checkItems}>{selectedChecklist.map((item) => <label key={item.id}><input type="checkbox" checked={item.done} disabled={!canUpdateChecklist} aria-describedby={!canUpdateChecklist ? "maintenance-checklist-permission" : undefined} title={canUpdateChecklist ? undefined : "Vai trò demo hiện tại không có quyền cập nhật checklist bảo dưỡng."} onChange={() => toggleChecklist(item.id)} /><span aria-hidden="true">✓</span><strong>{item.label}</strong></label>)}</div>
             <p>Thay đổi được lưu bằng localStorage trên trình duyệt này.</p>
           </section>
         </aside>

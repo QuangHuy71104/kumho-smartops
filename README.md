@@ -4,6 +4,14 @@ KSOps là đồ án thực tập lập trình viên mô phỏng một nền tả
 
 > **Phạm vi an toàn:** đây là sản phẩm demo phục vụ học tập, không phải hệ thống chính thức của doanh nghiệp. Tất cả biển số, mã đơn, hành trình, người, khách hàng, giá trị tài chính và trạng thái đều là dữ liệu giả lập. Repository không chứa dữ liệu lấy từ tài liệu thực tập, hệ thống bán vé, thiết bị định vị hay hồ sơ nội bộ.
 
+## Trạng thái chương trình
+
+- **Hiện tại:** frontend demo responsive với fixture synthetic, bộ chuyển 8 vai trò để minh họa quyền UI và một số thao tác lưu ở `localStorage`; chưa có backend, database, đăng nhập/RBAC server-side, GPS, payment hoặc ERP thật.
+- **Pilot 12 tuần:** một lát cắt kiểm chứng quy trình, authorization, concurrency, audit, UAT và khả năng vận hành; không đồng nghĩa thay thế hệ thống hiện hữu.
+- **Mục tiêu 12–15 tháng:** nền tảng đa kênh gồm web điều hành, kênh khách hàng, driver PWA/mobile, transactional core, telemetry, tài chính/tích hợp và BI, triển khai theo gate/chi nhánh.
+
+Xem [Enterprise Blueprint](docs/ENTERPRISE_BLUEPRINT.md) để biết phạm vi mục tiêu và [ma trận RBAC](docs/RBAC_MATRIX.md) để biết ai được vận hành từng phân hệ.
+
 ## Bài toán
 
 Một doanh nghiệp vận tải thường phải ghép thông tin từ nhiều luồng: nhu cầu khách hàng, đơn ký gửi, lịch xe, tài xế, ghế hành khách, hợp đồng, bảo dưỡng và đối soát. KSOps trình bày một thiết kế sản phẩm có thể gom các luồng đó vào một nguồn điều hành thống nhất, giúp:
@@ -33,6 +41,8 @@ Một doanh nghiệp vận tải thường phải ghép thông tin từ nhiều 
 | `/bao-cao` | KPI đa kỳ, hiệu quả dịch vụ/tuyến và xuất CSV |
 
 Các thao tác demo có thể dùng `localStorage` để duy trì trên chính trình duyệt đang xem. Database, API nghiệp vụ, SSO/RBAC, thanh toán và GPS thật không được bật trong bản công khai.
+
+Bộ chọn vai trò chỉ giúp xem navigation và thao tác của từng vị trí nghiệp vụ. Đây không phải đăng nhập hay security boundary; hệ thống production vẫn phải xác thực và kiểm tra quyền trên server cho mọi truy vấn/mutation.
 
 ## Công nghệ
 
@@ -96,7 +106,9 @@ Với pilot có backend, preview, staging và production phải dùng project/da
 
 ## Tài liệu
 
-- [Kế hoạch phát triển 12 tuần](docs/DEVELOPMENT_PLAN.md)
+- [Enterprise Blueprint 12–15 tháng](docs/ENTERPRISE_BLUEPRINT.md)
+- [Ma trận role, permission và data scope](docs/RBAC_MATRIX.md)
+- [Kế hoạch pilot 12 tuần](docs/DEVELOPMENT_PLAN.md)
 - [Kiến trúc hệ thống](docs/ARCHITECTURE.md)
 - [Bảo mật và threat model](docs/SECURITY.md)
 - [Hợp đồng API mục tiêu](docs/API_SPEC.md)

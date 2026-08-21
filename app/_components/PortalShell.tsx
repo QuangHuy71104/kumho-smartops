@@ -1,38 +1,12 @@
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { portalRouteFor, type PortalPath } from "../../lib/access-control";
+import Can from "./access/Can";
+import DemoNavigation from "./access/DemoNavigation";
+import DemoRoleSwitcher from "./access/DemoRoleSwitcher";
+import DemoRouteBoundary from "./access/DemoRouteBoundary";
 import QuickSearch from "./QuickSearch";
 import styles from "./PortalShell.module.css";
-
-const navigationSections = [
-  {
-    label: "Trung tâm vận hành",
-    items: [
-      { short: "TQ", label: "Tổng quan", href: "/" },
-      { short: "ĐH", label: "Đơn hàng", href: "/don-hang" },
-      { short: "ĐP", label: "Điều phối", href: "/dieu-phoi" },
-      { short: "DX", label: "Đội xe", href: "/doi-xe" },
-      { short: "TX", label: "Tài xế", href: "/tai-xe" },
-    ],
-  },
-  {
-    label: "Kinh doanh & dịch vụ",
-    items: [
-      { short: "VX", label: "Vé hành khách", href: "/ve-xe" },
-      { short: "HĐ", label: "Hợp đồng xe", href: "/hop-dong" },
-      { short: "KH", label: "Khách hàng", href: "/khach-hang" },
-    ],
-  },
-  {
-    label: "Kiểm soát",
-    items: [
-      { short: "BD", label: "Bảo dưỡng", href: "/bao-duong" },
-      { short: "TC", label: "Tài chính", href: "/tai-chinh" },
-      { short: "BC", label: "Báo cáo", href: "/bao-cao" },
-    ],
-  },
-] as const;
-
-type PortalPath = (typeof navigationSections)[number]["items"][number]["href"];
 
 type PortalShellProps = {
   activePath: PortalPath;
@@ -51,6 +25,11 @@ export default function PortalShell({
   headerActions,
   children,
 }: PortalShellProps) {
+  const activeRoute = portalRouteFor(activePath);
+  const headerPermission = "primaryActionPermission" in activeRoute
+    ? activeRoute.primaryActionPermission
+    : activeRoute.viewPermission;
+
   return (
     <div className={styles.shell}>
       <a className={styles.skipLink} href="#noi-dung-chinh">
@@ -71,31 +50,7 @@ export default function PortalShell({
           Trung tâm điều phối demo
         </div>
 
-        <nav className={styles.navigation} aria-label="Điều hướng chính">
-          {navigationSections.map((section, sectionIndex) => (
-            <Fragment key={section.label}>
-              <p className={`${styles.navLabel} ${sectionIndex > 0 ? styles.projectLabel : ""}`}>
-                {section.label}
-              </p>
-              <div className={styles.navScroller}>
-                {section.items.map((item) => {
-                  const isActive = item.href === activePath;
-                  return (
-                    <Link
-                      className={isActive ? styles.navItemActive : styles.navItem}
-                      href={item.href}
-                      key={item.href}
-                      aria-current={isActive ? "page" : undefined}
-                    >
-                      <span className={styles.navIcon} aria-hidden="true">{item.short}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </Fragment>
-          ))}
-        </nav>
+        <DemoNavigation activePath={activePath} />
 
         <div className={styles.safetyNote}>
           <span className={styles.shield} aria-hidden="true">✓</span>
@@ -114,14 +69,16 @@ export default function PortalShell({
             {subtitle ? <span>{subtitle}</span> : null}
           </div>
           <div className={styles.topbarActions}>
-            {headerActions ? <div className={styles.headerActionsSlot}>{headerActions}</div> : null}
+            {headerActions ? (
+              <Can permission={headerPermission}>
+                <div className={styles.headerActionsSlot}>{headerActions}</div>
+              </Can>
+            ) : null}
             <QuickSearch />
             <span className={styles.demoFlag}>
               <i aria-hidden="true" /> Demo
             </span>
-            <span className={styles.avatar} title="Điều phối viên mẫu" aria-label="Điều phối viên mẫu">
-              ĐP
-            </span>
+            <DemoRoleSwitcher />
           </div>
         </header>
 
@@ -132,7 +89,7 @@ export default function PortalShell({
               <strong>Môi trường trình diễn độc lập.</strong> Toàn bộ xe, tài xế, khách hàng, hành trình và doanh thu đều là dữ liệu giả lập.
             </p>
           </div>
-          {children}
+          <DemoRouteBoundary activePath={activePath}>{children}</DemoRouteBoundary>
         </main>
 
         <footer className={styles.footer}>

@@ -4,6 +4,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import test from "node:test";
+import { PORTAL_ROUTES } from "../lib/access-control.ts";
 
 const root = process.cwd();
 const read = (path) => readFile(join(root, path), "utf8");
@@ -37,6 +38,8 @@ test("all transport product routes and enterprise documents are present", async 
   const required = [
     ...routes.map(([path]) => path),
     "docs/DEVELOPMENT_PLAN.md",
+    "docs/ENTERPRISE_BLUEPRINT.md",
+    "docs/RBAC_MATRIX.md",
     "docs/ARCHITECTURE.md",
     "docs/SECURITY.md",
     "docs/API_SPEC.md",
@@ -96,15 +99,15 @@ test("all product pages compose the shared shell with the expected active route"
 });
 
 test("portal navigation exposes every transport module exactly once", async () => {
-  const shell = await read("app/_components/PortalShell.tsx");
-  routes.slice(1).forEach(([, href]) => {
-    const occurrences = shell.match(new RegExp(`href: ["']${href}["']`, "g")) ?? [];
-    assert.equal(occurrences.length, 1, `${href} should appear once in portal navigation`);
-  });
-  assert.match(shell, /Đơn hàng/);
-  assert.match(shell, /Điều phối/);
-  assert.match(shell, /Vé hành khách/);
-  assert.match(shell, /Tài chính/);
+  const navigation = await read("app/_components/access/DemoNavigation.tsx");
+  assert.deepEqual(PORTAL_ROUTES.map((route) => route.path), routes.map(([, href]) => href));
+  assert.equal(new Set(PORTAL_ROUTES.map((route) => route.path)).size, routes.length);
+  assert.deepEqual(
+    PORTAL_ROUTES.map((route) => route.label),
+    ["Tổng quan", "Đơn hàng", "Điều phối", "Đội xe", "Tài xế", "Vé hành khách", "Hợp đồng xe", "Khách hàng", "Bảo dưỡng", "Tài chính", "Báo cáo"],
+  );
+  assert.match(navigation, /PORTAL_ROUTES\.filter/);
+  assert.match(navigation, /section\.routes\.map/);
 });
 
 test("social preview is a real, transport-specific PNG", async () => {
