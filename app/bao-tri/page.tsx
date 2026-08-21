@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import PortalAction from "../_components/PortalAction";
 import PortalShell from "../_components/PortalShell";
 import MaintenanceClient from "./MaintenanceClient";
-import styles from "./Maintenance.module.css";
 
 export const metadata: Metadata = {
   title: "Lịch bảo trì",
@@ -15,7 +15,7 @@ export default function MaintenancePage() {
       eyebrow="Preventive maintenance"
       title="Bảo trì & thay đổi"
       subtitle="Quản lý lịch định kỳ, cửa sổ thay đổi và bằng chứng nghiệm thu."
-      headerActions={<a className={styles.headerButton} href="#lich-cong-viec">Xem lịch tháng</a>}
+      headerActions={<PortalAction href="#lich-cong-viec" variant="secondary">Xem lịch tháng</PortalAction>}
     >
       <MaintenanceClient />
     </PortalShell>

@@ -11,6 +11,8 @@
 
 Hiện tại repository là một web demo server-rendered bằng Next.js 16 App Router, React 19 và TypeScript. Bảy route sản phẩm đọc dữ liệu synthetic trong source; bộ lọc, xuất CSV, ticket và checklist là tương tác thật ở phía client. Thay đổi do người xem tạo chỉ lưu trong `localStorage`; repository không có database, API nghiệp vụ, SSO hoặc connector tới hệ thống doanh nghiệp.
 
+Mã demo tổ chức theo **feature folder**: mỗi route giữ `_components` cho khối trình bày và `_lib` cho type, cấu hình cùng hàm thuần; component `*Client` chỉ điều phối state và sự kiện. `PortalShell`, hành động header và hook `localStorage` nằm ở `app/_components`/`app/_hooks` để dùng chung. Cấu trúc này loại bỏ shell trùng lặp, giữ business helper độc lập với React và cho phép kiểm thử trực tiếp trước khi thay mock data bằng API.
+
 Mục tiêu pilot là một **modular monolith**: một deployable web/API để giảm chi phí vận hành, nhưng domain được tách module rõ để sau này có thể bóc tách khi có bằng chứng về tải hoặc ownership. Không bắt đầu bằng microservice vì sẽ làm tăng bề mặt bảo mật, distributed transaction và công sức quan sát.
 
 ## 3. Bối cảnh hệ thống
@@ -87,6 +89,23 @@ flowchart TB
 Module trao đổi qua service interface nội bộ và domain event/outbox. Không import trực tiếp repository của module khác; dữ liệu tham chiếu qua ID và read model đã định nghĩa.
 
 ## 6. Cấu trúc mã mục tiêu
+
+Cấu trúc bản demo hiện tại:
+
+```text
+app/
+  _components/          # portal shell, action và dashboard dùng chung
+  _hooks/               # browser-state adapter có runtime decoder
+  <feature>/
+    page.tsx             # metadata + composition phía server
+    <Feature>Client.tsx  # state/event orchestration khi thật sự cần client
+    _components/         # component trình bày theo feature
+    _lib/                # type, mock config và pure helper
+lib/                     # dữ liệu synthetic được chia sẻ giữa nhiều route
+tests/                   # regression, data-safety, security config và unit helper
+```
+
+Cấu trúc mục tiêu khi bổ sung backend production:
 
 ```text
 app/

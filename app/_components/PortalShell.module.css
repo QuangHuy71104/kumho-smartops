@@ -232,7 +232,7 @@
 }
 
 .titleBlock > span {
-  display: none;
+  display: block;
   margin-top: 4px;
   color: var(--shell-muted);
   font-size: 10px;
@@ -300,6 +300,8 @@
 .avatar {
   width: 38px;
   height: 38px;
+  display: grid;
+  place-items: center;
   border: 0;
   border-radius: 10px;
   background: var(--shell-brand);
@@ -307,7 +309,6 @@
   box-shadow: 0 6px 14px rgba(201, 21, 36, .16);
   font-size: 10px;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .main { padding: 22px 34px 8px; }

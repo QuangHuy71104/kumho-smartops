@@ -4,7 +4,7 @@
 
 Kế hoạch này chứng minh KSOps đáp ứng acceptance criteria, không vượt ranh giới quyền, bảo toàn dữ liệu và có thể vận hành/rollback ở phạm vi pilot. Kiểm thử dựa trên rủi ro: identity/RBAC, thay đổi CMDB, incident workflow, audit, import/export và attachment được ưu tiên hơn chi tiết trang trí.
 
-Bản demo hiện tại mới có dashboard và build/render test cơ bản. Các suite bên dưới là target cần triển khai theo roadmap, không phải tuyên bố rằng chúng đã tồn tại.
+Bản demo hiện tại có typecheck, lint, Next production build, kiểm tra cấu hình bảo mật/Vercel, quét toàn bộ source để chặn literal IPv4/MAC, kiểm tra shell/route và unit test cho các hàm thuần của danh mục tài sản (seed, filter, sort, phân trang, thống kê và CSV formula-injection guard). Các suite integration, component và E2E bên dưới vẫn là target cần triển khai theo roadmap, không phải tuyên bố rằng chúng đã tồn tại.
 
 ## 2. Phạm vi chất lượng
 

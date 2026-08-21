@@ -1,4 +1,3 @@
-.headerButton { display: inline-flex; align-items: center; justify-content: center; min-height: 37px; padding: 0 14px; border-radius: 9px; background: #c91524; color: #fff; font-size: 10px; font-weight: 700; }
 .module { display: grid; gap: 16px; }
 .executive { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(290px,.5fr); gap: 30px; padding: 28px 30px; border-radius: 15px; background: linear-gradient(120deg,#171d28,#272e3b); color: #fff; box-shadow: 0 12px 30px rgba(23,32,47,.09); }
 .executive > div > span { color: #ff6b75; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }

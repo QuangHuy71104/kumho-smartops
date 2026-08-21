@@ -1,65 +1,100 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { maintenanceRecords, type MaintenanceRecord, type MaintenanceStatus } from "../../lib/demo-data";
+import { useMemo, useState } from "react";
+import { useLocalStorageState } from "../_hooks/useLocalStorageState";
+import {
+  maintenanceRecords,
+  type MaintenanceRecord,
+  type MaintenanceStatus,
+} from "../../lib/demo-data";
 import styles from "./Maintenance.module.css";
 
 const STORAGE_KEY = "ksops-demo-maintenance-checklist-v1";
-const filters: Array<"Tất cả" | MaintenanceStatus> = ["Tất cả", "Sắp tới", "Đang thực hiện", "Hoàn tất", "Quá hạn"];
+const filters = ["Tất cả", "Sắp tới", "Đang thực hiện", "Hoàn tất", "Quá hạn"] as const satisfies readonly ("Tất cả" | MaintenanceStatus)[];
+const EMPTY_CHECK_STATE: CheckState = {};
 
+type MaintenanceFilter = (typeof filters)[number];
 type CheckState = Record<string, boolean[]>;
 
-function readState(): CheckState {
-  try {
-    const value = window.localStorage.getItem(STORAGE_KEY);
-    return value ? JSON.parse(value) as CheckState : {};
-  } catch {
-    return {};
-  }
+function decodeCheckState(value: unknown): CheckState | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const stored = value as Record<string, unknown>;
+
+  return maintenanceRecords.reduce<CheckState>((valid, task) => {
+    const taskChecks = stored[task.id];
+    if (
+      Array.isArray(taskChecks)
+      && taskChecks.length === task.checklist.length
+      && taskChecks.every((item) => typeof item === "boolean")
+    ) {
+      valid[task.id] = taskChecks;
+    }
+    return valid;
+  }, {});
+}
+
+function checksForTask(checks: CheckState, task: MaintenanceRecord) {
+  return checks[task.id] ?? task.checklist.map(() => task.status === "Hoàn tất");
+}
+
+function toggleChecklistItem(values: boolean[], index: number) {
+  return values.map((value, current) => current === index ? !value : value);
+}
+
+function completionPercentage(done: number, total: number) {
+  return total === 0 ? 0 : Math.round((done / total) * 100);
+}
+
+function filterMaintenance(records: readonly MaintenanceRecord[], filter: MaintenanceFilter) {
+  return records.filter((item) => filter === "Tất cả" || item.status === filter);
+}
+
+function MaintenanceOverview() {
+  return (
+    <section className={styles.overview} aria-label="Tổng hợp bảo trì">
+      <article><span>Tuần này</span><strong>03</strong><small>công việc đã lên lịch</small></article>
+      <article><span>Tuân thủ lịch</span><strong>94%</strong><small>mục tiêu pilot ≥ 92%</small></article>
+      <article><span>Quá hạn</span><strong>01</strong><small>cần xử lý trong hôm nay</small></article>
+      <article><span>Restore drill</span><strong>Đạt</strong><small>lần gần nhất: dữ liệu mẫu</small></article>
+    </section>
+  );
 }
 
 export default function MaintenanceClient() {
-  const [filter, setFilter] = useState<(typeof filters)[number]>("Tất cả");
-  const [selected, setSelected] = useState<MaintenanceRecord>(maintenanceRecords[0]);
-  const [checks, setChecks] = useState<CheckState>({});
+  const [filter, setFilter] = useState<MaintenanceFilter>("Tất cả");
+  const [selectedId, setSelectedId] = useState(maintenanceRecords[0].id);
+  const [checks, setChecks, resetStoredChecks] = useLocalStorageState({
+    key: STORAGE_KEY,
+    initialValue: EMPTY_CHECK_STATE,
+    decode: decodeCheckState,
+  });
   const [announcement, setAnnouncement] = useState("");
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setChecks(readState()));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  const visible = useMemo(
-    () => maintenanceRecords.filter((item) => filter === "Tất cả" || item.status === filter),
-    [filter],
+  const selected = useMemo(
+    () => maintenanceRecords.find((task) => task.id === selectedId) ?? maintenanceRecords[0],
+    [selectedId],
   );
-  const selectedChecks = checks[selected.id] ?? selected.checklist.map(() => selected.status === "Hoàn tất");
+  const visible = useMemo(() => filterMaintenance(maintenanceRecords, filter), [filter]);
+  const selectedChecks = checksForTask(checks, selected);
   const doneCount = selectedChecks.filter(Boolean).length;
+  const percentDone = completionPercentage(doneCount, selected.checklist.length);
 
   function toggleCheck(index: number) {
-    const nextForTask = selectedChecks.map((value, current) => current === index ? !value : value);
-    const next = { ...checks, [selected.id]: nextForTask };
-    setChecks(next);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    const nextForTask = toggleChecklistItem(selectedChecks, index);
+    setChecks((current) => ({ ...current, [selected.id]: nextForTask }));
     setAnnouncement(`Đã cập nhật checklist ${selected.id}: ${nextForTask.filter(Boolean).length}/${nextForTask.length} bước.`);
   }
 
   function resetChecks() {
-    window.localStorage.removeItem(STORAGE_KEY);
-    setChecks({});
+    resetStoredChecks();
     setAnnouncement("Đã khôi phục checklist demo ban đầu.");
   }
 
   return (
     <div className={styles.module}>
-      <p className="sr-only" aria-live="polite">{announcement}</p>
+      <p className="sr-only" aria-atomic="true" aria-live="polite">{announcement}</p>
 
-      <section className={styles.overview} aria-label="Tổng hợp bảo trì">
-        <article><span>Tuần này</span><strong>03</strong><small>công việc đã lên lịch</small></article>
-        <article><span>Tuân thủ lịch</span><strong>94%</strong><small>mục tiêu pilot ≥ 92%</small></article>
-        <article><span>Quá hạn</span><strong>01</strong><small>cần xử lý trong hôm nay</small></article>
-        <article><span>Restore drill</span><strong>Đạt</strong><small>lần gần nhất: dữ liệu mẫu</small></article>
-      </section>
+      <MaintenanceOverview />
 
       <div className={styles.bodyGrid}>
         <section className={styles.schedule} id="lich-cong-viec" aria-labelledby="schedule-title">
@@ -69,14 +104,30 @@ export default function MaintenanceClient() {
           </div>
 
           <div className={styles.filterTabs} role="group" aria-label="Lọc theo trạng thái">
-            {filters.map((item) => <button className={item === filter ? styles.tabActive : styles.tab} onClick={() => setFilter(item)} type="button" key={item}>{item}</button>)}
+            {filters.map((item) => (
+              <button
+                aria-pressed={item === filter}
+                className={item === filter ? styles.tabActive : styles.tab}
+                onClick={() => setFilter(item)}
+                type="button"
+                key={item}
+              >
+                {item}
+              </button>
+            ))}
           </div>
 
-          <div className={styles.taskList}>
+          <div className={styles.taskList} aria-label="Danh sách công việc bảo trì">
             {visible.map((task) => {
               const [day, month] = task.date.split("/");
               return (
-                <button className={selected.id === task.id ? styles.taskActive : styles.task} onClick={() => setSelected(task)} type="button" key={task.id}>
+                <button
+                  aria-pressed={selected.id === task.id}
+                  className={selected.id === task.id ? styles.taskActive : styles.task}
+                  onClick={() => setSelectedId(task.id)}
+                  type="button"
+                  key={task.id}
+                >
                   <span className={styles.dateTile}><strong>{day}</strong><small>THÁNG {month}</small></span>
                   <span className={styles.taskCopy}>
                     <span className={styles.taskMeta}>{task.id} · {task.type}</span>
@@ -91,7 +142,7 @@ export default function MaintenanceClient() {
           </div>
         </section>
 
-        <aside className={styles.workOrder} aria-labelledby="work-order-title">
+        <aside className={styles.workOrder} aria-labelledby="work-order-title" aria-live="polite">
           <div className={styles.workHeader}>
             <span>{selected.id}</span>
             <i data-status={selected.status}>{selected.status}</i>
@@ -108,18 +159,29 @@ export default function MaintenanceClient() {
 
           <div className={styles.progressHeading}>
             <div><span>Checklist thực hiện</span><strong>{doneCount}/{selected.checklist.length} hoàn tất</strong></div>
-            <b>{Math.round((doneCount / selected.checklist.length) * 100)}%</b>
+            <b>{percentDone}%</b>
           </div>
-          <div className={styles.progress}><span style={{ width: `${(doneCount / selected.checklist.length) * 100}%` }} /></div>
+          <div
+            aria-label={`Tiến độ checklist ${selected.id}`}
+            aria-valuemax={selected.checklist.length}
+            aria-valuemin={0}
+            aria-valuenow={doneCount}
+            className={styles.progress}
+            role="progressbar"
+          >
+            <span style={{ width: `${percentDone}%` }} />
+          </div>
 
           <div className={styles.checklist}>
-            {selected.checklist.map((item, index) => (
-              <label htmlFor={`${selected.id}-check-${index}`} key={item}>
-                <span className="sr-only">Đánh dấu bước bảo trì</span>
-                <input id={`${selected.id}-check-${index}`} checked={Boolean(selectedChecks[index])} onChange={() => toggleCheck(index)} type="checkbox" />
-                <span><strong>{item}</strong><small>{selectedChecks[index] ? "Đã ghi nhận trên thiết bị này" : "Chưa thực hiện"}</small></span>
-              </label>
-            ))}
+            {selected.checklist.map((item, index) => {
+              const inputId = `${selected.id}-check-${index}`;
+              return (
+                <label aria-label={`Bước bảo trì: ${item}`} htmlFor={inputId} key={item}>
+                  <input id={inputId} checked={Boolean(selectedChecks[index])} onChange={() => toggleCheck(index)} type="checkbox" />
+                  <span><strong>{item}</strong><small>{selectedChecks[index] ? "Đã ghi nhận trên thiết bị này" : "Chưa thực hiện"}</small></span>
+                </label>
+              );
+            })}
           </div>
 
           <div className={styles.changeGate}>
@@ -131,7 +193,7 @@ export default function MaintenanceClient() {
 
       <section className={styles.monthStrip} aria-label="Cường độ bảo trì theo tuần">
         <div><span>Lịch công việc theo tuần</span><strong>Tháng 08 / 2026</strong></div>
-        {[3, 5, 2, 4].map((count, index) => <article key={index}><span>Tuần {index + 1}</span><div><i style={{ width: `${count * 18}%` }} /></div><strong>{count}</strong></article>)}
+        {[3, 5, 2, 4].map((count, index) => <article key={index}><span>Tuần {index + 1}</span><div aria-hidden="true"><i style={{ width: `${count * 18}%` }} /></div><strong>{count}</strong></article>)}
         <p>Biểu đồ chỉ dùng dữ liệu tổng hợp mẫu.</p>
       </section>
     </div>

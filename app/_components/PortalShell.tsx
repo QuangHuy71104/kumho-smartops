@@ -1,18 +1,30 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
+import QuickSearch from "./QuickSearch";
 import styles from "./PortalShell.module.css";
 
-const navigation = [
-  { short: "TQ", label: "Tổng quan", href: "/" },
-  { short: "TS", label: "Tài sản", href: "/tai-san" },
-  { short: "SC", label: "Sự cố", href: "/su-co" },
-  { short: "BT", label: "Bảo trì", href: "/bao-tri" },
-  { short: "GS", label: "Giám sát", href: "/giam-sat" },
-  { short: "TT", label: "Tri thức", href: "/tri-thuc" },
+const navigationSections = [
+  {
+    label: "Vận hành",
+    items: [
+      { short: "TQ", label: "Tổng quan", href: "/" },
+      { short: "TS", label: "Tài sản", href: "/tai-san" },
+      { short: "SC", label: "Sự cố", href: "/su-co" },
+      { short: "BT", label: "Bảo trì", href: "/bao-tri" },
+      { short: "GS", label: "Giám sát", href: "/giam-sat" },
+      { short: "TT", label: "Tri thức", href: "/tri-thuc" },
+    ],
+  },
+  {
+    label: "Dự án",
+    items: [{ short: "KH", label: "Kế hoạch", href: "/ke-hoach" }],
+  },
 ] as const;
 
+type PortalPath = (typeof navigationSections)[number]["items"][number]["href"];
+
 type PortalShellProps = {
-  activePath: string;
+  activePath: PortalPath;
   eyebrow: string;
   title: string;
   subtitle?: string;
@@ -49,33 +61,29 @@ export default function PortalShell({
         </div>
 
         <nav className={styles.navigation} aria-label="Điều hướng chính">
-          <p className={styles.navLabel}>Vận hành</p>
-          <div className={styles.navScroller}>
-            {navigation.map((item) => {
-              const isActive = item.href === activePath;
-              return (
-                <Link
-                  className={isActive ? styles.navItemActive : styles.navItem}
-                  href={item.href}
-                  key={item.href}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <span className={styles.navIcon} aria-hidden="true">{item.short}</span>
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-
-          <p className={`${styles.navLabel} ${styles.projectLabel}`}>Dự án</p>
-          <Link
-            className={activePath === "/ke-hoach" ? styles.navItemActive : styles.navItem}
-            href="/ke-hoach"
-            aria-current={activePath === "/ke-hoach" ? "page" : undefined}
-          >
-            <span className={styles.navIcon} aria-hidden="true">KH</span>
-            <span>Kế hoạch</span>
-          </Link>
+          {navigationSections.map((section, sectionIndex) => (
+            <Fragment key={section.label}>
+              <p className={`${styles.navLabel} ${sectionIndex > 0 ? styles.projectLabel : ""}`}>
+                {section.label}
+              </p>
+              <div className={styles.navScroller}>
+                {section.items.map((item) => {
+                  const isActive = item.href === activePath;
+                  return (
+                    <Link
+                      className={isActive ? styles.navItemActive : styles.navItem}
+                      href={item.href}
+                      key={item.href}
+                      aria-current={isActive ? "page" : undefined}
+                    >
+                      <span className={styles.navIcon} aria-hidden="true">{item.short}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </Fragment>
+          ))}
         </nav>
 
         <div className={styles.safetyNote}>
@@ -96,17 +104,13 @@ export default function PortalShell({
           </div>
           <div className={styles.topbarActions}>
             {headerActions ? <div className={styles.headerActionsSlot}>{headerActions}</div> : null}
-            <Link className={styles.quickSearch} href="/tai-san" aria-label="Mở trang tìm kiếm tài sản">
-              <span aria-hidden="true">⌕</span>
-              <span>Tìm nhanh</span>
-              <kbd>Ctrl K</kbd>
-            </Link>
+            <QuickSearch />
             <span className={styles.demoFlag}>
               <i aria-hidden="true" /> Demo
             </span>
-            <button className={styles.avatar} type="button" aria-label="Tài khoản Demo Admin">
+            <span className={styles.avatar} title="Tài khoản quản trị mẫu" aria-label="Tài khoản quản trị mẫu">
               DA
-            </button>
+            </span>
           </div>
         </header>
 

@@ -1,4 +1,3 @@
-.headerButton { display: inline-flex; align-items: center; justify-content: center; min-height: 37px; padding: 0 14px; border: 1px solid #dfe3e8; border-radius: 9px; background: #fff; color: #344054; font-size: 10px; font-weight: 700; }
 .module { display: grid; gap: 16px; }
 .overview { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 .overview article { padding: 18px 20px; border: 1px solid #e5e8ed; border-radius: 13px; background: #fff; box-shadow: 0 3px 12px rgba(16,24,40,.025); }

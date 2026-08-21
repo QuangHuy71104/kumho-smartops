@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
+import PortalAction from "../_components/PortalAction";
 import PortalShell from "../_components/PortalShell";
-import styles from "./Incidents.module.css";
 import IncidentsClient from "./IncidentsClient";
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function IncidentsPage() {
       eyebrow="IT Service Management"
       title="Sự cố & yêu cầu"
       subtitle="Tiếp nhận, ưu tiên và theo dõi SLA trong một luồng thống nhất."
-      headerActions={<a className={styles.headerButton} href="#tao-su-co">+ Tạo sự cố</a>}
+      headerActions={<PortalAction href="#tao-su-co">+ Tạo sự cố</PortalAction>}
     >
       <IncidentsClient />
     </PortalShell>

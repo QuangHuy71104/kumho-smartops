@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import PortalAction from "../_components/PortalAction";
 import PortalShell from "../_components/PortalShell";
 import KnowledgeClient from "./KnowledgeClient";
-import styles from "./Knowledge.module.css";
 
 export const metadata: Metadata = {
   title: "Kho tri thức",
@@ -15,7 +15,7 @@ export default function KnowledgePage() {
       eyebrow="Knowledge management"
       title="Kho tri thức vận hành"
       subtitle="Runbook có phiên bản, người sở hữu và checklist xác nhận sau xử lý."
-      headerActions={<a className={styles.headerButton} href="#danh-sach-runbook">Duyệt runbook</a>}
+      headerActions={<PortalAction href="#danh-sach-runbook">Duyệt runbook</PortalAction>}
     >
       <KnowledgeClient />
     </PortalShell>

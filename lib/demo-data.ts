@@ -14,7 +14,7 @@ export type IncidentRecord = {
   summary: string;
 };
 
-export const incidentRecords: IncidentRecord[] = [
+export const incidentRecords: readonly IncidentRecord[] = [
   {
     id: "INC-2048",
     title: "Mất kết nối máy in tại quầy điều hành",
@@ -103,7 +103,7 @@ export type MaintenanceRecord = {
   checklist: string[];
 };
 
-export const maintenanceRecords: MaintenanceRecord[] = [
+export const maintenanceRecords: readonly MaintenanceRecord[] = [
   {
     id: "MNT-0824",
     date: "24/08/2026",
@@ -173,7 +173,7 @@ export type RunbookRecord = {
   steps: string[];
 };
 
-export const runbooks: RunbookRecord[] = [
+export const runbooks: readonly RunbookRecord[] = [
   {
     slug: "chan-doan-mat-ket-noi",
     code: "RB-NET-01",
@@ -219,36 +219,3 @@ export const runbooks: RunbookRecord[] = [
     steps: ["Đánh giá mức độ ưu tiên", "Xác nhận bản vá đã được phê duyệt", "Triển khai nhóm thử nghiệm", "Theo dõi chỉ số lỗi", "Mở rộng theo vòng", "Chốt bằng chứng tuân thủ"],
   },
 ];
-
-export const roadmapPhases = [
-  {
-    weeks: "Tuần 1–2",
-    name: "Khảo sát & thiết kế",
-    outcome: "User story, quy trình AS-IS/TO-BE, mô hình dữ liệu, threat model và prototype được duyệt.",
-    status: "Hoàn tất",
-  },
-  {
-    weeks: "Tuần 3–5",
-    name: "Nền tảng CMDB",
-    outcome: "Tài sản, địa điểm, RBAC, audit log, import dữ liệu mẫu và dashboard cơ bản.",
-    status: "Đang thực hiện",
-  },
-  {
-    weeks: "Tuần 6–8",
-    name: "ITSM & bảo trì",
-    outcome: "Ticket, SLA, workflow, lịch bảo trì, checklist, thông báo và runbook.",
-    status: "Sắp tới",
-  },
-  {
-    weeks: "Tuần 9–10",
-    name: "Quan sát & tích hợp",
-    outcome: "Cảnh báo, dashboard KPI, API tích hợp, backup governance và báo cáo.",
-    status: "Sắp tới",
-  },
-  {
-    weeks: "Tuần 11–12",
-    name: "UAT & chuyển giao",
-    outcome: "Kiểm thử bảo mật, hiệu năng, UAT, tài liệu vận hành, đào tạo và go-live pilot.",
-    status: "Sắp tới",
-  },
-] as const;

@@ -16,7 +16,8 @@ Phiên bản hiện tại là ứng dụng Next.js 16 responsive, gồm:
 - kho runbook có tìm kiếm, phân loại, quy trình xử lý và vòng đời tài liệu;
 - roadmap 12 tuần, kiến trúc mục tiêu, quality gate, risk register và bộ bàn giao;
 - metadata Open Graph riêng, security headers, semantic HTML và hỗ trợ truy cập;
-- pipeline lint, build và test trên GitHub Actions.
+- feature-folder architecture với shell/hook dùng chung và pure helper có unit test;
+- pipeline typecheck, lint, build, test và dependency audit trên GitHub Actions.
 
 Database, API, SSO/RBAC và tích hợp giám sát thật không được bật trong bản demo công khai. Ticket và checklist do người xem tạo chỉ lưu trong `localStorage`; thiết kế production được mô tả trong thư mục `docs/`.
 
@@ -73,6 +74,10 @@ npx vercel@latest --prod
 ```
 
 Không cần biến môi trường cho bản demo. Với pilot có backend, tạo project riêng cho preview/staging/production và cấp secret qua Vercel Environment Variables hoặc secret manager được phê duyệt.
+
+Vercel tự cấp `VERCEL_PROJECT_PRODUCTION_URL` khi bật System Environment Variables; ứng dụng dùng giá trị này để tạo canonical/Open Graph URL ngay lúc build và giữ toàn bộ route ở dạng static. Với custom domain hoặc nền tảng khác, đặt `NEXT_PUBLIC_SITE_URL` thành URL HTTPS đầy đủ trước khi build.
+
+Bản trình diễn gửi chỉ thị `noindex, nofollow, noarchive` trong metadata và response header để hạn chế bị hiểu nhầm là hệ thống chính thức; người xem vẫn truy cập bình thường bằng liên kết trực tiếp.
 
 ## Tài liệu dự án
 
