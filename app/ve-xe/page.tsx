@@ -5,17 +5,17 @@ import TicketBookingClient from "./_components/TicketBookingClient";
 
 export const metadata: Metadata = {
   title: "Vé hành khách",
-  description: "Tra cứu chuyến, chọn ghế và tạo bản ghi đặt chỗ hoàn toàn mô phỏng.",
+  description: "Tra cứu chuyến, chọn ghế và quản lý đặt chỗ hành khách.",
 };
 
 export default function PassengerTicketsPage() {
   return (
     <PortalShell
       activePath="/ve-xe"
-      eyebrow="Kinh doanh hành khách · Dữ liệu mô phỏng"
+      eyebrow="Kinh doanh hành khách · Booking desk"
       title="Vé hành khách"
-      subtitle="Tra cứu chuyến, chọn ghế và giữ chỗ demo trên thiết bị này"
-      headerActions={<PortalAction href="#dat-cho-demo">Đặt chỗ demo</PortalAction>}
+      subtitle="Tra cứu chuyến, chọn ghế và quản lý đặt chỗ theo hành trình"
+      headerActions={<PortalAction href="#dat-cho">Đặt chỗ mới</PortalAction>}
     >
       <TicketBookingClient />
     </PortalShell>

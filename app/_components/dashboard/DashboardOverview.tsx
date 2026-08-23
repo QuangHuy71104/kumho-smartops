@@ -36,7 +36,7 @@ function RecentOrders() {
       </div>
       <div className={styles.tableWrap}>
         <table>
-          <caption className="sr-only">Ba đơn vận chuyển gần đây nhất trong dữ liệu mô phỏng</caption>
+          <caption className="sr-only">Ba đơn vận chuyển gần đây nhất</caption>
           <thead>
             <tr>
               <th>Đơn vận chuyển</th>
@@ -139,7 +139,7 @@ export default function DashboardOverview() {
     <div className={styles.dashboard}>
       <section className={styles.heroPanel} aria-labelledby="welcome-title">
         <div>
-          <span className={styles.sectionKicker}>Ca vận hành 21/08</span>
+          <span className={styles.sectionKicker}>Ca vận hành 23/08</span>
           <h2 id="welcome-title">Điều phối mọi chuyến đi từ một màn hình.</h2>
           <p>Theo dõi đội xe, đơn hàng, tài xế và cam kết giao nhận trong cùng một luồng vận hành minh bạch.</p>
         </div>

@@ -15,7 +15,7 @@ type DemoRouteBoundaryProps = {
 };
 
 /**
- * Demo-only UI boundary. The children are server-rendered synthetic content, so
+ * Vận hành-only UI boundary. The children are server-rendered nghiệp vụ content, so
  * this component must not be treated as a security boundary for production data.
  */
 export default function DemoRouteBoundary({

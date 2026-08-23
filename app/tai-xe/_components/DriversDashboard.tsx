@@ -40,19 +40,19 @@ export default function DriversDashboard() {
   return (
     <div className={styles.page}>
       <section className={styles.hero} aria-labelledby="drivers-hero-title">
-        <div><span>WORKFORCE DESK · MOCK</span><h2 id="drivers-hero-title">Đúng người, đủ điều kiện, khớp ca.</h2><p>Điều phối tài xế dựa trên ca làm, giờ công và hồ sơ tuân thủ giả lập trong một luồng thống nhất.</p></div>
-        <div className={styles.complianceHero}><div className={styles.heroRing}><strong>{driverSummary.compliance}</strong><small>điểm</small></div><div><strong>Tuân thủ toàn đội</strong><small>2 hồ sơ mẫu cần xác minh</small></div></div>
+        <div><span>WORKFORCE DESK · 08:42</span><h2 id="drivers-hero-title">Đúng người, đủ điều kiện, khớp ca.</h2><p>Điều phối tài xế dựa trên ca làm, giờ công và hồ sơ tuân thủ trong một luồng thống nhất.</p></div>
+        <div className={styles.complianceHero}><div className={styles.heroRing}><strong>{driverSummary.compliance}</strong><small>điểm</small></div><div><strong>Tuân thủ toàn đội</strong><small>2 hồ sơ cần xác minh</small></div></div>
       </section>
 
-      <section className={styles.metrics} aria-label="Chỉ số tài xế mô phỏng">
-        <article><span>TX</span><div><p>Tổng tài xế</p><strong>{driverSummary.total}</strong><small>100% hồ sơ synthetic</small></div></article>
+      <section className={styles.metrics} aria-label="Chỉ số tài xế">
+        <article><span>TX</span><div><p>Tổng tài xế</p><strong>{driverSummary.total}</strong><small>100% hồ sơ nghiệp vụ</small></div></article>
         <article><span className={styles.green}>✓</span><div><p>Sẵn sàng nhận ca</p><strong>{driverSummary.ready}</strong><small>Có thể phân công ngay</small></div></article>
         <article><span className={styles.blue}>→</span><div><p>Đang làm việc</p><strong>{driverSummary.working}</strong><small>Trên chuyến hoặc lệnh hàng</small></div></article>
         <article><span className={styles.amber}>HS</span><div><p>Chờ xác minh</p><strong>{driverSummary.review}</strong><small>Không tự động phân công</small></div></article>
       </section>
 
       <section className={styles.shiftStrip} aria-labelledby="shift-title">
-        <div className={styles.stripHeading}><div><span>Coverage hôm nay</span><h2 id="shift-title">Phủ ca vận hành</h2></div><p>Cập nhật giả lập 08:42</p></div>
+        <div className={styles.stripHeading}><div><span>Coverage hôm nay</span><h2 id="shift-title">Phủ ca vận hành</h2></div><p>Cập nhật 08:42</p></div>
         <div className={styles.shiftGrid}>
           {shiftSummary.map((item) => (
             <article key={item.shift}><span>{item.shift}</span><strong>{item.count} tài xế</strong><p>{item.ready} sẵn sàng · {item.count - item.ready} đã xếp trạng thái</p><div><i style={{ "--coverage": `${Math.max(28, item.count / driverSummary.total * 260)}%` } as CSSProperties} /></div></article>
@@ -62,9 +62,9 @@ export default function DriversDashboard() {
 
       <div className={styles.mainGrid}>
         <section className={styles.directory} aria-labelledby="driver-list-title">
-          <div className={styles.sectionHeading}><div><span>Danh bạ vận hành</span><h2 id="driver-list-title">Tài xế & khả năng sẵn sàng</h2><p>Không chứa danh tính hoặc số giấy tờ thật.</p></div><b role="status" aria-live="polite">{filteredDrivers.length} kết quả</b></div>
+          <div className={styles.sectionHeading}><div><span>Danh bạ vận hành</span><h2 id="driver-list-title">Tài xế & khả năng sẵn sàng</h2><p>Tìm kiếm theo mã nhân viên, công việc, xe hoặc bãi xe.</p></div><b role="status" aria-live="polite">{filteredDrivers.length} kết quả</b></div>
           <div className={styles.filters} role="search" aria-label="Tìm và lọc tài xế">
-            <label className={styles.searchField} htmlFor="driver-search"><span aria-hidden="true">⌕</span><span className={styles.srOnly}>Tìm tài xế</span><input id="driver-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mã, công việc, xe mẫu..." /></label>
+            <label className={styles.searchField} htmlFor="driver-search"><span aria-hidden="true">⌕</span><span className={styles.srOnly}>Tìm tài xế</span><input id="driver-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mã, công việc, biển số xe..." /></label>
             <label><span className={styles.srOnly}>Khả năng sẵn sàng</span><select value={availability} onChange={(event) => setAvailability(event.target.value)}><option>Tất cả</option>{availabilityOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
             <label><span className={styles.srOnly}>Ca làm</span><select value={shift} onChange={(event) => setShift(event.target.value)}><option>Tất cả</option>{shiftOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
             <button type="button" onClick={resetFilters}>Đặt lại</button>
@@ -86,7 +86,7 @@ export default function DriversDashboard() {
 
         <aside className={styles.profile} aria-labelledby="driver-profile-title" aria-live="polite">
           <div className={styles.profileHeader}><span className={styles.largeAvatar} aria-hidden="true">TX</span><span className={`${styles.availability} ${availabilityClass[selectedDriver.availability]}`}><i aria-hidden="true" />{selectedDriver.availability}</span></div>
-          <p>Hồ sơ nhân sự mô phỏng</p><h2 id="driver-profile-title">{selectedDriver.name}</h2><code>{selectedDriver.id}</code>
+          <p>Hồ sơ nhân sự</p><h2 id="driver-profile-title">{selectedDriver.name}</h2><code>{selectedDriver.id}</code>
           <div className={styles.profileStats}>
             <div><span>Điểm tuân thủ</span><strong>{selectedDriver.compliance}/100</strong></div>
             <div><span>Giờ tuần này</span><strong>{selectedDriver.hoursThisWeek}h / 48h</strong></div>
@@ -95,11 +95,11 @@ export default function DriversDashboard() {
             <div><dt>Ca làm</dt><dd>{selectedDriver.shift}<small>{selectedDriver.shiftWindow}</small></dd></div>
             <div><dt>Phân công</dt><dd>{selectedDriver.assignment}<small>{selectedDriver.vehicle}</small></dd></div>
             <div><dt>Điểm trực</dt><dd>{selectedDriver.homeBase}</dd></div>
-            <div><dt>Hạng bằng demo</dt><dd>{selectedDriver.licenseClass}<small>Hạn mẫu {selectedDriver.licenseExpiry}</small></dd></div>
+            <div><dt>Hạng bằng</dt><dd>{selectedDriver.licenseClass}<small>Hạn {selectedDriver.licenseExpiry}</small></dd></div>
           </dl>
 
           <section className={styles.documents} aria-labelledby="documents-title">
-            <div><h3 id="documents-title">Giấy tờ & chứng nhận demo</h3><span>3 mục</span></div>
+            <div><h3 id="documents-title">Giấy tờ & chứng nhận</h3><span>3 mục</span></div>
             {selectedDriver.documents.map((document) => <article key={document.label}><span className={documentClass[document.state]} aria-hidden="true">{document.state === "Hợp lệ" ? "✓" : "!"}</span><div><strong>{document.label}</strong><small>{document.note}</small></div><em>{document.state}</em></article>)}
           </section>
 

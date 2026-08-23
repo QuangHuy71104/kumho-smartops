@@ -30,14 +30,14 @@ function resolveMetadataBase() {
 
 const metadataBase = resolveMetadataBase();
 const title = "KSOps — Transport Control";
-const description = "Bản demo quản lý đội xe, đơn vận chuyển, vé hành khách, hợp đồng và điều phối dành cho đề tài thực tập lập trình viên.";
+const description = "Nền tảng điều hành đội xe, đơn vận chuyển, vé hành khách, hợp đồng và tài chính trên một không gian thống nhất.";
 
 export const metadata: Metadata = {
   metadataBase,
   title: { default: title, template: "%s · KSOps" },
   description,
   applicationName: "KSOps",
-  robots: { index: false, follow: false, noarchive: true },
+  robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     locale: "vi_VN",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     siteName: "KSOps",
     title,
     description,
-    images: [{ url: "/og.png", width: 1659, height: 948, alt: "KSOps Transport Control — Demo quản lý vận tải" }],
+    images: [{ url: "/og.png", width: 1659, height: 948, alt: "KSOps Transport Control — Trung tâm điều hành vận tải" }],
   },
   twitter: {
     card: "summary_large_image",

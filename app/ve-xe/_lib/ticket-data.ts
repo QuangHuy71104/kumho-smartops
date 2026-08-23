@@ -43,25 +43,25 @@ export type Seat = {
 
 export const BOOKING_STORAGE_KEY = "ksops-transport-demo-bookings-v1";
 export const EMPTY_BOOKINGS: DemoBooking[] = [];
-export const DEFAULT_ROUTE_ID = "RT-DEMO-01";
-export const DEFAULT_TRAVEL_DATE = "2026-08-22";
+export const DEFAULT_ROUTE_ID = "RT-SG-VT";
+export const DEFAULT_TRAVEL_DATE = "2026-08-23";
 
 export const ticketRoutes: TicketRoute[] = [
-  { id: "RT-DEMO-01", origin: "Bến Thành Phố A", destination: "Trạm Duyên Hải B", duration: "2 giờ 30 phút" },
-  { id: "RT-DEMO-02", origin: "Bến Thành Phố A", destination: "Điểm Cao Nguyên C", duration: "6 giờ 15 phút" },
-  { id: "RT-DEMO-03", origin: "Trạm Duyên Hải B", destination: "Bến Thành Phố A", duration: "2 giờ 35 phút" },
-  { id: "RT-DEMO-04", origin: "Bến Thành Phố A", destination: "Trung Tâm Miền Tây D", duration: "3 giờ 45 phút" },
+  { id: "RT-SG-VT", origin: "Bến xe Miền Đông Mới", destination: "Bến xe Vũng Tàu", duration: "2 giờ 30 phút" },
+  { id: "RT-SG-BMT", origin: "Bến xe Miền Đông Mới", destination: "Bến xe phía Nam Buôn Ma Thuột", duration: "6 giờ 15 phút" },
+  { id: "RT-VT-SG", origin: "Bến xe Vũng Tàu", destination: "Bến xe Miền Đông Mới", duration: "2 giờ 35 phút" },
+  { id: "RT-SG-CT", origin: "Bến xe Miền Đông Mới", destination: "Bến xe Trung tâm Cần Thơ", duration: "3 giờ 45 phút" },
 ];
 
 export const ticketTrips: TicketTrip[] = [
-  { id: "TRP-D2201", routeId: "RT-DEMO-01", date: "2026-08-22", departure: "06:30", arrival: "09:00", vehicle: "Xe ghế 28 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Sảnh đón A1 (demo)", dropoffPoint: "Sảnh trả B1 (demo)", capacity: 28, price: 145000, reservedSeats: ["A01", "B01", "D02", "A04", "C05", "D07"] },
-  { id: "TRP-D2202", routeId: "RT-DEMO-01", date: "2026-08-22", departure: "09:15", arrival: "11:45", vehicle: "Xe ghế 24 chỗ", serviceClass: "Linh hoạt", pickupPoint: "Sảnh đón A2 (demo)", dropoffPoint: "Sảnh trả B1 (demo)", capacity: 24, price: 165000, reservedSeats: ["C01", "D01", "A02", "B04", "C04"] },
-  { id: "TRP-D2203", routeId: "RT-DEMO-01", date: "2026-08-22", departure: "14:00", arrival: "16:30", vehicle: "Xe ghế 28 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Sảnh đón A1 (demo)", dropoffPoint: "Sảnh trả B2 (demo)", capacity: 28, price: 145000, reservedSeats: ["A01", "B01", "A03", "B03", "C03", "D03", "A06"] },
-  { id: "TRP-D2301", routeId: "RT-DEMO-01", date: "2026-08-23", departure: "07:00", arrival: "09:30", vehicle: "Xe ghế 28 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Sảnh đón A1 (demo)", dropoffPoint: "Sảnh trả B1 (demo)", capacity: 28, price: 145000, reservedSeats: ["D01", "A02", "B02"] },
-  { id: "TRP-C2201", routeId: "RT-DEMO-02", date: "2026-08-22", departure: "07:30", arrival: "13:45", vehicle: "Xe giường 24 chỗ", serviceClass: "Đường dài", pickupPoint: "Sảnh đón A3 (demo)", dropoffPoint: "Sảnh trả C1 (demo)", capacity: 24, price: 320000, reservedSeats: ["A01", "B01", "C01", "D01", "B02", "C04"] },
-  { id: "TRP-C2301", routeId: "RT-DEMO-02", date: "2026-08-23", departure: "20:00", arrival: "02:15 +1", vehicle: "Xe giường 24 chỗ", serviceClass: "Đường dài", pickupPoint: "Sảnh đón A3 (demo)", dropoffPoint: "Sảnh trả C1 (demo)", capacity: 24, price: 340000, reservedSeats: ["A02", "D02", "C03"] },
-  { id: "TRP-A2201", routeId: "RT-DEMO-03", date: "2026-08-22", departure: "10:00", arrival: "12:35", vehicle: "Xe ghế 24 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Sảnh đón B1 (demo)", dropoffPoint: "Sảnh trả A1 (demo)", capacity: 24, price: 145000, reservedSeats: ["B01", "C01", "D04"] },
-  { id: "TRP-DW2201", routeId: "RT-DEMO-04", date: "2026-08-22", departure: "08:00", arrival: "11:45", vehicle: "Xe ghế 28 chỗ", serviceClass: "Linh hoạt", pickupPoint: "Sảnh đón A4 (demo)", dropoffPoint: "Sảnh trả D1 (demo)", capacity: 28, price: 210000, reservedSeats: ["A01", "D01", "A02", "D02", "B05"] },
+  { id: "TRP-D2201", routeId: "RT-SG-VT", date: "2026-08-23", departure: "06:30", arrival: "09:00", vehicle: "Xe ghế 28 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Quầy đón số 3 · Bến xe Miền Đông Mới", dropoffPoint: "Bến xe Vũng Tàu", capacity: 28, price: 145000, reservedSeats: ["A01", "B01", "D02", "A04", "C05", "D07"] },
+  { id: "TRP-D2202", routeId: "RT-SG-VT", date: "2026-08-23", departure: "09:15", arrival: "11:45", vehicle: "Xe ghế 24 chỗ", serviceClass: "Linh hoạt", pickupPoint: "Quầy đón số 5 · Bến xe Miền Đông Mới", dropoffPoint: "Bến xe Vũng Tàu", capacity: 24, price: 165000, reservedSeats: ["C01", "D01", "A02", "B04", "C04"] },
+  { id: "TRP-D2203", routeId: "RT-SG-VT", date: "2026-08-23", departure: "14:00", arrival: "16:30", vehicle: "Xe ghế 28 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Quầy đón số 3 · Bến xe Miền Đông Mới", dropoffPoint: "Văn phòng 192 Nam Kỳ Khởi Nghĩa", capacity: 28, price: 145000, reservedSeats: ["A01", "B01", "A03", "B03", "C03", "D03", "A06"] },
+  { id: "TRP-D2301", routeId: "RT-SG-VT", date: "2026-08-24", departure: "07:00", arrival: "09:30", vehicle: "Xe ghế 28 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Quầy đón số 3 · Bến xe Miền Đông Mới", dropoffPoint: "Bến xe Vũng Tàu", capacity: 28, price: 145000, reservedSeats: ["D01", "A02", "B02"] },
+  { id: "TRP-C2201", routeId: "RT-SG-BMT", date: "2026-08-23", departure: "07:30", arrival: "13:45", vehicle: "Xe giường 24 chỗ", serviceClass: "Đường dài", pickupPoint: "Quầy đón số 8 · Bến xe Miền Đông Mới", dropoffPoint: "Bến xe phía Nam Buôn Ma Thuột", capacity: 24, price: 320000, reservedSeats: ["A01", "B01", "C01", "D01", "B02", "C04"] },
+  { id: "TRP-C2301", routeId: "RT-SG-BMT", date: "2026-08-24", departure: "20:00", arrival: "02:15 +1", vehicle: "Xe giường 24 chỗ", serviceClass: "Đường dài", pickupPoint: "Quầy đón số 8 · Bến xe Miền Đông Mới", dropoffPoint: "Bến xe phía Nam Buôn Ma Thuột", capacity: 24, price: 340000, reservedSeats: ["A02", "D02", "C03"] },
+  { id: "TRP-A2201", routeId: "RT-VT-SG", date: "2026-08-23", departure: "10:00", arrival: "12:35", vehicle: "Xe ghế 24 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Quầy đón số 2 · Bến xe Vũng Tàu", dropoffPoint: "Bến xe Miền Đông Mới", capacity: 24, price: 145000, reservedSeats: ["B01", "C01", "D04"] },
+  { id: "TRP-DW2201", routeId: "RT-SG-CT", date: "2026-08-23", departure: "08:00", arrival: "11:45", vehicle: "Xe ghế 28 chỗ", serviceClass: "Linh hoạt", pickupPoint: "Quầy đón số 2 · Bến xe Miền Tây", dropoffPoint: "Bến xe Trung tâm Cần Thơ", capacity: 28, price: 210000, reservedSeats: ["A01", "D01", "A02", "D02", "B05"] },
 ];
 
 export function routeLabel(route: TicketRoute) {
@@ -110,7 +110,7 @@ export function formatTravelDate(value: string) {
 function isDemoBooking(value: unknown): value is DemoBooking {
   if (typeof value !== "object" || value === null) return false;
   const booking = value as Record<string, unknown>;
-  if (typeof booking.id !== "string" || !booking.id.startsWith("BK-DEMO-") || typeof booking.tripId !== "string") return false;
+  if (typeof booking.id !== "string" || !booking.id.startsWith("BK-2608-") || typeof booking.tripId !== "string") return false;
   const trip = ticketTrips.find((item) => item.id === booking.tripId);
   if (!trip || !Array.isArray(booking.seats) || booking.seats.length < 1 || booking.seats.length > trip.capacity) return false;
   const validSeatCodes = new Set(seatsFor(trip).map((seat) => seat.code));
@@ -137,7 +137,7 @@ export function createDemoBooking(trip: TicketTrip, seats: string[], timestamp: 
   const route = routeForTrip(trip);
   const uniqueSeats = [...new Set(seats)].sort();
   return {
-    id: `BK-DEMO-${String(timestamp).slice(-6)}`,
+    id: `BK-2608-${String(timestamp).slice(-6)}`,
     tripId: trip.id,
     routeLabel: routeLabel(route),
     date: trip.date,
@@ -145,6 +145,6 @@ export function createDemoBooking(trip: TicketTrip, seats: string[], timestamp: 
     seats: uniqueSeats,
     total: trip.price * uniqueSeats.length,
     status: "Đã giữ chỗ",
-    createdAt: "Vừa tạo trên thiết bị này",
+    createdAt: "Vừa tạo",
   };
 }

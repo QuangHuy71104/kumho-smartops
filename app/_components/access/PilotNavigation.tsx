@@ -13,7 +13,7 @@ import styles from "../PortalShell.module.css";
  */
 export default function PilotNavigation({ activePath }: { activePath: PortalPath }) {
   return (
-    <nav className={styles.navigation} aria-label="Điều hướng môi trường pilot">
+    <nav className={styles.navigation} aria-label="Điều hướng môi trường kết nối">
       {PORTAL_SECTIONS.map((section, sectionIndex) => (
         <Fragment key={section.id}>
           <p className={`${styles.navLabel} ${sectionIndex > 0 ? styles.projectLabel : ""}`}>
@@ -34,7 +34,7 @@ export default function PilotNavigation({ activePath }: { activePath: PortalPath
                   <span className={styles.pilotNavCopy}>
                     <span>{route.label}</span>
                     <small className={isCargoPilot ? styles.pilotNavLive : styles.pilotNavMock}>
-                      {isCargoPilot ? "SSO + DB" : "Mẫu"}
+                      {isCargoPilot ? "SSO + DB" : "Workspace"}
                     </small>
                   </span>
                 </Link>

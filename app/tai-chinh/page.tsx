@@ -4,7 +4,7 @@ import FinanceDashboard from "./FinanceDashboard";
 
 export const metadata: Metadata = {
   title: "Tài chính vận tải",
-  description: "Theo dõi doanh thu, công nợ và chi phí khai thác bằng dữ liệu mô phỏng.",
+  description: "Theo dõi doanh thu, công nợ và chi phí khai thác bằng dữ liệu vận hành.",
 };
 
 export default function FinancePage() {

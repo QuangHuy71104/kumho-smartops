@@ -4,16 +4,16 @@ import DriversDashboard from "./_components/DriversDashboard";
 
 export const metadata: Metadata = {
   title: "Điều hành tài xế",
-  description: "Lịch ca, khả năng sẵn sàng và hồ sơ tuân thủ tài xế bằng dữ liệu mô phỏng.",
+  description: "Lịch ca, khả năng sẵn sàng và hồ sơ tuân thủ của đội ngũ tài xế.",
 };
 
 export default function DriversPage() {
   return (
     <PortalShell
       activePath="/tai-xe"
-      eyebrow="Driver operations · Hồ sơ demo"
+      eyebrow="Driver operations · Workforce desk"
       title="Điều hành tài xế"
-      subtitle="Xếp ca, kiểm soát giấy tờ và mức độ sẵn sàng của đội ngũ mẫu."
+      subtitle="Xếp ca, kiểm soát giấy tờ và mức độ sẵn sàng của đội ngũ"
     >
       <DriversDashboard />
     </PortalShell>

@@ -13,12 +13,12 @@ export default function DemoRoleSwitcher() {
 
   return (
     <div className={styles.demoRoleControl}>
-      <label className={styles.demoRoleSwitcher} htmlFor="demo-role-selector">
-        <span>Góc nhìn vai trò <b>DEMO</b></span>
+      <label className={styles.demoRoleSwitcher} htmlFor="role-selector">
+        <span>Vai trò làm việc</span>
         <select
-          id="demo-role-selector"
+          id="role-selector"
           value={roleId}
-          aria-describedby="demo-role-disclaimer"
+          aria-describedby="role-disclaimer"
           onChange={(event) => {
             const nextRole = decodeDemoRole(event.target.value);
             if (nextRole) selectRole(nextRole);
@@ -28,12 +28,12 @@ export default function DemoRoleSwitcher() {
             <option value={id} key={id}>{DEMO_ROLES[id].label}</option>
           ))}
         </select>
-        <small id="demo-role-disclaimer">Chỉ lọc giao diện · không phải đăng nhập</small>
+        <small id="role-disclaimer">Phạm vi: {role.scopeLabel}</small>
       </label>
       <span
         className={styles.avatar}
         title={`${role.label} · ${role.department}`}
-        aria-label={`Vai trò demo: ${role.label}`}
+        aria-label={`Vai trò hiện tại: ${role.label}`}
       >
         {role.short}
       </span>

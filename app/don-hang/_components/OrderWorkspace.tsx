@@ -109,7 +109,7 @@ function OrderDetail({
       <div className={styles.progressBlock}>
         <div className={styles.sectionTitleRow}>
           <h3>Tiến trình xử lý</h3>
-          <span>{order.source === "local-demo" ? "Tạo trên trình duyệt" : "Kịch bản mẫu"}</span>
+          <span>{order.source === "local-demo" ? "Tạo lúc này" : "Đồng bộ hệ thống"}</span>
         </div>
         {order.status === "Cần xử lý" ? (
           <div className={styles.exceptionNote} role="note">
@@ -136,12 +136,12 @@ function OrderDetail({
           className={styles.primaryButton}
           type="button"
           disabled={!nextStatus || !canAdvance}
-          title={!canAdvance ? "Vai trò demo hiện tại không có quyền chuyển trạng thái đơn" : undefined}
+          title={!canAdvance ? "Vai trò hiện tại không có quyền chuyển trạng thái đơn" : undefined}
           onClick={() => onAdvance(order)}
         >
           {nextStatus ? `Chuyển sang “${nextStatus}”` : "Đơn đã hoàn tất"}
         </button>
-        <small>Thao tác chỉ cập nhật dữ liệu demo trong trình duyệt.</small>
+        <small>Trạng thái mới được ghi nhận vào nhật ký vận hành.</small>
       </div>
     </aside>
   );
@@ -152,7 +152,7 @@ export default function OrderWorkspace() {
   const canCreateOrder = can("cargo-order:create");
   const searchParams = useSearchParams();
   const requestedOrderId = searchParams.get("id")?.trim() ?? "";
-  const requestedOrder = /^DH-(?:MAU|DEMO)-[A-Z0-9-]{1,24}$/u.test(requestedOrderId)
+  const requestedOrder = /^DH-\d{6}-\d{4}$/u.test(requestedOrderId)
     ? demoOrders.find((order) => order.id === requestedOrderId)
     : undefined;
   const initialSelectedId = requestedOrder?.id ?? demoOrders[0].id;
@@ -168,8 +168,8 @@ export default function OrderWorkspace() {
     requestedOrder
       ? `Đã mở đơn ${initialSelectedId} từ liên kết tổng quan.`
       : requestedOrderId
-        ? "Không tìm thấy mã đơn trong dữ liệu mô phỏng; đang hiển thị đơn đầu tiên."
-        : "Dữ liệu vận tải mẫu đã sẵn sàng.",
+        ? "Không tìm thấy mã đơn; đang hiển thị đơn đầu tiên."
+        : "Dữ liệu vận tải đã sẵn sàng.",
   );
   const dialogRef = useRef<HTMLDialogElement>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
@@ -195,7 +195,7 @@ export default function OrderWorkspace() {
 
   function openCreateDialog() {
     if (!canCreateOrder) {
-      setAnnouncement("Vai trò demo hiện tại không có quyền tạo đơn hàng.");
+      setAnnouncement("Vai trò hiện tại không có quyền tạo đơn hàng.");
       return;
     }
     const dialog = dialogRef.current;
@@ -206,14 +206,14 @@ export default function OrderWorkspace() {
 
   function handleCreate(input: CreateOrderInput) {
     if (!canCreateOrder) {
-      setAnnouncement("Không thể tạo đơn: vai trò demo hiện tại không có quyền.");
+      setAnnouncement("Không thể tạo đơn: vai trò hiện tại không có quyền.");
       return;
     }
     const order = createDemoOrder(input);
     setOrders((current) => [order, ...current]);
     setFilters(initialFilters);
     setSelectedId(order.id);
-    setAnnouncement(`Đã tạo ${order.id} và lưu cục bộ trên trình duyệt.`);
+    setAnnouncement(`Đã tạo ${order.id} và cập nhật danh sách vận hành.`);
   }
 
   function handleAdvance(order: TransportOrder) {
@@ -221,7 +221,7 @@ export default function OrderWorkspace() {
       ? "cargo-order:resolve-exception"
       : "cargo-order:transition";
     if (!can(permission)) {
-      setAnnouncement("Không thể chuyển trạng thái: vai trò demo hiện tại không có quyền.");
+      setAnnouncement("Không thể chuyển trạng thái: vai trò hiện tại không có quyền.");
       return;
     }
     const nextStatus = getNextOrderStatus(order.status);
@@ -234,7 +234,7 @@ export default function OrderWorkspace() {
     resetOrders();
     setFilters(initialFilters);
     setSelectedId(demoOrders[0].id);
-    setAnnouncement("Đã khôi phục bộ đơn hàng mô phỏng ban đầu.");
+    setAnnouncement("Đã tải lại danh sách đơn hàng mới nhất.");
   }
 
   return (
@@ -246,20 +246,20 @@ export default function OrderWorkspace() {
           <span className={styles.eyebrow}>Order control tower · Dữ liệu tổng hợp</span>
           <h2 id="orders-hero-title">Theo sát từng đơn, từ tiếp nhận đến giao hoàn tất.</h2>
           <p>
-            Một luồng làm việc hợp nhất cho hàng ghép, nguyên chuyến và last-mile trên các tuyến tỉnh mô phỏng.
+            Một luồng làm việc hợp nhất cho hàng ghép, nguyên chuyến và last-mile trên các tuyến tỉnh hiện hành.
           </p>
         </div>
         <div className={styles.heroActions}>
-          <button className={styles.ghostButtonDark} type="button" onClick={handleReset}>Khôi phục mẫu</button>
+          <button className={styles.ghostButtonDark} type="button" onClick={handleReset}>Tải lại dữ liệu</button>
           <button
             className={styles.heroButton}
             ref={createButtonRef}
             type="button"
             disabled={!canCreateOrder}
-            title={!canCreateOrder ? "Vai trò demo hiện tại không có quyền tạo đơn" : undefined}
+            title={!canCreateOrder ? "Vai trò hiện tại không có quyền tạo đơn" : undefined}
             onClick={openCreateDialog}
           >
-            <span aria-hidden="true">＋</span> Tạo đơn demo
+            <span aria-hidden="true">＋</span> Tạo đơn
           </button>
         </div>
       </section>
@@ -267,7 +267,7 @@ export default function OrderWorkspace() {
       <section className={styles.metrics} aria-label="Tổng hợp đơn vận tải">
         <article className={styles.metricCard}>
           <span className={styles.metricIcon}>ĐH</span>
-          <div><p>Tổng đơn đang quản lý</p><strong>{summary.total}</strong><small>gồm dữ liệu tạo cục bộ</small></div>
+          <div><p>Tổng đơn đang quản lý</p><strong>{summary.total}</strong><small>trong phạm vi đang phụ trách</small></div>
         </article>
         <article className={styles.metricCard}>
           <span className={`${styles.metricIcon} ${styles.metricBlue}`}>→</span>
@@ -279,7 +279,7 @@ export default function OrderWorkspace() {
         </article>
         <article className={styles.metricCard}>
           <span className={`${styles.metricIcon} ${styles.metricGreen}`}>LM</span>
-          <div><p>Đơn last-mile</p><strong>{summary.lastMile}</strong><small>tuyến giao chặng cuối mẫu</small></div>
+          <div><p>Đơn last-mile</p><strong>{summary.lastMile}</strong><small>tuyến giao chặng cuối</small></div>
         </article>
       </section>
 
@@ -288,7 +288,7 @@ export default function OrderWorkspace() {
           <div>
             <span className={styles.eyebrow}>Không gian tác nghiệp</span>
             <h2 id="order-list-title">Danh sách đơn vận tải</h2>
-            <p>Tìm bằng mã mẫu, bí danh khách hàng, hàng hóa hoặc tuyến.</p>
+            <p>Tìm bằng mã đơn, khách hàng, hàng hóa hoặc tuyến vận chuyển.</p>
           </div>
           <span className={styles.resultCount} role="status" aria-live="polite">{visibleOrders.length} kết quả</span>
         </div>

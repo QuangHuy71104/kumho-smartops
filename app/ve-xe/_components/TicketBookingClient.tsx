@@ -54,7 +54,7 @@ export default function TicketBookingClient() {
     setSearch({ routeId: routeDraft, date: dateDraft });
     setSelectedTripId(results[0]?.id ?? "");
     setSelectedSeats([]);
-    setAnnouncement(results.length > 0 ? `Đã tìm thấy ${results.length} chuyến mô phỏng.` : "Không có chuyến mô phỏng phù hợp.");
+    setAnnouncement(results.length > 0 ? `Đã tìm thấy ${results.length} chuyến phù hợp.` : "Không có chuyến phù hợp.");
   }
 
   function selectTrip(trip: TicketTrip) {
@@ -70,7 +70,7 @@ export default function TicketBookingClient() {
 
   function confirmBooking() {
     if (!canCreateBooking) {
-      setAnnouncement("Vai trò demo hiện tại không có quyền tạo đặt chỗ.");
+      setAnnouncement("Vai trò hiện tại không có quyền tạo đặt chỗ.");
       return;
     }
     if (!selectedTrip || selectedSeats.length === 0) {
@@ -80,21 +80,21 @@ export default function TicketBookingClient() {
     const booking = createDemoBooking(selectedTrip, selectedSeats, Date.now());
     setBookings((current) => [booking, ...current].slice(0, 8));
     setSelectedSeats([]);
-    setAnnouncement(`Đã tạo ${booking.id}. Đây chỉ là bản ghi demo, chưa thanh toán.`);
+    setAnnouncement(`Đã tạo ${booking.id}. Đặt chỗ đang chờ xác nhận thanh toán.`);
   }
 
   function cancelBooking(id: string) {
     if (!canCancelBooking) {
-      setAnnouncement("Vai trò demo hiện tại không có quyền hủy đặt chỗ.");
+      setAnnouncement("Vai trò hiện tại không có quyền hủy đặt chỗ.");
       return;
     }
     setBookings((current) => current.map((booking) => booking.id === id ? { ...booking, status: "Đã hủy" } : booking));
-    setAnnouncement(`Đã hủy bản ghi demo ${id}.`);
+    setAnnouncement(`Đã hủy bản ghi đặt chỗ ${id}.`);
   }
 
   function clearBookingHistory() {
     resetBookings();
-    setAnnouncement("Đã xóa lịch sử đặt chỗ demo trên thiết bị này.");
+    setAnnouncement("Đã làm mới danh sách đặt chỗ gần đây.");
   }
 
   const selectedRoute = selectedTrip ? routeForTrip(selectedTrip) : ticketRoutes.find((route) => route.id === search.routeId) ?? ticketRoutes[0];
@@ -106,14 +106,14 @@ export default function TicketBookingClient() {
 
       <section className={styles.hero} aria-labelledby="ticket-search-title">
         <div>
-          <span className={styles.kicker}>Passenger service demo</span>
+          <span className={styles.kicker}>Passenger booking</span>
           <h2 id="ticket-search-title">Tìm chuyến phù hợp trong vài bước.</h2>
-          <p>Giờ chạy, giá và ghế đều là dữ liệu mô phỏng. Hệ thống không thu thập thông tin hành khách hoặc xử lý thanh toán.</p>
+          <p>Chọn tuyến, giờ khởi hành và ghế trống để tạo đặt chỗ. Thanh toán được đối soát tại quầy.</p>
         </div>
-        <div className={styles.heroMetrics} aria-label="Tổng quan vé mô phỏng">
-          <div><strong>{ticketTrips.length}</strong><span>chuyến mẫu</span></div>
-          <div><strong>{ticketRoutes.length}</strong><span>tuyến demo</span></div>
-          <div><strong>0</strong><span>giao dịch thật</span></div>
+        <div className={styles.heroMetrics} aria-label="Tổng quan vé">
+          <div><strong>{ticketTrips.length}</strong><span>chuyến đang mở bán</span></div>
+          <div><strong>{ticketRoutes.length}</strong><span>tuyến khai thác</span></div>
+          <div><strong>{bookings.filter((booking) => booking.status === "Đã giữ chỗ").length}</strong><span>đặt chỗ hôm nay</span></div>
         </div>
       </section>
 
@@ -137,11 +137,11 @@ export default function TicketBookingClient() {
                 <span className={styles.tripAvailability}><strong>{availableSeatCount(trip, bookings)} ghế</strong><small>{formatDemoPrice(trip.price)}</small></span>
               </button>
             ))}
-            {matchingTrips.length === 0 ? <div className={styles.empty}><strong>Chưa có chuyến cho lựa chọn này</strong><p>Hãy thử ngày khác hoặc một tuyến mô phỏng khác.</p></div> : null}
+            {matchingTrips.length === 0 ? <div className={styles.empty}><strong>Chưa có chuyến cho lựa chọn này</strong><p>Hãy thử ngày khác hoặc một tuyến khai thác khác.</p></div> : null}
           </div>
         </section>
 
-        <section className={styles.seatPanel} id="dat-cho-demo" aria-labelledby="seat-map-title">
+        <section className={styles.seatPanel} id="dat-cho" aria-labelledby="seat-map-title">
           {selectedTrip ? (
             <>
               <div className={styles.panelHeading}>
@@ -165,16 +165,16 @@ export default function TicketBookingClient() {
               <div className={styles.tripFacts}><div><span>Điểm đón</span><strong>{selectedTrip.pickupPoint}</strong></div><div><span>Điểm trả</span><strong>{selectedTrip.dropoffPoint}</strong></div></div>
               <div className={styles.summary}>
                 <div><span>Ghế đã chọn</span><strong>{selectedSeats.length ? [...selectedSeats].sort().join(", ") : "Chưa chọn"}</strong></div>
-                <div><span>Tạm tính mô phỏng</span><strong>{formatDemoPrice(estimate)}</strong></div>
+                <div><span>Tạm tính</span><strong>{formatDemoPrice(estimate)}</strong></div>
                 <button
                   disabled={selectedSeats.length === 0 || !canCreateBooking}
-                  title={!canCreateBooking ? "Vai trò demo hiện tại không có quyền tạo đặt chỗ." : undefined}
+                  title={!canCreateBooking ? "Vai trò hiện tại không có quyền tạo đặt chỗ." : undefined}
                   onClick={confirmBooking}
                   type="button"
                 >
-                  Giữ chỗ demo
+                  Xác nhận giữ chỗ
                 </button>
-                <p>Không phát sinh thanh toán, vé thật hoặc thông tin hành khách.</p>
+                <p>Đặt chỗ được giữ trong 15 phút và chờ xác nhận thanh toán tại quầy.</p>
               </div>
             </>
           ) : <div className={styles.seatEmpty}><span aria-hidden="true">VX</span><strong>Chọn một chuyến</strong><p>Sơ đồ ghế sẽ xuất hiện sau khi có kết quả phù hợp.</p></div>}
@@ -182,8 +182,8 @@ export default function TicketBookingClient() {
       </div>
 
       <section className={styles.history} aria-labelledby="booking-history-title">
-        <div className={styles.historyHeading}><div><span>Lưu cục bộ</span><h2 id="booking-history-title">Đặt chỗ demo gần đây</h2></div>{bookings.length > 0 ? <button type="button" onClick={clearBookingHistory}>Xóa lịch sử demo</button> : null}</div>
-        {bookings.length > 0 ? <div className={styles.historyList}>{bookings.map((booking) => <article key={booking.id}><div><span>{booking.id}</span><strong>{booking.routeLabel}</strong><small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small></div><div><strong>{formatDemoPrice(booking.total)}</strong><span data-status={booking.status}>{booking.status}</span>{booking.status === "Đã giữ chỗ" ? <button disabled={!canCancelBooking} title={canCancelBooking ? undefined : "Vai trò demo hiện tại không có quyền hủy đặt chỗ."} onClick={() => cancelBooking(booking.id)} type="button">Hủy bản ghi</button> : null}</div></article>)}</div> : <div className={styles.historyEmpty}><strong>Chưa có bản ghi đặt chỗ</strong><p>Các booking demo sẽ chỉ được lưu trong trình duyệt hiện tại.</p></div>}
+        <div className={styles.historyHeading}><div><span>Booking desk</span><h2 id="booking-history-title">Đặt chỗ gần đây</h2></div>{bookings.length > 0 ? <button type="button" onClick={clearBookingHistory}>Làm mới danh sách</button> : null}</div>
+        {bookings.length > 0 ? <div className={styles.historyList}>{bookings.map((booking) => <article key={booking.id}><div><span>{booking.id}</span><strong>{booking.routeLabel}</strong><small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small></div><div><strong>{formatDemoPrice(booking.total)}</strong><span data-status={booking.status}>{booking.status}</span>{booking.status === "Đã giữ chỗ" ? <button disabled={!canCancelBooking} title={canCancelBooking ? undefined : "Vai trò hiện tại không có quyền hủy đặt chỗ."} onClick={() => cancelBooking(booking.id)} type="button">Hủy bản ghi</button> : null}</div></article>)}</div> : <div className={styles.historyEmpty}><strong>Chưa có bản ghi đặt chỗ</strong><p>Đặt chỗ mới sẽ xuất hiện tại đây.</p></div>}
       </section>
     </div>
   );

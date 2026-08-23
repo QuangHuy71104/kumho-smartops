@@ -20,7 +20,7 @@ export default function DemoNavigation({ activePath }: { activePath: PortalPath 
   })).filter((section) => section.routes.length > 0);
 
   return (
-    <nav className={styles.navigation} aria-label="Điều hướng chính theo vai trò demo">
+    <nav className={styles.navigation} aria-label="Điều hướng chính theo vai trò">
       {visibleSections.map((section, sectionIndex) => (
         <Fragment key={section.id}>
           <p className={`${styles.navLabel} ${sectionIndex > 0 ? styles.projectLabel : ""}`}>

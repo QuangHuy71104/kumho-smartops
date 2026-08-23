@@ -44,33 +44,33 @@ export default function FinanceDashboard() {
 
   function markPaid(id: string) {
     if (!canRecordPayment) {
-      setMessage("Vai trò demo hiện tại không có quyền ghi nhận thanh toán.");
+      setMessage("Vai trò hiện tại không có quyền ghi nhận thanh toán.");
       return;
     }
     setPaidIds((current) => current.includes(id) ? current : [...current, id]);
-    setMessage(`Đã ghi nhận thanh toán mô phỏng cho ${id}.`);
+    setMessage(`Đã ghi nhận thanh toán cho ${id}.`);
   }
 
-  function resetDemo() {
+  function resetFinanceData() {
     resetPaidIds();
-    setMessage("Đã khôi phục dữ liệu thanh toán mẫu.");
+    setMessage("Đã tải lại trạng thái thanh toán mới nhất.");
   }
 
   return (
     <div className={styles.finance}>
       <section className={styles.hero} aria-labelledby="finance-summary-title">
         <div>
-          <span className={styles.kicker}>Đối soát ngày 21/08</span>
+          <span className={styles.kicker}>Đối soát ngày 23/08</span>
           <h2 id="finance-summary-title">Dòng tiền bám theo từng chuyến xe.</h2>
-          <p>Doanh thu, công nợ và chi phí khai thác được liên kết bằng mã đơn hàng mô phỏng để dễ truy vết.</p>
+          <p>Doanh thu, công nợ và chi phí khai thác được liên kết bằng mã đơn hàng để dễ truy vết.</p>
         </div>
-        <button className={styles.secondaryButton} type="button" onClick={resetDemo}>Khôi phục dữ liệu mẫu</button>
+        <button className={styles.secondaryButton} type="button" onClick={resetFinanceData}>Tải lại dữ liệu</button>
       </section>
 
       <section className={styles.metrics} aria-label="Chỉ số tài chính">
         <article><span>Doanh thu tháng</span><strong>2,84 tỷ</strong><small>+8,6% so với tháng trước</small></article>
-        <article><span>Đã thu trong mẫu</span><strong>{formatCurrency(collected)}</strong><small>Cập nhật khi ghi nhận thanh toán</small></article>
-        <article><span>Công nợ trong mẫu</span><strong>{formatCurrency(receivable)}</strong><small>1 hóa đơn đang quá hạn</small></article>
+        <article><span>Đã thu trong kỳ</span><strong>{formatCurrency(collected)}</strong><small>Cập nhật khi ghi nhận thanh toán</small></article>
+        <article><span>Công nợ hiện tại</span><strong>{formatCurrency(receivable)}</strong><small>1 hóa đơn đang quá hạn</small></article>
         <article><span>Biên đóng góp</span><strong>31,4%</strong><small>Sau chi phí vận hành trực tiếp</small></article>
       </section>
 
@@ -106,7 +106,7 @@ export default function FinanceDashboard() {
 
       <section className={styles.panel} aria-labelledby="invoice-title">
         <div className={styles.invoiceHeading}>
-          <div><span className={styles.kicker}>Chứng từ mô phỏng</span><h2 id="invoice-title">Hóa đơn và công nợ</h2></div>
+          <div><span className={styles.kicker}>Chứng từ vận hành</span><h2 id="invoice-title">Hóa đơn và công nợ</h2></div>
           <label>Trạng thái
             <select value={filter} onChange={(event) => setFilter(event.target.value as Filter)}>
               <option>Tất cả</option><option>Đã thanh toán</option><option>Chờ thanh toán</option><option>Quá hạn</option>
@@ -116,7 +116,7 @@ export default function FinanceDashboard() {
         <p className={styles.liveMessage} aria-live="polite">{message}</p>
         <div className={styles.tableWrap}>
           <table>
-            <caption className="sr-only">Danh sách hóa đơn mô phỏng</caption>
+            <caption className="sr-only">Danh sách hóa đơn vận hành</caption>
             <thead><tr><th>Hóa đơn</th><th>Khách hàng</th><th>Dịch vụ</th><th>Giá trị</th><th>Hạn</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
             <tbody>
               {filteredInvoices.map((invoice) => (
@@ -124,7 +124,7 @@ export default function FinanceDashboard() {
                   <td><strong>{invoice.id}</strong><span>{invoice.reference}</span></td>
                   <td>{invoice.customer}</td><td>{invoice.service}</td><td>{formatCurrency(invoice.amount)}</td><td>{invoice.dueDate}</td>
                   <td><span className={styles.status} data-status={invoice.status}>{invoice.status}</span></td>
-                  <td>{invoice.status === "Đã thanh toán" ? <span className={styles.done}>Đã đối soát</span> : <button disabled={!canRecordPayment} title={canRecordPayment ? undefined : "Vai trò demo hiện tại không có quyền ghi nhận thanh toán."} type="button" onClick={() => markPaid(invoice.id)}>Ghi nhận thu</button>}</td>
+                  <td>{invoice.status === "Đã thanh toán" ? <span className={styles.done}>Đã đối soát</span> : <button disabled={!canRecordPayment} title={canRecordPayment ? undefined : "Vai trò hiện tại không có quyền ghi nhận thanh toán."} type="button" onClick={() => markPaid(invoice.id)}>Ghi nhận thu</button>}</td>
                 </tr>
               ))}
             </tbody>

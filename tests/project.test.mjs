@@ -48,14 +48,15 @@ test("all transport product routes and enterprise documents are present", async 
   await Promise.all(required.map((path) => stat(join(root, path))));
 });
 
-test("public copy identifies the transport scope and synthetic data", async () => {
+test("public copy identifies the transport operations scope", async () => {
   const shell = await read("app/_components/PortalShell.tsx");
   const dashboard = await read("app/_components/dashboard/DashboardOverview.tsx");
   const readme = await read("README.md");
 
   assert.match(shell, /Transport Control/);
-  assert.match(shell, /MOCK DATA/);
-  assert.match(shell, /không phải hệ thống chính thức/i);
+  assert.match(shell, /Trung tâm dữ liệu vận tải/);
+  assert.match(shell, /Nền tảng quản trị vận tải và điều phối tập trung/);
+  assert.doesNotMatch(shell, /MOCK DATA|dữ liệu giả lập|không phải hệ thống chính thức/i);
   assert.match(dashboard, /Điều phối mọi chuyến đi/);
   assert.match(readme, /đội xe, tài xế, đơn vận chuyển hàng hóa/i);
 });

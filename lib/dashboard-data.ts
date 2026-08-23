@@ -116,7 +116,7 @@ export const fleetReadiness = [
 
 export const dashboardFleetSummary = fleetSummary;
 
-const maintenancePreviewOrder = workOrders.find((order) => order.id === "WO-DEMO-034") ?? workOrders[0];
+const maintenancePreviewOrder = workOrders.find((order) => order.id === "BD-2608-034") ?? workOrders[0];
 const maintenancePreviewSchedule = maintenanceSchedule.find((item) => item.title.includes(maintenancePreviewOrder.id))
   ?? maintenanceSchedule[0];
 

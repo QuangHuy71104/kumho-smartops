@@ -16,18 +16,17 @@ export default function DemoAccessNotice({
   fallbackPath,
 }: DemoAccessNoticeProps) {
   return (
-    <section className={styles.accessNotice} aria-labelledby="demo-access-title">
+    <section className={styles.accessNotice} aria-labelledby="access-title">
       <span className={styles.accessNoticeIcon} aria-hidden="true">RB</span>
       <div>
-        <p>Phạm vi vai trò mô phỏng</p>
-        <h2 id="demo-access-title">{role.label} không sử dụng phân hệ {routeLabel}</h2>
+        <p>Phạm vi truy cập</p>
+        <h2 id="access-title">{role.label} chưa được cấp quyền vào phân hệ {routeLabel}</h2>
         <p>
-          Navigation được lọc theo nghiệp vụ để trình diễn operating model. Đây chỉ là
-          kiểm soát giao diện demo, không phải cơ chế xác thực hoặc phân quyền production.
+          Điều hướng được giới hạn theo chức năng và phạm vi công việc của vai trò hiện tại.
         </p>
         <dl>
           <div><dt>Phòng ban</dt><dd>{role.department}</dd></div>
-          <div><dt>Phạm vi mẫu</dt><dd>{role.scopeLabel}</dd></div>
+          <div><dt>Phạm vi dữ liệu</dt><dd>{role.scopeLabel}</dd></div>
         </dl>
         <Link href={fallbackPath}>Mở phân hệ được phép đầu tiên</Link>
       </div>

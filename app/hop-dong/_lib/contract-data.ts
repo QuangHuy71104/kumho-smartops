@@ -1,6 +1,6 @@
 export const CONTRACT_STAGES = ["Mới tiếp nhận", "Đang khảo sát", "Chờ báo giá", "Đã gửi báo giá", "Đã xác nhận"] as const;
 export type ContractStage = (typeof CONTRACT_STAGES)[number];
-export type CustomerGroupType = "Đoàn thể mô phỏng" | "Doanh nghiệp mô phỏng" | "Nhóm khách mô phỏng";
+export type CustomerGroupType = "Đoàn thể" | "Doanh nghiệp" | "Nhóm khách";
 export type VehicleOption = "Xe 16 chỗ" | "Xe 29 chỗ" | "Xe 45 chỗ";
 
 export type ContractRequest = {
@@ -28,12 +28,12 @@ export type ContractDraft = Pick<
 export const CONTRACT_STORAGE_KEY = "ksops-transport-demo-contract-requests-v1";
 export const EMPTY_CREATED_REQUESTS: ContractRequest[] = [];
 export const CONTRACT_FILTERS = ["Tất cả", ...CONTRACT_STAGES] as const;
-export const PICKUP_OPTIONS = ["Điểm đón Thành Phố A (demo)", "Điểm tập kết Bắc A (demo)", "Trung tâm sự kiện A (demo)"] as const;
-export const DESTINATION_OPTIONS = ["Khu sinh thái B (demo)", "Trung tâm hội nghị C (demo)", "Điểm tham quan D (demo)"] as const;
+export const PICKUP_OPTIONS = ["Nhà Văn hóa Thanh niên TP.HCM", "KCN VSIP I, Bình Dương", "Trung tâm Hội nghị White Palace"] as const;
+export const DESTINATION_OPTIONS = ["Khu du lịch Hồ Tràm", "Trung tâm Hội nghị GEM Center", "Khu du lịch Đại Nam"] as const;
 
 export const EMPTY_CONTRACT_DRAFT: ContractDraft = {
-  title: "Hành trình đoàn demo",
-  groupType: "Doanh nghiệp mô phỏng",
+  title: "Đưa đón đoàn hội nghị khách hàng",
+  groupType: "Doanh nghiệp",
   passengerCount: 24,
   vehicleType: "Xe 29 chỗ",
   vehicleCount: 1,
@@ -44,12 +44,12 @@ export const EMPTY_CONTRACT_DRAFT: ContractDraft = {
 };
 
 export const contractRequests: ContractRequest[] = [
-  { id: "HĐ-DEMO-1042", title: "Đoàn hội thảo nội bộ 02", groupType: "Doanh nghiệp mô phỏng", passengerCount: 72, vehicleType: "Xe 45 chỗ", vehicleCount: 2, startDate: "2026-08-26", endDate: "2026-08-27", pickup: "Trung tâm sự kiện A (demo)", destination: "Trung tâm hội nghị C (demo)", status: "Mới tiếp nhận", owner: "Nhóm Kinh doanh A", estimatedValue: 16800000, createdAt: "21/08/2026 · 08:30" },
-  { id: "HĐ-DEMO-1039", title: "Chuyến tham quan tập thể 05", groupType: "Đoàn thể mô phỏng", passengerCount: 43, vehicleType: "Xe 45 chỗ", vehicleCount: 1, startDate: "2026-09-02", endDate: "2026-09-04", pickup: "Điểm đón Thành Phố A (demo)", destination: "Khu sinh thái B (demo)", status: "Đang khảo sát", owner: "Chuyên viên Demo 01", estimatedValue: 14400000, createdAt: "20/08/2026 · 14:15" },
-  { id: "HĐ-DEMO-1037", title: "Đưa đón nhóm dự án 07", groupType: "Nhóm khách mô phỏng", passengerCount: 15, vehicleType: "Xe 16 chỗ", vehicleCount: 1, startDate: "2026-08-30", endDate: "2026-08-30", pickup: "Điểm tập kết Bắc A (demo)", destination: "Trung tâm hội nghị C (demo)", status: "Đang khảo sát", owner: "Chuyên viên Demo 02", estimatedValue: 3200000, createdAt: "20/08/2026 · 09:40" },
-  { id: "HĐ-DEMO-1034", title: "Đoàn đào tạo khu vực 03", groupType: "Doanh nghiệp mô phỏng", passengerCount: 56, vehicleType: "Xe 29 chỗ", vehicleCount: 2, startDate: "2026-09-05", endDate: "2026-09-06", pickup: "Trung tâm sự kiện A (demo)", destination: "Điểm tham quan D (demo)", status: "Chờ báo giá", owner: "Nhóm Kinh doanh B", estimatedValue: 19200000, createdAt: "19/08/2026 · 16:05" },
-  { id: "HĐ-DEMO-1028", title: "Sự kiện khách hàng mẫu 08", groupType: "Doanh nghiệp mô phỏng", passengerCount: 88, vehicleType: "Xe 45 chỗ", vehicleCount: 2, startDate: "2026-09-10", endDate: "2026-09-10", pickup: "Điểm đón Thành Phố A (demo)", destination: "Trung tâm hội nghị C (demo)", status: "Đã gửi báo giá", owner: "Chuyên viên Demo 03", estimatedValue: 11800000, createdAt: "18/08/2026 · 11:20" },
-  { id: "HĐ-DEMO-1021", title: "Hành trình tập thể mẫu 04", groupType: "Đoàn thể mô phỏng", passengerCount: 27, vehicleType: "Xe 29 chỗ", vehicleCount: 1, startDate: "2026-08-25", endDate: "2026-08-26", pickup: "Điểm tập kết Bắc A (demo)", destination: "Khu sinh thái B (demo)", status: "Đã xác nhận", owner: "Nhóm Kinh doanh A", estimatedValue: 7600000, createdAt: "16/08/2026 · 10:10" },
+  { id: "HĐ-26-1042", title: "Hội nghị đối tác Minh Long 2026", groupType: "Doanh nghiệp", passengerCount: 72, vehicleType: "Xe 45 chỗ", vehicleCount: 2, startDate: "2026-08-26", endDate: "2026-08-27", pickup: "Trung tâm Hội nghị White Palace", destination: "Trung tâm Hội nghị GEM Center", status: "Mới tiếp nhận", owner: "Nhóm Kinh doanh A", estimatedValue: 16800000, createdAt: "21/08/2026 · 08:30" },
+  { id: "HĐ-26-1039", title: "Chuyến nghỉ dưỡng Công ty An Phú", groupType: "Đoàn thể", passengerCount: 43, vehicleType: "Xe 45 chỗ", vehicleCount: 1, startDate: "2026-09-02", endDate: "2026-09-04", pickup: "Nhà Văn hóa Thanh niên TP.HCM", destination: "Khu du lịch Hồ Tràm", status: "Đang khảo sát", owner: "Nguyễn Ngọc Anh", estimatedValue: 14400000, createdAt: "20/08/2026 · 14:15" },
+  { id: "HĐ-26-1037", title: "Đưa đón nhóm kỹ sư VSIP", groupType: "Nhóm khách", passengerCount: 15, vehicleType: "Xe 16 chỗ", vehicleCount: 1, startDate: "2026-08-30", endDate: "2026-08-30", pickup: "KCN VSIP I, Bình Dương", destination: "Trung tâm Hội nghị GEM Center", status: "Đang khảo sát", owner: "Trần Khánh Linh", estimatedValue: 3200000, createdAt: "20/08/2026 · 09:40" },
+  { id: "HĐ-26-1034", title: "Đào tạo đại lý khu vực phía Nam", groupType: "Doanh nghiệp", passengerCount: 56, vehicleType: "Xe 29 chỗ", vehicleCount: 2, startDate: "2026-09-05", endDate: "2026-09-06", pickup: "Trung tâm Hội nghị White Palace", destination: "Khu du lịch Đại Nam", status: "Chờ báo giá", owner: "Nhóm Kinh doanh B", estimatedValue: 19200000, createdAt: "19/08/2026 · 16:05" },
+  { id: "HĐ-26-1028", title: "Sự kiện khách hàng Phương Nam", groupType: "Doanh nghiệp", passengerCount: 88, vehicleType: "Xe 45 chỗ", vehicleCount: 2, startDate: "2026-09-10", endDate: "2026-09-10", pickup: "Nhà Văn hóa Thanh niên TP.HCM", destination: "Trung tâm Hội nghị GEM Center", status: "Đã gửi báo giá", owner: "Lê Minh Châu", estimatedValue: 11800000, createdAt: "18/08/2026 · 11:20" },
+  { id: "HĐ-26-1021", title: "Chuyến công đoàn quý III", groupType: "Đoàn thể", passengerCount: 27, vehicleType: "Xe 29 chỗ", vehicleCount: 1, startDate: "2026-08-25", endDate: "2026-08-26", pickup: "KCN VSIP I, Bình Dương", destination: "Khu du lịch Hồ Tràm", status: "Đã xác nhận", owner: "Nhóm Kinh doanh A", estimatedValue: 7600000, createdAt: "16/08/2026 · 10:10" },
 ];
 
 export function vehicleCapacity(vehicle: VehicleOption) {
@@ -87,7 +87,7 @@ export function nextContractStage(stage: ContractStage): ContractStage | null {
 }
 
 export function validateContractDraft(draft: ContractDraft) {
-  if (draft.title.trim().length < 8) return "Tên hành trình demo cần ít nhất 8 ký tự.";
+  if (draft.title.trim().length < 8) return "Tên hành trình cần ít nhất 8 ký tự.";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(draft.endDate)) return "Hãy chọn đầy đủ ngày bắt đầu và kết thúc.";
   if (draft.endDate < draft.startDate) return "Ngày kết thúc không được trước ngày bắt đầu.";
   if (draft.passengerCount < 1 || draft.vehicleCount < 1) return "Quy mô đoàn và số xe phải lớn hơn 0.";
@@ -98,12 +98,12 @@ export function validateContractDraft(draft: ContractDraft) {
 export function buildContractRequest(draft: ContractDraft, timestamp: number): ContractRequest {
   return {
     ...draft,
-    id: `HĐ-DEMO-${String(timestamp).slice(-5)}`,
+    id: `HĐ-26-${String(timestamp).slice(-5)}`,
     title: draft.title.trim(),
     status: "Mới tiếp nhận",
     owner: "Chưa phân công",
     estimatedValue: estimateContractValue(draft),
-    createdAt: "Vừa tạo trên thiết bị này",
+    createdAt: "Vừa tạo",
   };
 }
 
@@ -130,12 +130,12 @@ function isContractRequest(value: unknown): value is ContractRequest {
     && request.estimatedValue >= 0;
 
   return typeof request.id === "string"
-    && request.id.startsWith("HĐ-DEMO-")
+    && request.id.startsWith("HĐ-26-")
     && boundedStrings
     && validDates
     && validNumbers
     && (CONTRACT_STAGES as readonly unknown[]).includes(request.status)
-    && ["Đoàn thể mô phỏng", "Doanh nghiệp mô phỏng", "Nhóm khách mô phỏng"].includes(String(request.groupType))
+    && ["Đoàn thể", "Doanh nghiệp", "Nhóm khách"].includes(String(request.groupType))
     && ["Xe 16 chỗ", "Xe 29 chỗ", "Xe 45 chỗ"].includes(String(request.vehicleType));
 }
 

@@ -11,7 +11,7 @@ type CanProps = {
 };
 
 /**
- * Presentation-only capability gate for the synthetic demo.
+ * Presentation-only capability gate for the nghiệp vụ vận hành.
  * It must never replace server-side authorization in a real deployment.
  */
 export default function Can({ permission, children, fallback = null }: CanProps) {

@@ -80,7 +80,7 @@ test("dispatch simulation detects same-shift vehicle and driver conflicts", () =
 test("contract validation enforces chronology and fleet capacity", () => {
   const validDraft = {
     ...EMPTY_CONTRACT_DRAFT,
-    title: "Hành trình đào tạo mẫu",
+    title: "Hành trình đào tạo khu vực",
     startDate: "2026-09-01",
     endDate: "2026-09-02",
     passengerCount: 30,
@@ -98,7 +98,7 @@ test("contract validation enforces chronology and fleet capacity", () => {
 });
 
 test("finance and report decoders guard stored state and CSV formulas", () => {
-  assert.deepEqual(decodePaidInvoiceIds(["INV-DEMO-1", "INV-DEMO-1"]), ["INV-DEMO-1"]);
+  assert.deepEqual(decodePaidInvoiceIds(["INV-2608-018", "INV-2608-018"]), ["INV-2608-018"]);
   assert.equal(decodePaidInvoiceIds(["INV-REAL-1"]), null);
   assert.equal(protectCsvCell("=HYPERLINK(\"unsafe\")"), "\"'=HYPERLINK(\"\"unsafe\"\")\"");
   const csv = buildReportCsv("30 ngày");

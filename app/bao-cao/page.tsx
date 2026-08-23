@@ -4,7 +4,7 @@ import ReportsDashboard from "./ReportsDashboard";
 
 export const metadata: Metadata = {
   title: "Báo cáo vận tải",
-  description: "Phân tích doanh thu, hiệu suất đội xe, đúng giờ và trải nghiệm khách hàng bằng dữ liệu mô phỏng.",
+  description: "Phân tích doanh thu, hiệu suất đội xe, đúng giờ và trải nghiệm khách hàng bằng dữ liệu vận hành.",
 };
 
 export default function ReportsPage() {

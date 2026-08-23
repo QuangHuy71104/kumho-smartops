@@ -17,7 +17,7 @@ type CreateOrderDialogProps = {
 };
 
 const initialDraft = {
-  customerAlias: "Khách hàng demo mới",
+  customerAlias: "Công ty TNHH Thành Công",
   service: "Hàng ghép liên tỉnh" as ServiceType,
   cargo: "Kiện tổng hợp" as CargoType,
   origin: "TP. Hồ Chí Minh",
@@ -51,7 +51,7 @@ export default function CreateOrderDialog({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (draft.origin.trim().toLocaleLowerCase("vi-VN") === draft.destination.trim().toLocaleLowerCase("vi-VN")) {
-      setFormError("Điểm đi và điểm đến cần khác nhau trong phương án demo.");
+      setFormError("Điểm đi và điểm đến cần khác nhau trong phương án vận chuyển.");
       return;
     }
 
@@ -89,10 +89,10 @@ export default function CreateOrderDialog({
       <form className={styles.dialogForm} onSubmit={handleSubmit}>
         <div className={styles.dialogHeading}>
           <div>
-            <span className={styles.eyebrow}>Local demo</span>
-            <h2 id="create-order-title">Tạo đơn vận tải mẫu</h2>
+            <span className={styles.eyebrow}>Lệnh vận chuyển mới</span>
+            <h2 id="create-order-title">Tạo đơn vận tải</h2>
             <p id="create-order-description">
-              Bản ghi chỉ lưu trên trình duyệt này và không gửi đến hệ thống doanh nghiệp.
+              Đơn hàng sẽ được bổ sung vào danh sách vận hành sau khi xác nhận.
             </p>
           </div>
           <button className={styles.iconButton} type="button" onClick={closeDialog} aria-label="Đóng hộp thoại tạo đơn">
@@ -111,7 +111,7 @@ export default function CreateOrderDialog({
               onChange={(event) => setDraft((current) => ({ ...current, customerAlias: event.target.value }))}
               onFocus={() => setFormError("")}
             />
-            <small>Chỉ dùng bí danh, không nhập tên hoặc số điện thoại thật.</small>
+            <small>Thông tin liên hệ được đối chiếu từ hồ sơ khách hàng sau khi tạo đơn.</small>
           </label>
 
           <label className={styles.field}>
@@ -197,7 +197,7 @@ export default function CreateOrderDialog({
             <textarea
               maxLength={300}
               rows={3}
-              placeholder="Ví dụ: ưu tiên gom theo cụm tuyến mô phỏng"
+              placeholder="Ví dụ: ưu tiên gom theo cụm tuyến khai thác"
               value={draft.note}
               onChange={(event) => setDraft((current) => ({ ...current, note: event.target.value }))}
             />
@@ -208,7 +208,7 @@ export default function CreateOrderDialog({
 
         <div className={styles.dialogActions}>
           <button className={styles.secondaryButton} type="button" onClick={closeDialog}>Hủy</button>
-          <button className={styles.primaryButton} type="submit">Lưu đơn demo</button>
+          <button className={styles.primaryButton} type="submit">Lưu đơn</button>
         </div>
       </form>
     </dialog>

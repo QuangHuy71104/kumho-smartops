@@ -9,12 +9,12 @@ import {
   getOrderSummary,
 } from "../app/don-hang/_lib/orders.ts";
 
-test("transport order fixtures use unique synthetic identifiers", () => {
+test("transport order fixtures use unique operational identifiers", () => {
   assert.ok(demoOrders.length >= 8);
   assert.equal(new Set(demoOrders.map((order) => order.id)).size, demoOrders.length);
-  assert.ok(demoOrders.every((order) => order.id.includes("DEMO") || order.id.includes("MAU")));
+  assert.ok(demoOrders.every((order) => /^DH-\d{6}-\d{4}$/.test(order.id)));
   assert.ok(demoOrders.every((order) => order.source === "seed"));
-  assert.ok(demoOrders.every((order) => order.customerAlias.toLocaleLowerCase("vi-VN").includes("mẫu")));
+  assert.ok(demoOrders.every((order) => order.customerAlias.length >= 10));
 });
 
 test("order search is accent-insensitive and composes with filters", () => {

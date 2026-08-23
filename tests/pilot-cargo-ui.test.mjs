@@ -225,7 +225,7 @@ test("pilot page is explicit and the demo workspace remains the default", async 
   assert.match(page, /<PilotOrderWorkspace \/>/);
   assert.match(page, /<OrderWorkspace \/>/);
   assert.match(demoWorkspace, /useLocalStorageState/);
-  assert.match(demoWorkspace, /Tạo đơn demo/);
+  assert.match(demoWorkspace, /Tạo đơn/);
 });
 
 test("pilot workspace uses server identity, safe references and guarded mutations", async () => {
@@ -270,9 +270,9 @@ test("pilot shell is honest and removes demo role gates from the pilot branch", 
   assert.match(shell, /pilotMode\s*\? children\s*: <DemoRouteBoundary/);
   assert.match(shell, /\/auth\/login\?returnTo=/);
   assert.match(shell, /\/auth\/logout\?returnTo=/);
-  assert.match(shell, /Chỉ phân hệ Đơn hàng dùng SSO và PostgreSQL/);
-  assert.match(shell, /Các phân hệ khác vẫn là dữ liệu mẫu/);
-  assert.match(navigation, /isCargoPilot \? "SSO \+ DB" : "Mẫu"/);
+  assert.match(shell, /Phân hệ Đơn hàng đang sử dụng SSO và PostgreSQL/);
+  assert.match(shell, /Dữ liệu của phân hệ được đồng bộ theo phạm vi truy cập hiện tại/);
+  assert.match(navigation, /isCargoPilot \? "SSO \+ DB" : "Workspace"/);
   assert.doesNotMatch(navigation, /useDemoAccess|demoRoleCan|viewPermission/);
   assert.match(styles, /\.pilotSessionControls/);
   assert.match(styles, /@media \(max-width: 620px\)/);

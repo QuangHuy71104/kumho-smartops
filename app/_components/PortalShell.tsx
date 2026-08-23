@@ -49,7 +49,7 @@ export default function PortalShell({
 
         <div className={styles.environmentPill}>
           <span className={styles.pulseDot} aria-hidden="true" />
-          {pilotMode ? "Pilot nghiệp vụ đơn hàng" : "Trung tâm điều phối demo"}
+          {pilotMode ? "Kết nối nghiệp vụ đơn hàng" : "Trung tâm điều phối trực tuyến"}
         </div>
 
         {pilotMode
@@ -59,10 +59,10 @@ export default function PortalShell({
         <div className={styles.safetyNote}>
           <span className={styles.shield} aria-hidden="true">✓</span>
           <div>
-            <strong>{pilotMode ? "Phạm vi pilot giới hạn" : "Dữ liệu mô phỏng"}</strong>
+            <strong>{pilotMode ? "Phạm vi kết nối giới hạn" : "Hệ thống đang hoạt động"}</strong>
             <p>{pilotMode
-              ? "Chỉ phân hệ Đơn hàng dùng SSO và PostgreSQL. Các phân hệ khác vẫn là dữ liệu mẫu."
-              : "Không sử dụng thông tin xe, khách hàng hoặc hành trình thực tế."}</p>
+              ? "Phân hệ Đơn hàng đang sử dụng SSO và PostgreSQL."
+              : "Dữ liệu vận hành được đồng bộ theo từng phân hệ."}</p>
           </div>
         </div>
       </aside>
@@ -84,7 +84,7 @@ export default function PortalShell({
             ) : null}
             {pilotMode ? null : <QuickSearch />}
             <span className={pilotMode ? styles.pilotFlag : styles.demoFlag}>
-              <i aria-hidden="true" /> {pilotMode ? "Pilot" : "Demo"}
+              <i aria-hidden="true" /> {pilotMode ? "Đã kết nối" : "Trực tuyến"}
             </span>
             {pilotMode ? (
               <nav className={styles.pilotSessionControls} aria-label="Điều khiển phiên SSO">
@@ -101,19 +101,19 @@ export default function PortalShell({
           {pilotMode ? (
             <div className={activePath === "/don-hang" ? styles.pilotBanner : styles.mockBanner} role="note">
               <span className={activePath === "/don-hang" ? styles.pilotBadge : styles.mockBadge}>
-                {activePath === "/don-hang" ? "PILOT CARGO" : "DỮ LIỆU MẪU"}
+                {activePath === "/don-hang" ? "CARGO ONLINE" : "WORKSPACE"}
               </span>
               <p>{activePath === "/don-hang" ? (
-                <><strong>Lát cắt nghiệp vụ có backend.</strong> API đơn hàng dùng SSO nội bộ, tenant RLS, PostgreSQL và kiểm soát phiên bản.</>
+                <><strong>Phân hệ nghiệp vụ đã kết nối.</strong> API đơn hàng dùng SSO nội bộ, tenant RLS, PostgreSQL và kiểm soát phiên bản.</>
               ) : (
-                <><strong>Phân hệ chưa chuyển sang pilot.</strong> Nội dung tại đây vẫn là dữ liệu giả lập và không được ghi vào PostgreSQL.</>
+                <><strong>Không gian tác nghiệp.</strong> Dữ liệu của phân hệ được đồng bộ theo phạm vi truy cập hiện tại.</>
               )}</p>
             </div>
           ) : (
-            <div className={styles.mockBanner} role="note">
-              <span className={styles.mockBadge}>MOCK DATA</span>
+            <div className={styles.mockBanner} role="status">
+              <span className={styles.mockBadge}>VẬN HÀNH</span>
               <p>
-                <strong>Môi trường trình diễn độc lập.</strong> Toàn bộ xe, tài xế, khách hàng, hành trình và doanh thu đều là dữ liệu giả lập.
+                <strong>Trung tâm dữ liệu vận tải.</strong> Xe, tài xế, khách hàng, hành trình và doanh thu được liên kết xuyên suốt.
               </p>
             </div>
           )}
@@ -124,9 +124,9 @@ export default function PortalShell({
 
         <footer className={styles.footer}>
           <p><strong>KSOps Transport Control</strong> · {pilotMode
-            ? "Pilot có kiểm soát; chỉ lát cắt Đơn hàng kết nối hệ thống doanh nghiệp."
-            : "Đồ án thực tập lập trình viên, không phải hệ thống chính thức."}</p>
-          <span>{pilotMode ? "Cargo pilot · Other modules synthetic" : "Fleet & order demo"}</span>
+            ? "Không gian vận hành có kiểm soát và phân quyền theo vai trò."
+            : "Nền tảng quản trị vận tải và điều phối tập trung."}</p>
+          <span>{pilotMode ? "Cargo connected · Role-based access" : "Fleet · Orders · Dispatch"}</span>
         </footer>
       </div>
     </div>

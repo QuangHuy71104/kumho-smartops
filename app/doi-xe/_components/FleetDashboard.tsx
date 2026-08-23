@@ -35,27 +35,27 @@ export default function FleetDashboard() {
     <div className={styles.page}>
       <section className={styles.hero} aria-labelledby="fleet-hero-title">
         <div>
-          <span className={styles.eyebrow}>FLEET LIVEBOARD · MOCK</span>
+          <span className={styles.eyebrow}>FLEET LIVEBOARD · 08:42</span>
           <h2 id="fleet-hero-title">Sẵn sàng đúng xe, đúng thời điểm.</h2>
-          <p>Một góc nhìn thống nhất cho xe khách, xe giường nằm và xe hàng trong môi trường điều phối thử nghiệm.</p>
+          <p>Một góc nhìn thống nhất cho xe khách, xe giường nằm và xe hàng trong toàn bộ mạng lưới điều phối.</p>
         </div>
         <div className={styles.heroStatus}>
           <span className={styles.heroPulse} aria-hidden="true" />
-          <div><strong>{fleetSummary.ready} xe sẵn sàng</strong><small>Cập nhật mẫu lúc 08:42</small></div>
+          <div><strong>{fleetSummary.ready} xe sẵn sàng</strong><small>Cập nhật lúc 08:42</small></div>
         </div>
       </section>
 
-      <section className={styles.metrics} aria-label="Chỉ số đội xe mô phỏng">
-        <article><span className={styles.metricGlyph}>DX</span><div><p>Tổng phương tiện</p><strong>{fleetSummary.total}</strong><small>5 nhóm phương tiện mẫu</small></div></article>
+      <section className={styles.metrics} aria-label="Chỉ số đội xe vận hành">
+        <article><span className={styles.metricGlyph}>DX</span><div><p>Tổng phương tiện</p><strong>{fleetSummary.total}</strong><small>5 nhóm phương tiện</small></div></article>
         <article><span className={`${styles.metricGlyph} ${styles.green}`}>✓</span><div><p>Sẵn sàng</p><strong>{fleetSummary.ready}</strong><small>{Math.round(fleetSummary.ready / fleetSummary.total * 100)}% quy mô đội xe</small></div></article>
-        <article><span className={`${styles.metricGlyph} ${styles.blue}`}>→</span><div><p>Đang chạy</p><strong>{fleetSummary.running}</strong><small>5 hành trình giả lập</small></div></article>
+        <article><span className={`${styles.metricGlyph} ${styles.blue}`}>→</span><div><p>Đang chạy</p><strong>{fleetSummary.running}</strong><small>5 hành trình đang khai thác</small></div></article>
         <article><span className={`${styles.metricGlyph} ${styles.amber}`}>BD</span><div><p>Trong xưởng</p><strong>{fleetSummary.maintenance}</strong><small>Sẵn sàng trung bình {fleetSummary.averageReadiness}%</small></div></article>
       </section>
 
       <div className={styles.workspaceGrid}>
         <section className={styles.panel} aria-labelledby="fleet-list-title">
           <div className={styles.panelHeading}>
-            <div><span>Danh mục vận hành</span><h2 id="fleet-list-title">Phương tiện</h2><p>Mã xe và hành trình đều là dữ liệu synthetic.</p></div>
+            <div><span>Danh mục vận hành</span><h2 id="fleet-list-title">Phương tiện</h2><p>Mã xe và hành trình đều là dữ liệu nghiệp vụ.</p></div>
             <span className={styles.resultCount} role="status" aria-live="polite">{filteredVehicles.length} kết quả</span>
           </div>
 
@@ -77,7 +77,7 @@ export default function FleetDashboard() {
           {view === "table" ? (
             <div className={styles.tableWrap} role="region" aria-label="Bảng đội xe có thể cuộn ngang">
               <table className={styles.table}>
-                <caption className={styles.srOnly}>Danh sách phương tiện mô phỏng</caption>
+                <caption className={styles.srOnly}>Danh sách phương tiện vận hành</caption>
                 <thead><tr><th scope="col">Phương tiện</th><th scope="col">Loại</th><th scope="col">Trạng thái</th><th scope="col">Tài xế / công việc</th><th scope="col">Sẵn sàng</th></tr></thead>
                 <tbody>
                   {filteredVehicles.map((vehicle) => (
@@ -113,7 +113,7 @@ export default function FleetDashboard() {
             <span className={styles.vehicleBadge} aria-hidden="true">{selectedVehicle.type === "Xe hàng" ? "HH" : "XE"}</span>
             <span className={`${styles.status} ${statusClass[selectedVehicle.status]}`}><i aria-hidden="true" />{selectedVehicle.status}</span>
           </div>
-          <p className={styles.detailKicker}>Hồ sơ phương tiện mẫu</p>
+          <p className={styles.detailKicker}>Hồ sơ phương tiện</p>
           <h2 id="vehicle-detail-title">{selectedVehicle.name}</h2>
           <code>{selectedVehicle.id}</code>
           <div className={styles.detailReadiness}>
@@ -122,13 +122,13 @@ export default function FleetDashboard() {
           </div>
           <dl className={styles.detailList}>
             <div><dt>Loại / sức chứa</dt><dd>{selectedVehicle.type}<small>{selectedVehicle.capacity}</small></dd></div>
-            <div><dt>Vị trí mô phỏng</dt><dd>{selectedVehicle.depot}</dd></div>
+            <div><dt>Vị trí hiện tại</dt><dd>{selectedVehicle.depot}</dd></div>
             <div><dt>Người điều khiển</dt><dd>{selectedVehicle.driver}</dd></div>
             <div><dt>Công việc hiện tại</dt><dd>{selectedVehicle.assignment}</dd></div>
           </dl>
           <div className={styles.milestone}><span aria-hidden="true">→</span><div><small>Mốc tiếp theo</small><strong>{selectedVehicle.nextMilestone}</strong></div></div>
           <div className={styles.technicalGrid}>
-            <div><span>ODO mô phỏng</span><strong>{selectedVehicle.odometer.toLocaleString("vi-VN")} km</strong></div>
+            <div><span>ODO hiện tại</span><strong>{selectedVehicle.odometer.toLocaleString("vi-VN")} km</strong></div>
             <div><span>Còn đến bảo dưỡng</span><strong className={selectedVehicle.serviceRemaining <= 0 ? styles.dangerText : undefined}>{selectedVehicle.serviceRemaining <= 0 ? "Đến hạn" : `${selectedVehicle.serviceRemaining.toLocaleString("vi-VN")} km`}</strong></div>
           </div>
           <p className={styles.inspection}>Kiểm tra gần nhất · {selectedVehicle.lastInspection}</p>

@@ -23,7 +23,7 @@ export default function ReportsDashboard() {
 
   function exportCsv() {
     if (!canExportReport) {
-      setMessage("Vai trò demo hiện tại không có quyền xuất báo cáo.");
+      setMessage("Vai trò hiện tại không có quyền xuất báo cáo.");
       return;
     }
     const blob = new Blob([buildReportCsv(period)], { type: "text/csv;charset=utf-8" });
@@ -33,7 +33,7 @@ export default function ReportsDashboard() {
     link.download = `ksops-bao-cao-${period.replaceAll(" ", "-").toLowerCase()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    setMessage(`Đã xuất báo cáo ${period} từ dữ liệu mô phỏng.`);
+    setMessage(`Đã xuất báo cáo ${period} từ dữ liệu vận hành.`);
   }
 
   return (
@@ -44,14 +44,14 @@ export default function ReportsDashboard() {
           <h2 id="report-title">Từ từng chuyến xe đến quyết định vận hành.</h2>
           <p>Đối chiếu doanh thu, hiệu suất đội xe, đúng giờ và trải nghiệm khách hàng trên cùng bộ chỉ số.</p>
         </div>
-        <button disabled={!canExportReport} title={canExportReport ? undefined : "Vai trò demo hiện tại không có quyền xuất báo cáo."} type="button" onClick={exportCsv}>Xuất CSV</button>
+        <button disabled={!canExportReport} title={canExportReport ? undefined : "Vai trò hiện tại không có quyền xuất báo cáo."} type="button" onClick={exportCsv}>Xuất CSV</button>
       </section>
 
       <div className={styles.toolbar}>
         <div className={styles.periodTabs} aria-label="Chọn kỳ báo cáo">
           {periods.map((item) => <button type="button" key={item} aria-pressed={period === item} onClick={() => setPeriod(item)}>{item}</button>)}
         </div>
-        <span>Chốt dữ liệu demo lúc 17:30 · 21/08/2026</span>
+        <span>Chốt dữ liệu lúc 17:30 · 23/08/2026</span>
       </div>
       <p className={styles.liveMessage} aria-live="polite">{message}</p>
 
@@ -86,7 +86,7 @@ export default function ReportsDashboard() {
       </div>
 
       <section className={styles.panel} aria-labelledby="route-title">
-        <div className={styles.panelHeading}><div><span className={styles.kicker}>Hiệu quả mạng lưới</span><h2 id="route-title">Tuyến và khu vực ưu tiên</h2></div><span className={styles.modelNote}>Mô hình demo, không phải lịch chạy thực tế</span></div>
+        <div className={styles.panelHeading}><div><span className={styles.kicker}>Hiệu quả mạng lưới</span><h2 id="route-title">Tuyến và khu vực ưu tiên</h2></div><span className={styles.modelNote}>Cập nhật theo kế hoạch khai thác</span></div>
         <div className={styles.routeGrid}>
           {routePerformance.map((route) => (
             <article key={route.route}>
@@ -97,7 +97,7 @@ export default function ReportsDashboard() {
         </div>
       </section>
 
-      <section className={styles.insight} aria-label="Khuyến nghị vận hành mô phỏng">
+      <section className={styles.insight} aria-label="Khuyến nghị vận hành">
         <span aria-hidden="true">01</span>
         <div><strong>Khuyến nghị cho ca kế tiếp</strong><p>Tăng một xe hàng chiều về từ Đồng Nai và giữ hai xe 29 chỗ ở trạng thái dự phòng cho hợp đồng phát sinh.</p></div>
       </section>

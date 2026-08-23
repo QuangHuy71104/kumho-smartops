@@ -198,7 +198,7 @@ function WorkspaceState({
         <span className={styles.pilotSpinner} aria-hidden="true" />
         <div>
           <p className={styles.eyebrow}>Kết nối vùng dữ liệu được cấp quyền</p>
-          <h2>Đang tải đơn hàng vận hành…</h2>
+          <h2>Đang tải đơn hàng…</h2>
           <p>KSOps đang xác minh phiên SSO, phạm vi chi nhánh và dữ liệu PostgreSQL.</p>
         </div>
       </section>
@@ -211,7 +211,7 @@ function WorkspaceState({
         <span className={styles.pilotStateIcon} aria-hidden="true">SSO</span>
         <div>
           <p className={styles.eyebrow}>Yêu cầu xác thực doanh nghiệp</p>
-          <h2 id="pilot-login-title">Đăng nhập để mở đơn hàng pilot</h2>
+          <h2 id="pilot-login-title">Đăng nhập để mở đơn hàng</h2>
           <p>Phiên đăng nhập phải được Auth0 xác minh và ánh xạ tới quyền nội bộ đang hoạt động.</p>
           <div className={styles.pilotStateActions}>
             <a className={styles.primaryButton} href="/auth/login?returnTo=%2Fdon-hang">Đăng nhập SSO</a>
@@ -226,8 +226,8 @@ function WorkspaceState({
     <section className={styles.pilotState} role="alert" aria-labelledby="pilot-error-title">
       <span className={`${styles.pilotStateIcon} ${styles.pilotStateIconError}`} aria-hidden="true">!</span>
       <div>
-        <p className={styles.eyebrow}>Không thể tải dữ liệu vận hành</p>
-        <h2 id="pilot-error-title">Kết nối pilot đang gián đoạn</h2>
+        <p className={styles.eyebrow}>Không thể tải dữ liệu đơn hàng</p>
+        <h2 id="pilot-error-title">Kết nối dữ liệu đang gián đoạn</h2>
         <p>{problem?.detail ?? "Hệ thống không thể hoàn tất yêu cầu. Hãy thử lại."}</p>
         {problem?.requestId ? <small>Mã yêu cầu: {problem.requestId}</small> : null}
         <div className={styles.pilotStateActions}>
@@ -580,7 +580,7 @@ export default function PilotOrderWorkspace() {
 
       <section className={`${styles.hero} ${styles.pilotHero}`} aria-labelledby="pilot-orders-title">
         <div>
-          <span className={styles.eyebrow}>Cargo pilot · SSO + PostgreSQL</span>
+          <span className={styles.eyebrow}>Cargo operations · SSO + PostgreSQL</span>
           <h2 id="pilot-orders-title">Điều hành đơn hàng trong phạm vi được cấp quyền.</h2>
           <p>Phiên SSO đã được API xác minh. Mọi thao tác vẫn được kiểm tra quyền, tenant và phiên bản ở máy chủ.</p>
         </div>
@@ -589,7 +589,7 @@ export default function PilotOrderWorkspace() {
             {busy === "refresh" ? "Đang đồng bộ…" : "Đồng bộ dữ liệu"}
           </button>
           <button ref={createTriggerRef} className={styles.heroButton} type="button" disabled={!canCreate || busy !== null} onClick={openCreateForm}>
-            <span aria-hidden="true">＋</span> Tạo đơn vận hành
+            <span aria-hidden="true">＋</span> Tạo đơn
           </button>
         </div>
       </section>
@@ -626,12 +626,12 @@ export default function PilotOrderWorkspace() {
               <label className={styles.field}><span>Giá trị khai báo (VND)</span><input type="number" min="0" max="9000000000000" step="1" placeholder="Không bắt buộc" value={createForm.declaredValueMinor} onChange={(event) => setCreateForm((current) => ({ ...current, declaredValueMinor: event.target.value }))} /></label>
               <label className={styles.field}><span>Hạn SLA</span><input required type="datetime-local" min={minimumSla} max={maximumSla} value={createForm.slaDueAt} onChange={(event) => setCreateForm((current) => ({ ...current, slaDueAt: event.target.value }))} /></label>
             </fieldset>
-            <div className={styles.pilotFormActions}><p>Origin được trình duyệt gửi theo same-origin; khóa idempotency không chứa dữ liệu nghiệp vụ.</p><button className={styles.primaryButton} type="submit" disabled={!canCreate || busy !== null || creatableBranchOptions.length === 0 || referenceData.locations.length < 2}>{busy === "create" ? "Đang ghi đơn…" : "Tạo đơn vận hành"}</button></div>
+            <div className={styles.pilotFormActions}><p>Origin được trình duyệt gửi theo same-origin; khóa idempotency không chứa dữ liệu nghiệp vụ.</p><button className={styles.primaryButton} type="submit" disabled={!canCreate || busy !== null || creatableBranchOptions.length === 0 || referenceData.locations.length < 2}>{busy === "create" ? "Đang ghi đơn…" : "Tạo đơn"}</button></div>
           </form>
         </section>
       ) : null}
 
-      <section className={styles.metrics} aria-label="Tổng hợp đơn hàng pilot">
+      <section className={styles.metrics} aria-label="Tổng hợp đơn hàng">
         <article className={styles.metricCard}><span className={styles.metricIcon}>ĐH</span><div><p>Tổng đơn được phép xem</p><strong>{orders.length}</strong><small>tối đa 100 bản ghi mới nhất</small></div></article>
         <article className={styles.metricCard}><span className={`${styles.metricIcon} ${styles.metricBlue}`}>→</span><div><p>Đang hoạt động</p><strong>{activeCount}</strong><small>chưa đối soát hoặc hủy</small></div></article>
         <article className={styles.metricCard}><span className={`${styles.metricIcon} ${styles.metricAmber}`}>SLA</span><div><p>Đến hạn trong 6 giờ</p><strong>{dueSoonCount}</strong><small>bao gồm đơn đã quá hạn</small></div></article>
@@ -639,7 +639,7 @@ export default function PilotOrderWorkspace() {
       </section>
 
       <section className={styles.controlPanel} aria-labelledby="pilot-order-list-title">
-        <div className={styles.panelHeading}><div><span className={styles.eyebrow}>Không gian tác nghiệp thật</span><h2 id="pilot-order-list-title">Đơn vận chuyển</h2><p>Mã công khai và dữ liệu vận hành không chứa thông tin liên hệ khách hàng.</p></div><span className={styles.resultCount} role="status" aria-live="polite">{visibleOrders.length} kết quả</span></div>
+        <div className={styles.panelHeading}><div><span className={styles.eyebrow}>Không gian tác nghiệp trực tuyến</span><h2 id="pilot-order-list-title">Đơn vận chuyển</h2><p>Mã công khai và dữ liệu vận hành được kiểm soát theo phạm vi truy cập.</p></div><span className={styles.resultCount} role="status" aria-live="polite">{visibleOrders.length} kết quả</span></div>
         <div className={`${styles.filters} ${styles.pilotFilters}`}>
           <label className={styles.searchField} htmlFor="pilot-order-search"><span>Tìm đơn</span><div><i aria-hidden="true">⌕</i><input id="pilot-order-search" type="search" placeholder="Mã đơn, chi nhánh hoặc tuyến…" value={query} onChange={(event) => setQuery(event.target.value)} /></div></label>
           <label className={styles.filterField}><span>Trạng thái</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as PilotOrderStatus | "all")}><option value="all">Tất cả trạng thái</option>{PILOT_ORDER_STATUSES.map((status) => <option key={status} value={status}>{pilotOrderStatusLabel(status)}</option>)}</select></label>
@@ -648,7 +648,7 @@ export default function PilotOrderWorkspace() {
 
         <div className={styles.workspace}>
           <div className={styles.orderListWrap}>
-            {visibleOrders.length ? <ol className={styles.orderList} aria-label="Các đơn vận tải pilot">{visibleOrders.map((order) => <li key={order.id}><button className={selectedOrder?.id === order.id ? styles.orderCardSelected : styles.orderCard} type="button" aria-pressed={selectedOrder?.id === order.id} onClick={() => setSelectedId(order.id)}><span className={styles.orderTopline}><span><strong>{order.publicCode}</strong><small>{pilotServiceLevelLabel(order.serviceLevel)} · v{order.version}</small></span><StatusBadge status={order.status} /></span><span className={styles.orderRoute}><strong>{locationById.get(order.originLocationId)?.displayName ?? order.originLocationId}</strong><i aria-hidden="true">→</i><strong>{locationById.get(order.destinationLocationId)?.displayName ?? order.destinationLocationId}</strong></span><span className={styles.orderMeta}><span>{branchById.get(order.owningBranchId)?.name ?? order.owningBranchId}</span><span>{order.packageCount} kiện · {formatPilotWeight(order.totalWeightGrams)}</span></span><span className={styles.orderBottomline}><span>SLA: {formatPilotDate(order.slaDueAt)}</span><span>Cập nhật: {formatPilotDate(order.updatedAt)}</span></span></button></li>)}</ol> : <div className={styles.emptyState}><span aria-hidden="true">⌕</span><h3>Không có đơn phù hợp</h3><p>Thay đổi bộ lọc hoặc tạo đơn mới nếu bạn có quyền.</p></div>}
+            {visibleOrders.length ? <ol className={styles.orderList} aria-label="Các đơn vận tải">{visibleOrders.map((order) => <li key={order.id}><button className={selectedOrder?.id === order.id ? styles.orderCardSelected : styles.orderCard} type="button" aria-pressed={selectedOrder?.id === order.id} onClick={() => setSelectedId(order.id)}><span className={styles.orderTopline}><span><strong>{order.publicCode}</strong><small>{pilotServiceLevelLabel(order.serviceLevel)} · v{order.version}</small></span><StatusBadge status={order.status} /></span><span className={styles.orderRoute}><strong>{locationById.get(order.originLocationId)?.displayName ?? order.originLocationId}</strong><i aria-hidden="true">→</i><strong>{locationById.get(order.destinationLocationId)?.displayName ?? order.destinationLocationId}</strong></span><span className={styles.orderMeta}><span>{branchById.get(order.owningBranchId)?.name ?? order.owningBranchId}</span><span>{order.packageCount} kiện · {formatPilotWeight(order.totalWeightGrams)}</span></span><span className={styles.orderBottomline}><span>SLA: {formatPilotDate(order.slaDueAt)}</span><span>Cập nhật: {formatPilotDate(order.updatedAt)}</span></span></button></li>)}</ol> : <div className={styles.emptyState}><span aria-hidden="true">⌕</span><h3>Không có đơn phù hợp</h3><p>Thay đổi bộ lọc hoặc tạo đơn mới nếu bạn có quyền.</p></div>}
           </div>
 
           {selectedOrder ? (

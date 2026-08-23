@@ -15,8 +15,8 @@ export function generateMetadata(): Metadata {
   return {
     title: "Quản lý đơn vận tải",
     description: mode === "pilot"
-      ? "Không gian pilot vận hành đơn hàng hóa với SSO, phân quyền nội bộ và PostgreSQL."
-      : "Không gian quản lý đơn hàng hóa, tuyến tỉnh và last-mile bằng dữ liệu mô phỏng.",
+      ? "Không gian vận hành đơn hàng hóa với SSO, phân quyền nội bộ và PostgreSQL."
+      : "Không gian quản lý đơn hàng hóa, tuyến tỉnh và giao chặng cuối.",
   };
 }
 
@@ -27,11 +27,11 @@ export default function TransportOrdersPage() {
     <PortalShell
       activePath="/don-hang"
       eyebrow={mode === "pilot"
-        ? "Vận hành đơn hàng · Pilot có kiểm soát"
-        : "Vận hành đơn hàng · Phiên mô phỏng 21/08/2026"}
+        ? "Vận hành đơn hàng · Kết nối PostgreSQL"
+        : "Vận hành đơn hàng · Cập nhật 23/08/2026"}
       title="Quản lý đơn vận tải"
       subtitle={mode === "pilot"
-        ? "Cargo slice dùng SSO và PostgreSQL · các phân hệ khác vẫn là mẫu"
+        ? "Phân hệ hàng hóa dùng SSO và PostgreSQL"
         : "SLA, tuyến hàng hóa và giao chặng cuối"}
     >
       {mode === "pilot" ? (

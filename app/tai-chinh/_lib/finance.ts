@@ -11,11 +11,11 @@ export type Invoice = {
 };
 
 export const invoices = [
-  { id: "INV-DEMO-2608-018", customer: "Công ty Minh Long (demo)", reference: "CTR-DEMO-0188", service: "Xe hợp đồng", amount: 28_600_000, dueDate: "24/08/2026", status: "Chờ thanh toán" },
-  { id: "INV-DEMO-2608-017", customer: "Đại lý An Phú (demo)", reference: "ORD-DEMO-1034", service: "Hàng hóa", amount: 8_450_000, dueDate: "20/08/2026", status: "Quá hạn" },
-  { id: "INV-DEMO-2608-016", customer: "Nhóm Hành Trình Xanh", reference: "CTR-DEMO-0182", service: "Xe hợp đồng", amount: 16_800_000, dueDate: "22/08/2026", status: "Chờ thanh toán" },
-  { id: "INV-DEMO-2608-015", customer: "Khách lẻ tổng hợp", reference: "BKG-DEMO-2108", service: "Vé hành khách", amount: 42_380_000, dueDate: "21/08/2026", status: "Đã thanh toán" },
-  { id: "INV-DEMO-2608-014", customer: "Cửa hàng Nam Sơn (demo)", reference: "ORD-DEMO-1028", service: "Hàng hóa", amount: 5_920_000, dueDate: "19/08/2026", status: "Đã thanh toán" },
+  { id: "INV-2608-018", customer: "Công ty TNHH Minh Long", reference: "HĐ-26-0188", service: "Xe hợp đồng", amount: 28_600_000, dueDate: "24/08/2026", status: "Chờ thanh toán" },
+  { id: "INV-2608-017", customer: "Công ty CP An Phú Logistics", reference: "DH-2608-1034", service: "Hàng hóa", amount: 8_450_000, dueDate: "20/08/2026", status: "Quá hạn" },
+  { id: "INV-2608-016", customer: "Nhóm Hành Trình Xanh", reference: "HĐ-26-0182", service: "Xe hợp đồng", amount: 16_800_000, dueDate: "22/08/2026", status: "Chờ thanh toán" },
+  { id: "INV-2608-015", customer: "Khách lẻ tổng hợp", reference: "BK-2608-2108", service: "Vé hành khách", amount: 42_380_000, dueDate: "21/08/2026", status: "Đã thanh toán" },
+  { id: "INV-2608-014", customer: "Cửa hàng Nội thất Nam Sơn", reference: "DH-2608-1028", service: "Hàng hóa", amount: 5_920_000, dueDate: "19/08/2026", status: "Đã thanh toán" },
 ] satisfies readonly Invoice[];
 
 export const cashFlow = [
@@ -44,7 +44,7 @@ export function formatCurrency(value: number) {
 }
 
 export function decodePaidInvoiceIds(value: unknown): string[] | null {
-  if (!Array.isArray(value) || !value.every((item) => typeof item === "string" && item.startsWith("INV-DEMO-"))) {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string" && /^INV-\d{4}-\d{3}$/.test(item))) {
     return null;
   }
   return [...new Set(value)];

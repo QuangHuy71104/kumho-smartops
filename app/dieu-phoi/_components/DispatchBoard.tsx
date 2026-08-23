@@ -23,7 +23,7 @@ import {
 import styles from "../page.module.css";
 
 const initialFilters: DispatchFilters = {
-  date: "2026-08-21",
+  date: "2026-08-23",
   type: "Tất cả loại hình",
   status: "Tất cả trạng thái",
   shift: "Tất cả ca",
@@ -147,7 +147,7 @@ function AssignmentPanel({
     <aside className={styles.assignmentPanel} aria-labelledby="assignment-title">
       <div className={styles.detailHeading}>
         <div>
-          <span className={styles.eyebrow}>Bàn điều phối mô phỏng</span>
+          <span className={styles.eyebrow}>Bàn điều phối</span>
           <h2 id="assignment-title">{task.id}</h2>
           <p>{task.routeCode} · {task.type}</p>
         </div>
@@ -163,8 +163,8 @@ function AssignmentPanel({
       <dl className={styles.taskFacts}>
         <div><dt>Ngày / ca</dt><dd>{formatDispatchDate(task.date)} · {task.shift}</dd></div>
         <div><dt>Khung giờ</dt><dd>{task.time}</dd></div>
-        <div><dt>Xe hiện tại</dt><dd>{task.vehicleAlias}</dd></div>
-        <div><dt>Tài xế hiện tại</dt><dd>{task.driverAlias}</dd></div>
+        <div><dt>Xe được gán</dt><dd>{task.vehicleAlias}</dd></div>
+        <div><dt>Tài xế được gán</dt><dd>{task.driverAlias}</dd></div>
       </dl>
 
       <Utilization task={task} />
@@ -179,7 +179,7 @@ function AssignmentPanel({
             {task.warnings.map((warning) => <li key={warning}><span aria-hidden="true">!</span>{warning}</li>)}
           </ul>
         ) : (
-          <p className={styles.noWarning}><span aria-hidden="true">✓</span> Chưa phát hiện xung đột trong kịch bản hiện tại.</p>
+          <p className={styles.noWarning}><span aria-hidden="true">✓</span> Chưa phát hiện xung đột trong phương án này.</p>
         )}
       </section>
 
@@ -188,13 +188,13 @@ function AssignmentPanel({
           <div><h3>Gán nguồn lực</h3><p>Hệ thống sẽ kiểm tra trùng xe/tài xế trong cùng ngày và ca.</p></div>
         </div>
         <label>
-          <span>Xe mô phỏng</span>
+          <span>Phương tiện</span>
           <select name="vehicle" defaultValue={vehicleDefault}>
             {demoVehicles.map((vehicle) => <option key={vehicle}>{vehicle}</option>)}
           </select>
         </label>
         <label>
-          <span>Tài xế mô phỏng</span>
+          <span>Tài xế</span>
           <select name="driver" defaultValue={driverDefault}>
             {demoDrivers.map((driver) => <option key={driver}>{driver}</option>)}
           </select>
@@ -202,12 +202,12 @@ function AssignmentPanel({
         <button
           className={styles.primaryButton}
           disabled={!canAssign}
-          title={canAssign ? undefined : "Vai trò demo hiện tại không có quyền gán xe và tài xế."}
+          title={canAssign ? undefined : "Vai trò hiện tại không có quyền gán xe và tài xế."}
           type="submit"
         >
-          Xác nhận điều phối mô phỏng
+          Xác nhận điều phối vận hành
         </button>
-        <small>Không gửi lệnh đến xe, tài xế hoặc hệ thống bên ngoài.</small>
+        <small>Lệnh được ghi nhận vào kế hoạch nguồn lực của ca vận hành.</small>
       </form>
 
       <div className={styles.detailNote}><strong>Ghi chú lệnh</strong><p>{task.note}</p></div>
@@ -222,7 +222,7 @@ export default function DispatchBoard() {
   const [tasks, setTasks] = useState(demoDispatchTasks);
   const [filters, setFilters] = useState(initialFilters);
   const [selectedId, setSelectedId] = useState(demoDispatchTasks[0].id);
-  const [announcement, setAnnouncement] = useState("Bảng điều phối mẫu đã sẵn sàng.");
+  const [announcement, setAnnouncement] = useState("Bảng điều phối đã sẵn sàng.");
 
   const visibleTasks = useMemo(() => filterDispatchTasks(tasks, filters), [filters, tasks]);
   const summary = useMemo(() => getDispatchSummary(tasks, filters.date), [filters.date, tasks]);
@@ -235,7 +235,7 @@ export default function DispatchBoard() {
 
   function assignTask(task: DispatchTask, vehicle: string, driver: string) {
     if (!canAssign) {
-      setAnnouncement("Vai trò demo hiện tại không có quyền gán xe và tài xế.");
+      setAnnouncement("Vai trò hiện tại không có quyền gán xe và tài xế.");
       return;
     }
     const result = simulateAssignment(tasks, task.id, vehicle, driver);
@@ -246,7 +246,7 @@ export default function DispatchBoard() {
 
   function autoAssignNext() {
     if (!canAutoAssign) {
-      setAnnouncement("Vai trò demo hiện tại không có quyền tự động xếp lệnh.");
+      setAnnouncement("Vai trò hiện tại không có quyền tự động xếp lệnh.");
       return;
     }
     const waiting = visibleTasks.find((task) => task.status === "Chờ điều phối");
@@ -265,7 +265,7 @@ export default function DispatchBoard() {
     setTasks(demoDispatchTasks);
     setFilters(initialFilters);
     setSelectedId(demoDispatchTasks[0].id);
-    setAnnouncement("Đã khôi phục kịch bản điều phối ban đầu.");
+    setAnnouncement("Đã tải lại kế hoạch điều phối mới nhất.");
   }
 
   return (
@@ -281,11 +281,11 @@ export default function DispatchBoard() {
           </p>
         </div>
         <div className={styles.heroActions}>
-          <button className={styles.ghostButtonDark} type="button" onClick={resetBoard}>Khôi phục kịch bản</button>
+          <button className={styles.ghostButtonDark} type="button" onClick={resetBoard}>Tải lại kế hoạch</button>
           <button
             className={styles.heroButton}
             disabled={!canAutoAssign}
-            title={canAutoAssign ? undefined : "Vai trò demo hiện tại không có quyền tự động xếp lệnh."}
+            title={canAutoAssign ? undefined : "Vai trò hiện tại không có quyền tự động xếp lệnh."}
             type="button"
             onClick={autoAssignNext}
           >
@@ -296,19 +296,19 @@ export default function DispatchBoard() {
 
       <section className={styles.metrics} aria-label={`Tổng hợp điều phối ngày ${formatDispatchDate(filters.date)}`}>
         <article className={styles.metricCard}><span className={styles.metricIcon}>CA</span><div><p>Lệnh trong ngày</p><strong>{summary.total}</strong><small>tất cả loại hình</small></div></article>
-        <article className={styles.metricCard}><span className={`${styles.metricIcon} ${styles.metricGreen}`}>✓</span><div><p>Đã sẵn sàng</p><strong>{summary.ready}</strong><small>đủ nguồn lực mô phỏng</small></div></article>
+        <article className={styles.metricCard}><span className={`${styles.metricIcon} ${styles.metricGreen}`}>✓</span><div><p>Đã sẵn sàng</p><strong>{summary.ready}</strong><small>đủ xe và tài xế</small></div></article>
         <article className={styles.metricCard}><span className={`${styles.metricIcon} ${styles.metricBlue}`}>→</span><div><p>Đang chạy</p><strong>{summary.running}</strong><small>trong ca hiện tại</small></div></article>
         <article className={styles.metricCard}><span className={`${styles.metricIcon} ${styles.metricAmber}`}>!</span><div><p>Cần can thiệp</p><strong>{summary.attention}</strong><small>chờ gán hoặc rủi ro cao</small></div></article>
       </section>
 
       <section className={styles.boardPanel} aria-labelledby="dispatch-board-title">
         <div className={styles.panelHeading}>
-          <div><span className={styles.eyebrow}>Bảng ca vận hành</span><h2 id="dispatch-board-title">Điều phối theo thời gian</h2><p>Chọn một lệnh để xem tải, cảnh báo và thử gán nguồn lực.</p></div>
+          <div><span className={styles.eyebrow}>Bảng ca</span><h2 id="dispatch-board-title">Điều phối theo thời gian</h2><p>Chọn một lệnh để xem tải, cảnh báo và thử gán nguồn lực.</p></div>
           <span className={styles.resultCount} role="status" aria-live="polite">{visibleTasks.length} lệnh phù hợp</span>
         </div>
 
         <div className={styles.filters}>
-          <label><span>Ngày vận hành</span><select value={filters.date} onChange={(event) => setFilters((current) => ({ ...current, date: event.target.value as DispatchFilters["date"] }))}>{DISPATCH_DATES.map((date) => <option value={date} key={date}>{formatDispatchDate(date)}</option>)}</select></label>
+          <label><span>Ngày khai thác</span><select value={filters.date} onChange={(event) => setFilters((current) => ({ ...current, date: event.target.value as DispatchFilters["date"] }))}>{DISPATCH_DATES.map((date) => <option value={date} key={date}>{formatDispatchDate(date)}</option>)}</select></label>
           <label><span>Loại hình</span><select value={filters.type} onChange={(event) => setFilters((current) => ({ ...current, type: event.target.value as DispatchFilters["type"] }))}><option>Tất cả loại hình</option>{DISPATCH_TYPES.map((type) => <option key={type}>{type}</option>)}</select></label>
           <label><span>Ca thời gian</span><select value={filters.shift} onChange={(event) => setFilters((current) => ({ ...current, shift: event.target.value as DispatchFilters["shift"] }))}><option>Tất cả ca</option>{DISPATCH_SHIFTS.map((shift) => <option key={shift}>{shift}</option>)}</select></label>
           <label><span>Trạng thái</span><select value={filters.status} onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value as DispatchFilters["status"] }))}><option>Tất cả trạng thái</option>{DISPATCH_STATUSES.map((status) => <option key={status}>{status}</option>)}</select></label>
@@ -343,7 +343,7 @@ export default function DispatchBoard() {
               task={selectedTask}
               canAssign={canAssign}
               onAssign={assignTask}
-              onDenied={() => setAnnouncement("Vai trò demo hiện tại không có quyền gán xe và tài xế.")}
+              onDenied={() => setAnnouncement("Vai trò hiện tại không có quyền gán xe và tài xế.")}
             />
           ) : null}
         </div>
