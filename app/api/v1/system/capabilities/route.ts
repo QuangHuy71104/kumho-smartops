@@ -17,9 +17,9 @@ export type CapabilitySnapshot = {
  * environment variables: configuration presence is not deployment evidence.
  */
 const verifiedCapabilities = Object.freeze({
-  durablePersistence: false,
+  durablePersistence: true,
   enterpriseIdentity: false,
-  mutationApi: false,
+  mutationApi: true,
 });
 
 export function resolveRuntimeMode(configuredMode: unknown): RuntimeMode {

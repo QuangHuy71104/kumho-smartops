@@ -2,6 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
+import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import {
   DISPATCH_DATES,
   DISPATCH_SHIFTS,
@@ -10,6 +11,7 @@ import {
   demoDispatchTasks,
   demoDrivers,
   demoVehicles,
+  decodeStoredDispatchTasks,
   filterDispatchTasks,
   formatDispatchDate,
   getDispatchSummary,
@@ -219,7 +221,12 @@ export default function DispatchBoard() {
   const { can } = useDemoAccess();
   const canAssign = can("dispatch:assign");
   const canAutoAssign = can("dispatch:auto-assign");
-  const [tasks, setTasks] = useState(demoDispatchTasks);
+  const [tasks, setTasks, resetTasks] = useWorkspaceState({
+    stateKey: "dispatch",
+    cacheKey: "ksops:transport:dispatch:v1",
+    initialValue: demoDispatchTasks,
+    decode: decodeStoredDispatchTasks,
+  });
   const [filters, setFilters] = useState(initialFilters);
   const [selectedId, setSelectedId] = useState(demoDispatchTasks[0].id);
   const [announcement, setAnnouncement] = useState("Bảng điều phối đã sẵn sàng.");
@@ -262,7 +269,7 @@ export default function DispatchBoard() {
   }
 
   function resetBoard() {
-    setTasks(demoDispatchTasks);
+    resetTasks();
     setFilters(initialFilters);
     setSelectedId(demoDispatchTasks[0].id);
     setAnnouncement("Đã tải lại kế hoạch điều phối mới nhất.");

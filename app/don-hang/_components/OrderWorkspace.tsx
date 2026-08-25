@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
-import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
+import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import CreateOrderDialog from "./CreateOrderDialog";
 import {
   ORDER_STATUSES,
@@ -157,8 +157,9 @@ export default function OrderWorkspace() {
     : undefined;
   const initialSelectedId = requestedOrder?.id ?? demoOrders[0].id;
   const shouldOpenCreateDialog = searchParams.get("new") === "1";
-  const [orders, setOrders, resetOrders] = useLocalStorageState({
-    key: ORDER_STORAGE_KEY,
+  const [orders, setOrders, resetOrders] = useWorkspaceState({
+    stateKey: "orders",
+    cacheKey: ORDER_STORAGE_KEY,
     initialValue: demoOrders,
     decode: decodeStoredOrders,
   });

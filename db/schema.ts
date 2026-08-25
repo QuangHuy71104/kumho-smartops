@@ -534,6 +534,13 @@ export const outboxMessages = platformSchema.table(
   ],
 );
 
+export const workspaceStates = platformSchema.table("workspace_state", {
+  stateKey: varchar("state_key", { length: 80 }).primaryKey(),
+  payload: jsonb("payload").$type<unknown>().notNull(),
+  version: bigint("version", { mode: "number" }).notNull().default(1),
+  ...mutableTimestamps(),
+});
+
 export type CargoOrderRow = typeof cargoOrders.$inferSelect;
 export type NewCargoOrderRow = typeof cargoOrders.$inferInsert;
 export type CargoPackageRow = typeof cargoPackages.$inferSelect;

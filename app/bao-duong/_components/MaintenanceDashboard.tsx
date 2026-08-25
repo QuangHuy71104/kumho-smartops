@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
-import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
+import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import { CHECKLIST_STORAGE_KEY, decodeChecklistStore, EMPTY_CHECKLIST_STORE, filterWorkOrders, maintenanceSchedule, maintenanceSummary, mileageAlerts, priorityOptions, statusOptions, workOrders } from "../_lib/maintenance";
 import type { ChecklistStore, WorkOrder, WorkOrderPriority, WorkOrderStatus } from "../_lib/maintenance";
 import styles from "../page.module.css";
@@ -34,8 +34,9 @@ export default function MaintenanceDashboard() {
   const [status, setStatus] = useState("Tất cả");
   const [priority, setPriority] = useState("Tất cả");
   const [selectedId, setSelectedId] = useState(workOrders[0].id);
-  const [checklistStore, setChecklistStore] = useLocalStorageState({
-    key: CHECKLIST_STORAGE_KEY,
+  const [checklistStore, setChecklistStore] = useWorkspaceState({
+    stateKey: "maintenance-checklists",
+    cacheKey: CHECKLIST_STORAGE_KEY,
     initialValue: EMPTY_CHECKLIST_STORE,
     decode: decodeChecklistStore,
   });

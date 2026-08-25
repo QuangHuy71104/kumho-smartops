@@ -16,6 +16,7 @@ import {
   outboxMessages,
   principals,
   vehicles,
+  workspaceStates,
 } from "../db/schema.ts";
 
 const root = process.cwd();
@@ -28,6 +29,7 @@ const expectedMigrations = [
   "0002_fleet_workforce.sql",
   "0003_cargo_dispatch.sql",
   "0004_platform_audit_reporting_rls.sql",
+  "0005_workspace_state.sql",
 ];
 
 async function readMigration(name) {
@@ -141,6 +143,17 @@ test("audit, idempotency, outbox, projections, and RLS include safety guards", a
   }
 });
 
+test("workspace state is bounded, private, and migration-managed", async () => {
+  const sql = await readMigration(expectedMigrations[4]);
+  assert.match(sql, /CREATE TABLE platform\.workspace_state/);
+  assert.match(sql, /payload jsonb NOT NULL/);
+  assert.match(sql, /version bigint NOT NULL DEFAULT 1 CHECK \(version > 0\)/);
+  assert.match(sql, /octet_length\(payload::text\) <= 524288/);
+  assert.match(sql, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(sql, /FORCE ROW LEVEL SECURITY/);
+  assert.match(sql, /REVOKE ALL ON TABLE platform\.workspace_state FROM PUBLIC/);
+});
+
 test("Drizzle runtime mappings retain migration schema and table names", () => {
   const expectedTables = new Map([
     [organizations, ["org", "organization"]],
@@ -155,13 +168,14 @@ test("Drizzle runtime mappings retain migration schema and table names", () => {
     [auditEvents, ["audit", "audit_event"]],
     [idempotencyKeys, ["platform", "idempotency_key"]],
     [outboxMessages, ["platform", "outbox_message"]],
+    [workspaceStates, ["platform", "workspace_state"]],
   ]);
 
   for (const [table, [schema, name]] of expectedTables) {
     const config = getTableConfig(table);
     assert.equal(config.schema, schema);
     assert.equal(config.name, name);
-    if (name !== "organization") {
+    if (name !== "organization" && name !== "workspace_state") {
       assert.ok(config.columns.some((column) => column.name === "organization_id"));
     }
   }

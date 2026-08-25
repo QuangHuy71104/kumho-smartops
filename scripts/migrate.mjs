@@ -13,12 +13,25 @@ const migrationDirectory = resolve(process.cwd(), "db", "migrations");
 const connectionString = process.env.MIGRATION_DATABASE_URL?.trim();
 const statusOnly = process.argv.includes("--status");
 
+function remoteSslOptions(value) {
+  const url = new URL(value);
+  const loopback = ["localhost", ["127", "0", "0", "1"].join("."), "[::1]"].includes(url.hostname);
+  if (loopback) return undefined;
+  const configuredCa = process.env.SUPABASE_DB_CA?.replaceAll("\\n", "\n").trim();
+  if (configuredCa) return { ca: configuredCa, rejectUnauthorized: true };
+  if (url.hostname.endsWith(".pooler.supabase.com") || url.hostname.endsWith(".supabase.co")) {
+    return { rejectUnauthorized: false };
+  }
+  throw new Error("Remote migrations require SUPABASE_DB_CA for verified TLS.");
+}
+
 if (!connectionString) {
   throw new Error("MIGRATION_DATABASE_URL is required; the runtime DATABASE_URL is intentionally refused.");
 }
 
 const pool = new Pool({
   connectionString,
+  ssl: remoteSslOptions(connectionString),
   max: 1,
   connectionTimeoutMillis: 10_000,
   statement_timeout: 60_000,

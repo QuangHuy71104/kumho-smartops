@@ -2,7 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
-import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
+import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import {
   buildContractRequest,
   CONTRACT_FILTERS,
@@ -30,7 +30,7 @@ export default function ContractPipelineClient() {
   const { can } = useDemoAccess();
   const canCreateContract = can("contract:create");
   const canTransitionContract = can("contract:transition");
-  const [created, setCreated, resetCreated] = useLocalStorageState({ key: CONTRACT_STORAGE_KEY, initialValue: EMPTY_CREATED_REQUESTS, decode: decodeCreatedContractRequests });
+  const [created, setCreated, resetCreated] = useWorkspaceState({ stateKey: "contracts", cacheKey: CONTRACT_STORAGE_KEY, initialValue: EMPTY_CREATED_REQUESTS, decode: decodeCreatedContractRequests });
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<(typeof CONTRACT_FILTERS)[number]>("Tất cả");
   const [selectedId, setSelectedId] = useState("HĐ-26-1042");

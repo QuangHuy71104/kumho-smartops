@@ -224,7 +224,7 @@ test("pilot page is explicit and the demo workspace remains the default", async 
   assert.match(page, /mode === "pilot" \? \(/);
   assert.match(page, /<PilotOrderWorkspace \/>/);
   assert.match(page, /<OrderWorkspace \/>/);
-  assert.match(demoWorkspace, /useLocalStorageState/);
+  assert.match(demoWorkspace, /useWorkspaceState/);
   assert.match(demoWorkspace, /Tạo đơn/);
 });
 

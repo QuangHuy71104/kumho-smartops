@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useDemoAccess } from "../_components/access/DemoAccessProvider";
-import { useLocalStorageState } from "../_hooks/useLocalStorageState";
+import { useWorkspaceState } from "../_hooks/useWorkspaceState";
 import {
   cashFlow,
   decodePaidInvoiceIds,
@@ -14,15 +14,17 @@ import {
 import styles from "./Finance.module.css";
 
 type Filter = "Tất cả" | InvoiceStatus;
+const EMPTY_PAID_INVOICE_IDS: string[] = [];
 
 export default function FinanceDashboard() {
   const { can } = useDemoAccess();
   const canRecordPayment = can("invoice:record-payment");
   const [filter, setFilter] = useState<Filter>("Tất cả");
   const [message, setMessage] = useState("");
-  const [paidIds, setPaidIds, resetPaidIds] = useLocalStorageState({
-    key: "ksops:transport:paid-invoices:v1",
-    initialValue: [] as string[],
+  const [paidIds, setPaidIds, resetPaidIds] = useWorkspaceState({
+    stateKey: "paid-invoices",
+    cacheKey: "ksops:transport:paid-invoices:v1",
+    initialValue: EMPTY_PAID_INVOICE_IDS,
     decode: decodePaidInvoiceIds,
   });
 

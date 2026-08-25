@@ -1,6 +1,6 @@
 # KSOps database foundation
 
-This directory contains the first production-oriented PostgreSQL schema slice for KSOps. It targets PostgreSQL 16+ and managed PostgreSQL providers such as Neon.
+This directory contains the first production-oriented PostgreSQL schema slice for KSOps. It targets PostgreSQL 16+ and managed PostgreSQL providers such as Supabase and Neon.
 
 ## Migration order
 
@@ -10,6 +10,7 @@ Apply every file in `migrations/` in lexical order with `ON_ERROR_STOP` enabled:
 2. `0002_fleet_workforce.sql`
 3. `0003_cargo_dispatch.sql`
 4. `0004_platform_audit_reporting_rls.sql`
+5. `0005_workspace_state.sql`
 
 The application must create UUIDv7 identifiers. Database columns deliberately have no random UUID default so identity generation remains explicit and testable. All timestamps use UTC-capable `timestamptz`; the UI is responsible for rendering a branch timezone.
 
@@ -36,6 +37,10 @@ psql $env:DATABASE_URL -v ON_ERROR_STOP=1 -f db/seeds/dev/001_synthetic_pilot.sq
 ```
 
 Do not enable those settings in production. Production onboarding must use an audited bootstrap command; it must not run the development seed. Never copy production rows into preview or development databases.
+
+`npm run db:seed:workspace` initializes the connected UI documents in
+`platform.workspace_state`. It is idempotent and never overwrites a state key that
+already exists. This seed contains only the repository's fictional operating data.
 
 ## Operational notes
 

@@ -266,6 +266,44 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
 ];
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isOneOf<const T extends readonly string[]>(value: unknown, values: T): value is T[number] {
+  return typeof value === "string" && values.includes(value as T[number]);
+}
+
+function boundedString(value: unknown, maximum = 180): value is string {
+  return typeof value === "string" && value.length > 0 && value.length <= maximum;
+}
+
+function decodeDispatchTask(value: unknown): DispatchTask | null {
+  if (!isRecord(value) || !boundedString(value.id, 32) || !value.id.startsWith("DP-")) return null;
+  if (!isOneOf(value.date, DISPATCH_DATES) || !isOneOf(value.shift, DISPATCH_SHIFTS)) return null;
+  if (!isOneOf(value.type, DISPATCH_TYPES) || !isOneOf(value.status, DISPATCH_STATUSES)) return null;
+  if (!isOneOf(value.risk, ["Ổn định", "Theo dõi", "Cao"] as const)) return null;
+  if (!isOneOf(value.capacityUnit, ["ghế", "kg"] as const)) return null;
+  if (!["time", "routeCode", "origin", "destination", "vehicleAlias", "driverAlias", "capacityLabel", "note"]
+    .every((key) => boundedString(value[key], key === "note" ? 400 : 180))) return null;
+  if (value.vehicleId !== null && !boundedString(value.vehicleId, 32)) return null;
+  if (value.driverId !== null && !boundedString(value.driverId, 32)) return null;
+  if (typeof value.usedCapacity !== "number" || !Number.isFinite(value.usedCapacity) || value.usedCapacity < 0) return null;
+  if (typeof value.totalCapacity !== "number" || !Number.isFinite(value.totalCapacity) || value.totalCapacity <= 0) return null;
+  if (value.usedCapacity > value.totalCapacity * 1.5) return null;
+  if (!Array.isArray(value.warnings) || value.warnings.length > 12
+    || !value.warnings.every((warning) => boundedString(warning, 220))) return null;
+  return value as DispatchTask;
+}
+
+export function decodeStoredDispatchTasks(value: unknown): DispatchTask[] | null {
+  if (!Array.isArray(value) || value.length === 0 || value.length > 100) return null;
+  const tasks = value.map(decodeDispatchTask);
+  if (tasks.some((task) => task === null)) return null;
+  const decoded = tasks as DispatchTask[];
+  return new Set(decoded.map((task) => task.id)).size === decoded.length ? decoded : null;
+}
+
 export function filterDispatchTasks(tasks: DispatchTask[], filters: DispatchFilters) {
   return tasks.filter((task) => (
     task.date === filters.date

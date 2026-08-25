@@ -2,7 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
-import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
+import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import {
   availableSeatCount,
   BOOKING_STORAGE_KEY,
@@ -34,8 +34,9 @@ export default function TicketBookingClient() {
   const [selectedTripId, setSelectedTripId] = useState(initialTrips[0]?.id ?? "");
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [announcement, setAnnouncement] = useState("");
-  const [bookings, setBookings, resetBookings] = useLocalStorageState({
-    key: BOOKING_STORAGE_KEY,
+  const [bookings, setBookings, resetBookings] = useWorkspaceState({
+    stateKey: "bookings",
+    cacheKey: BOOKING_STORAGE_KEY,
     initialValue: EMPTY_BOOKINGS,
     decode: decodeDemoBookings,
   });

@@ -142,6 +142,9 @@ function issueVariables(error: z.ZodError) {
 }
 
 export function parseServerConfig(environment: Environment): ServerConfig {
+  if (environment.KSOPS_MODE === undefined || environment.KSOPS_MODE === "demo") {
+    return Object.freeze({ mode: "demo" });
+  }
   const parsed = environmentSchema.safeParse(environment);
   if (!parsed.success) throw new ServerConfigurationError(issueVariables(parsed.error));
 

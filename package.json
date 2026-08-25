@@ -12,6 +12,8 @@
     "db:check": "node --test tests/database-schema.test.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:migrate:status": "node scripts/migrate.mjs --status",
+    "db:seed:workspace": "node --experimental-transform-types scripts/seed-workspace-state.mjs",
+    "db:setup:supabase": "node --experimental-transform-types scripts/setup-supabase.mjs",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",

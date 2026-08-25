@@ -82,7 +82,8 @@ npm ci
 npm run dev
 ```
 
-Không cần credential cho chế độ demo. Cấu hình mặc định fail closed về `demo`.
+Không cần credential để mở giao diện. Khi có `DATABASE_URL`, các thao tác đơn hàng,
+điều phối, đặt vé, hợp đồng, checklist và thanh toán được đồng bộ qua API server.
 
 Quality gate:
 
@@ -113,6 +114,26 @@ docker compose down
 
 `db:migrate` chỉ chấp nhận `MIGRATION_DATABASE_URL`; nó cố ý không dùng `DATABASE_URL` của runtime.
 
+## Kết nối Supabase
+
+KSOps dùng Supabase như PostgreSQL được quản lý và không đưa database password ra
+trình duyệt. Chọn **Session pooler** trong bảng Connect của Supabase, lưu URI vào
+`.env.local`, rồi chạy migration và seed workspace:
+
+```env
+DATABASE_URL="postgresql://..."
+NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
+```
+
+```powershell
+npm run db:setup:supabase
+```
+
+`NEXT_PUBLIC_SUPABASE_URL` chỉ dùng để nhận diện project; dữ liệu nghiệp vụ đi qua
+route `/api/v1/workspace-state/[key]` và kết nối `DATABASE_URL` phía server. Có thể
+đặt PEM CA của Supabase trong `SUPABASE_DB_CA` để bật kiểm tra đầy đủ chuỗi chứng
+chỉ. Không commit `.env.local`, database password hoặc `service_role` key.
+
 Runtime role phải được tạo ngoài migration rồi nhận đúng bộ quyền cargo qua `db/admin/grant_runtime_role.sql` theo [hướng dẫn admin](db/admin/README.md). `DATABASE_URL` tới host từ xa bắt buộc dùng TLS hostname/certificate verification với `sslmode=verify-full`; runtime không được dùng owner/migration credential.
 
 ## Biến môi trường
@@ -122,7 +143,7 @@ Chỉ lưu trong secret manager của từng môi trường. Repository không c
 | Nhóm | Tên biến |
 |---|---|
 | Chế độ/runtime | `KSOPS_MODE`, `APP_BASE_URL` |
-| Runtime database | `DATABASE_URL` |
+| Runtime database | `DATABASE_URL`, `SUPABASE_DB_CA` |
 | Migration/test | `MIGRATION_DATABASE_URL`, `TEST_DATABASE_URL`, `PGOPTIONS` |
 | Auth0 | `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_SECRET` |
 | Tenant và HMAC | `KSOPS_ORGANIZATION_ID`, `KSOPS_IDEMPOTENCY_SECRET`, `KSOPS_IDENTITY_LOOKUP_SECRET` |

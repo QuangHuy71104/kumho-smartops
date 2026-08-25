@@ -49,6 +49,7 @@ const pilotEnvironment = {
 test("server config defaults safely to demo without credentials", () => {
   assert.deepEqual(parseServerConfig({}), { mode: "demo" });
   assert.deepEqual(parseServerConfig({ KSOPS_MODE: "demo" }), { mode: "demo" });
+  assert.deepEqual(parseServerConfig({ KSOPS_MODE: "demo", DATABASE_URL: "provider-managed-at-runtime" }), { mode: "demo" });
 });
 
 test("pilot config fails closed and never includes secret values in errors", () => {

@@ -66,15 +66,15 @@ test("runtime mode resolver defaults closed and only accepts pilot explicitly", 
   assert.equal(capabilities.resolveRuntimeMode("PILOT"), "pilot");
 });
 
-test("pilot label never promotes unverified enterprise capabilities", async () => {
+test("capabilities advertise persistence without promoting enterprise identity", async () => {
   const capabilities = await importTypeScript("app/api/v1/system/capabilities/route.ts");
   const snapshot = capabilities.buildCapabilitySnapshot("pilot", "request-under-test");
 
   assert.deepEqual(snapshot, {
     mode: "pilot",
-    durablePersistence: false,
+    durablePersistence: true,
     enterpriseIdentity: false,
-    mutationApi: false,
+    mutationApi: true,
     requestId: "request-under-test",
   });
 });
@@ -95,9 +95,9 @@ test("capabilities route returns no-store, safe JSON with a fresh request id", a
     assert.equal(firstResponse.headers.get("cache-control"), "no-store");
     assert.equal(firstResponse.headers.get("x-content-type-options"), "nosniff");
     assert.equal(first.mode, "demo");
-    assert.equal(first.durablePersistence, false);
+    assert.equal(first.durablePersistence, true);
     assert.equal(first.enterpriseIdentity, false);
-    assert.equal(first.mutationApi, false);
+    assert.equal(first.mutationApi, true);
     assert.match(first.requestId, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     assert.notEqual(first.requestId, second.requestId);
     assert.deepEqual(Object.keys(first).sort(), [
