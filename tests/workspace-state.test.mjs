@@ -26,10 +26,21 @@ test("workspace clients persist through the same-origin server API", async () =>
     readFile("lib/server/db/workspace-pool.ts", "utf8"),
   ]);
   assert.match(route, /requireSameHost\(request\)/);
-  assert.match(route, /ON CONFLICT \(state_key\) DO UPDATE/);
-  assert.match(route, /platform\.workspace_state\.version \+ 1/);
+  assert.match(route, /readRelationalWorkspaceState/);
+  assert.match(route, /writeRelationalWorkspaceState/);
   assert.match(hook, /writeQueues/);
   assert.match(hook, /useLocalStorageState/);
   assert.match(pool, /process\.env\.DATABASE_URL/);
   assert.doesNotMatch([route, hook, pool].join("\n"), /NEXT_PUBLIC_SUPABASE|service_role/i);
+});
+
+test("workspace adapter reads and writes named relational tables", async () => {
+  const adapter = await readFile("lib/server/db/relational-workspace-state.ts", "utf8");
+  for (const table of [
+    "transport_orders", "dispatch_tasks", "ticket_bookings", "booking_seats",
+    "contract_requests", "maintenance_checklist_items", "invoices",
+  ]) {
+    assert.match(adapter, new RegExp(`public\\.${table}`));
+  }
+  assert.doesNotMatch(adapter, /platform\.workspace_state/);
 });

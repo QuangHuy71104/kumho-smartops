@@ -11,6 +11,7 @@ Apply every file in `migrations/` in lexical order with `ON_ERROR_STOP` enabled:
 3. `0003_cargo_dispatch.sql`
 4. `0004_platform_audit_reporting_rls.sql`
 5. `0005_workspace_state.sql`
+6. `0006_relational_operations.sql`
 
 The application must create UUIDv7 identifiers. Database columns deliberately have no random UUID default so identity generation remains explicit and testable. All timestamps use UTC-capable `timestamptz`; the UI is responsible for rendering a branch timezone.
 
@@ -38,9 +39,12 @@ psql $env:DATABASE_URL -v ON_ERROR_STOP=1 -f db/seeds/dev/001_synthetic_pilot.sq
 
 Do not enable those settings in production. Production onboarding must use an audited bootstrap command; it must not run the development seed. Never copy production rows into preview or development databases.
 
-`npm run db:seed:workspace` initializes the connected UI documents in
-`platform.workspace_state`. It is idempotent and never overwrites a state key that
-already exists. This seed contains only the repository's fictional operating data.
+`npm run db:seed:relational` initializes the normalized `public` operating tables.
+The seed is idempotent, preserves interactive records, migrates compatible legacy
+documents once, and contains only the repository's fictional operating data.
+The application reads and writes orders, dispatch, bookings, contracts, maintenance,
+and invoices through those relational tables; `platform.legacy_workspace_state` is
+retained as an empty compatibility marker after its records are migrated.
 
 ## Operational notes
 

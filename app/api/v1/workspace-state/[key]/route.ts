@@ -1,5 +1,8 @@
 import { ApplicationError } from "../../../../../modules/shared/application/errors.ts";
-import { getWorkspacePool } from "../../../../../lib/server/db/workspace-pool.ts";
+import {
+  readRelationalWorkspaceState,
+  writeRelationalWorkspaceState,
+} from "../../../../../lib/server/db/relational-workspace-state.ts";
 import { readBoundedJson } from "../../../../../lib/server/http/json-body.ts";
 import { errorProblemResponse } from "../../../../../lib/server/http/problem.ts";
 import { requestIdFromHeaders, REQUEST_ID_HEADER } from "../../../../../lib/server/http/request-id.ts";
@@ -42,15 +45,9 @@ export async function GET(request: Request, context: RouteContext) {
   const requestId = requestIdFromHeaders(request.headers);
   try {
     const key = await stateKey(context);
-    const result = await getWorkspacePool().query(
-      `SELECT payload, version, updated_at
-         FROM platform.workspace_state
-        WHERE state_key = $1`,
-      [key],
-    );
-    const row = result.rows[0];
+    const data = await readRelationalWorkspaceState(key);
     return Response.json(
-      { data: row?.payload ?? null, meta: { key, version: Number(row?.version ?? 0), updatedAt: row?.updated_at ?? null, requestId } },
+      { data, meta: { key, source: "relational", requestId } },
       { headers: headers(requestId) },
     );
   } catch (error) {
@@ -69,19 +66,9 @@ export async function PUT(request: Request, context: RouteContext) {
     }
     const data = (body as { data: unknown }).data;
     if (!isJsonValue(data)) throw new ApplicationError("BAD_REQUEST", "Dữ liệu phân hệ không hợp lệ.");
-    const result = await getWorkspacePool().query(
-      `INSERT INTO platform.workspace_state (state_key, payload)
-       VALUES ($1, $2::jsonb)
-       ON CONFLICT (state_key) DO UPDATE
-         SET payload = EXCLUDED.payload,
-             version = platform.workspace_state.version + 1,
-             updated_at = now()
-       RETURNING version, updated_at`,
-      [key, JSON.stringify(data)],
-    );
-    const row = result.rows[0];
+    const stored = await writeRelationalWorkspaceState(key, data);
     return Response.json(
-      { data, meta: { key, version: Number(row.version), updatedAt: row.updated_at, requestId } },
+      { data: stored, meta: { key, source: "relational", updatedAt: new Date().toISOString(), requestId } },
       { headers: headers(requestId) },
     );
   } catch (error) {

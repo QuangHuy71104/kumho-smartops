@@ -12,6 +12,7 @@ import {
   jsonb,
   numeric,
   pgSchema,
+  pgTable,
   smallint,
   timestamp,
   unique,
@@ -534,10 +535,123 @@ export const outboxMessages = platformSchema.table(
   ],
 );
 
-export const workspaceStates = platformSchema.table("workspace_state", {
+export const legacyWorkspaceStates = platformSchema.table("legacy_workspace_state", {
   stateKey: varchar("state_key", { length: 80 }).primaryKey(),
   payload: jsonb("payload").$type<unknown>().notNull(),
   version: bigint("version", { mode: "number" }).notNull().default(1),
+  ...mutableTimestamps(),
+});
+
+export const relationalOrganizations = pgTable("organizations", {
+  id: varchar("id", { length: 24 }).primaryKey(),
+  code: varchar("code", { length: 32 }).notNull(),
+  legalName: varchar("legal_name", { length: 180 }).notNull(),
+  timezone: varchar("timezone", { length: 64 }).notNull().default("Asia/Ho_Chi_Minh"),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  ...mutableTimestamps(),
+});
+
+export const relationalVehicles = pgTable("vehicles", {
+  id: varchar("id", { length: 20 }).primaryKey(),
+  organizationId: varchar("organization_id", { length: 24 }).notNull().references(() => relationalOrganizations.id),
+  name: varchar("name", { length: 120 }).notNull(),
+  vehicleType: varchar("vehicle_type", { length: 32 }).notNull(),
+  operationalStatus: varchar("operational_status", { length: 24 }).notNull(),
+  odometerKm: integer("odometer_km").notNull(),
+  readinessPercent: integer("readiness_percent").notNull(),
+  ...mutableTimestamps(),
+});
+
+export const relationalDrivers = pgTable("drivers", {
+  id: varchar("id", { length: 24 }).primaryKey(),
+  organizationId: varchar("organization_id", { length: 24 }).notNull().references(() => relationalOrganizations.id),
+  fullName: varchar("full_name", { length: 120 }).notNull(),
+  availability: varchar("availability", { length: 28 }).notNull(),
+  shift: varchar("shift", { length: 20 }).notNull(),
+  licenseExpiry: date("license_expiry").notNull(),
+  vehicleId: varchar("vehicle_id", { length: 20 }).references(() => relationalVehicles.id),
+  ...mutableTimestamps(),
+});
+
+export const transportOrders = pgTable("transport_orders", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  organizationId: varchar("organization_id", { length: 24 }).notNull().references(() => relationalOrganizations.id),
+  customerName: varchar("customer_name", { length: 180 }).notNull(),
+  serviceType: varchar("service_type", { length: 40 }).notNull(),
+  cargoType: varchar("cargo_type", { length: 50 }).notNull(),
+  status: varchar("status", { length: 28 }).notNull(),
+  packageCount: integer("package_count").notNull(),
+  weightKg: numeric("weight_kg", { precision: 12, scale: 2 }).notNull(),
+  slaDeadline: timestamp("sla_deadline", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const relationalDispatchTasks = pgTable("dispatch_tasks", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  organizationId: varchar("organization_id", { length: 24 }).notNull().references(() => relationalOrganizations.id),
+  serviceDate: date("service_date").notNull(),
+  routeCode: varchar("route_code", { length: 48 }).notNull(),
+  vehicleId: varchar("vehicle_id", { length: 20 }).references(() => relationalVehicles.id),
+  driverId: varchar("driver_id", { length: 24 }).references(() => relationalDrivers.id),
+  status: varchar("status", { length: 24 }).notNull(),
+  ...mutableTimestamps(),
+});
+
+export const relationalTicketRoutes = pgTable("ticket_routes", {
+  id: varchar("id", { length: 24 }).primaryKey(),
+  origin: varchar("origin", { length: 180 }).notNull(),
+  destination: varchar("destination", { length: 180 }).notNull(),
+  status: varchar("status", { length: 16 }).notNull().default("active"),
+  ...mutableTimestamps(),
+});
+
+export const relationalTicketTrips = pgTable("ticket_trips", {
+  id: varchar("id", { length: 24 }).primaryKey(),
+  routeId: varchar("route_id", { length: 24 }).notNull().references(() => relationalTicketRoutes.id),
+  serviceDate: date("service_date").notNull(),
+  seatCapacity: integer("seat_capacity").notNull(),
+  ticketPrice: bigint("ticket_price", { mode: "number" }).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("scheduled"),
+  ...mutableTimestamps(),
+});
+
+export const relationalTicketBookings = pgTable("ticket_bookings", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  tripId: varchar("trip_id", { length: 24 }).notNull().references(() => relationalTicketTrips.id),
+  totalAmount: bigint("total_amount", { mode: "number" }).notNull(),
+  status: varchar("status", { length: 24 }).notNull(),
+  ...mutableTimestamps(),
+});
+
+export const relationalContractRequests = pgTable("contract_requests", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  status: varchar("status", { length: 28 }).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  estimatedValue: bigint("estimated_value", { mode: "number" }).notNull(),
+  recordSource: varchar("record_source", { length: 16 }).notNull(),
+  ...mutableTimestamps(),
+});
+
+export const relationalMaintenanceOrders = pgTable("maintenance_orders", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  vehicleId: varchar("vehicle_id", { length: 20 }).notNull().references(() => relationalVehicles.id),
+  jobName: varchar("job_name", { length: 180 }).notNull(),
+  status: varchar("status", { length: 28 }).notNull(),
+  priority: varchar("priority", { length: 20 }).notNull(),
+  dueDate: date("due_date").notNull(),
+  ...mutableTimestamps(),
+});
+
+export const relationalInvoices = pgTable("invoices", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  customerName: varchar("customer_name", { length: 180 }).notNull(),
+  referenceCode: varchar("reference_code", { length: 40 }).notNull(),
+  amount: bigint("amount", { mode: "number" }).notNull(),
+  dueDate: date("due_date").notNull(),
+  originalStatus: varchar("original_status", { length: 24 }).notNull(),
+  manuallyPaid: boolean("manually_paid").notNull().default(false),
   ...mutableTimestamps(),
 });
 

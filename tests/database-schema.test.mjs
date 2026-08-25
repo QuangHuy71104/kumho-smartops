@@ -11,12 +11,23 @@ import {
   cargoPackages,
   drivers,
   idempotencyKeys,
+  legacyWorkspaceStates,
   locations,
   organizations,
   outboxMessages,
   principals,
   vehicles,
-  workspaceStates,
+  relationalContractRequests,
+  relationalDispatchTasks,
+  relationalDrivers,
+  relationalInvoices,
+  relationalMaintenanceOrders,
+  relationalOrganizations,
+  relationalTicketBookings,
+  relationalTicketRoutes,
+  relationalTicketTrips,
+  relationalVehicles,
+  transportOrders,
 } from "../db/schema.ts";
 
 const root = process.cwd();
@@ -30,6 +41,7 @@ const expectedMigrations = [
   "0003_cargo_dispatch.sql",
   "0004_platform_audit_reporting_rls.sql",
   "0005_workspace_state.sql",
+  "0006_relational_operations.sql",
 ];
 
 async function readMigration(name) {
@@ -154,6 +166,25 @@ test("workspace state is bounded, private, and migration-managed", async () => {
   assert.match(sql, /REVOKE ALL ON TABLE platform\.workspace_state FROM PUBLIC/);
 });
 
+test("presentation data is normalized into guarded public business tables", async () => {
+  const sql = await readMigration(expectedMigrations[5]);
+  for (const table of [
+    "organizations", "branches", "customers", "vehicles", "drivers",
+    "transport_orders", "dispatch_tasks", "ticket_routes", "ticket_trips",
+    "ticket_bookings", "booking_seats", "contract_requests",
+    "maintenance_orders", "maintenance_checklist_items", "invoices",
+  ]) {
+    assert.match(sql, new RegExp(`CREATE TABLE public\\.${table}`));
+  }
+  assert.match(sql, /REFERENCES public\.customers\(id\)/);
+  assert.match(sql, /REFERENCES public\.vehicles\(id\)/);
+  assert.match(sql, /REFERENCES public\.ticket_trips\(id\)/);
+  assert.match(sql, /REFERENCES public\.maintenance_orders\(id\) ON DELETE CASCADE/);
+  assert.match(sql, /ENABLE ROW LEVEL SECURITY/);
+  assert.match(sql, /FORCE ROW LEVEL SECURITY/);
+  assert.match(sql, /ALTER TABLE platform\.workspace_state RENAME TO legacy_workspace_state/);
+});
+
 test("Drizzle runtime mappings retain migration schema and table names", () => {
   const expectedTables = new Map([
     [organizations, ["org", "organization"]],
@@ -168,16 +199,34 @@ test("Drizzle runtime mappings retain migration schema and table names", () => {
     [auditEvents, ["audit", "audit_event"]],
     [idempotencyKeys, ["platform", "idempotency_key"]],
     [outboxMessages, ["platform", "outbox_message"]],
-    [workspaceStates, ["platform", "workspace_state"]],
+    [legacyWorkspaceStates, ["platform", "legacy_workspace_state"]],
   ]);
 
   for (const [table, [schema, name]] of expectedTables) {
     const config = getTableConfig(table);
     assert.equal(config.schema, schema);
     assert.equal(config.name, name);
-    if (name !== "organization" && name !== "workspace_state") {
+    if (name !== "organization" && name !== "legacy_workspace_state") {
       assert.ok(config.columns.some((column) => column.name === "organization_id"));
     }
+  }
+
+  for (const [table, name] of [
+    [relationalOrganizations, "organizations"],
+    [relationalVehicles, "vehicles"],
+    [relationalDrivers, "drivers"],
+    [transportOrders, "transport_orders"],
+    [relationalDispatchTasks, "dispatch_tasks"],
+    [relationalTicketRoutes, "ticket_routes"],
+    [relationalTicketTrips, "ticket_trips"],
+    [relationalTicketBookings, "ticket_bookings"],
+    [relationalContractRequests, "contract_requests"],
+    [relationalMaintenanceOrders, "maintenance_orders"],
+    [relationalInvoices, "invoices"],
+  ]) {
+    const config = getTableConfig(table);
+    assert.equal(config.schema, undefined);
+    assert.equal(config.name, name);
   }
 
   const cargoConfig = getTableConfig(cargoOrders);

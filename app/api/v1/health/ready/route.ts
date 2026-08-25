@@ -16,9 +16,9 @@ export async function GET(request: Request) {
       const durablePersistence = Boolean(process.env.DATABASE_URL?.trim());
       if (durablePersistence) {
         const result = await getWorkspacePool().query(
-          "SELECT to_regclass('platform.workspace_state')::text AS table_name",
+          "SELECT to_regclass('public.transport_orders')::text AS table_name",
         );
-        if (result.rows[0]?.table_name !== "platform.workspace_state") throw new Error("workspace table missing");
+        if (result.rows[0]?.table_name !== "transport_orders") throw new Error("relational operations tables missing");
       }
       return Response.json(
         { status: "ready", mode: "demo", durablePersistence, requestId },

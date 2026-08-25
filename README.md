@@ -118,7 +118,7 @@ docker compose down
 
 KSOps dùng Supabase như PostgreSQL được quản lý và không đưa database password ra
 trình duyệt. Chọn **Session pooler** trong bảng Connect của Supabase, lưu URI vào
-`.env.local`, rồi chạy migration và seed workspace:
+`.env.local`, rồi chạy migration và seed dữ liệu quan hệ:
 
 ```env
 DATABASE_URL="postgresql://..."
@@ -129,8 +129,9 @@ NEXT_PUBLIC_SUPABASE_URL="https://<project-ref>.supabase.co"
 npm run db:setup:supabase
 ```
 
-`NEXT_PUBLIC_SUPABASE_URL` chỉ dùng để nhận diện project; dữ liệu nghiệp vụ đi qua
-route `/api/v1/workspace-state/[key]` và kết nối `DATABASE_URL` phía server. Có thể
+`NEXT_PUBLIC_SUPABASE_URL` chỉ dùng để nhận diện project; dữ liệu nghiệp vụ nằm trong
+các bảng quan hệ `public` và đi qua route server `/api/v1/workspace-state/[key]`.
+Có thể
 đặt PEM CA của Supabase trong `SUPABASE_DB_CA` để bật kiểm tra đầy đủ chuỗi chứng
 chỉ. Không commit `.env.local`, database password hoặc `service_role` key.
 
