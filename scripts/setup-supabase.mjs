@@ -11,3 +11,4 @@ if (!connectionString) throw new Error("DATABASE_URL is required in .env.local o
 process.env.MIGRATION_DATABASE_URL = connectionString;
 await import("./migrate.mjs");
 await import("./seed-relational-data.mjs");
+await import("./seed-work-center.mjs");

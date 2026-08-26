@@ -145,6 +145,7 @@ export default function DashboardOverview() {
         </div>
         <div className={styles.heroActions}>
           <Link className={`${styles.button} ${styles.buttonPrimary}`} href={createOrderHref}>+ Tạo đơn hàng</Link>
+          <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/cong-viec">Công việc của tôi</Link>
           <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/dieu-phoi">Mở bàn điều phối</Link>
         </div>
       </section>

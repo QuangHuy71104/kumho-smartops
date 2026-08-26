@@ -10,7 +10,7 @@ Repository hiện có hai lớp khác nhau:
 
 | Lớp | Đã có | Chưa được tuyên bố |
 |---|---|---|
-| Demo công khai | 11 màn hình responsive, 8 vai trò minh họa, dữ liệu giả lập, một số thao tác `localStorage` | đăng nhập thật, dữ liệu bền vững hoặc security boundary |
+| Demo công khai | 12 màn hình responsive, 8 vai trò minh họa, dữ liệu giả lập, một số thao tác `localStorage` | đăng nhập thật hoặc security boundary hoàn chỉnh |
 | Nền tảng pilot trong mã nguồn | PostgreSQL migrations, RLS tenant, Auth0 session boundary, principal/role/scope nội bộ, cargo API, idempotency, optimistic concurrency, audit và outbox | đã provision production, đã kết nối bản Vercel công khai hoặc đã qua go-live gate |
 
 Lát cắt hàng hóa đã được triển khai theo cấu trúc domain → application service → PostgreSQL repository → HTTP API và có integration test với PostgreSQL thật trong CI. Route `/don-hang` đã có nhánh pilot gọi API thật khi runtime chọn pilot; deployment Vercel công khai vẫn chọn workspace demo.
@@ -18,6 +18,7 @@ Lát cắt hàng hóa đã được triển khai theo cấu trúc domain → app
 Trạng thái từng miền:
 
 - **Cargo:** có vertical slice backend đầu tiên cho list/get/create/transition.
+- **Work Center:** hàng đợi PostgreSQL theo 8 vai trò, giao việc, nhận việc, xử lý, phê duyệt, yêu cầu chứng từ, bình luận, lịch sử và thông báo.
 - **Organization/IAM/Fleet/Driver/Dispatch:** đã có schema nền tảng; Auth0 và principal directory có adapter server-side; dispatch có constraint chống trùng lịch ở database.
 - **Dispatch UI, vé, hợp đồng, CRM, bảo dưỡng, tài chính và báo cáo:** vẫn dùng fixture hoặc `localStorage`; chưa có application/API production tương ứng.
 - **GPS, payment, e-invoice, ERP, notification và object storage:** chưa tích hợp.
@@ -29,6 +30,7 @@ Vì vậy dự án **chưa production-ready**. Xem [Production Readiness](docs/P
 | Route | Năng lực demo |
 |---|---|
 | `/` | trung tâm điều hành và KPI theo ca |
+| `/cong-viec` | hàng đợi theo vai trò, SLA, giao việc, phê duyệt, bằng chứng, trao đổi và thông báo |
 | `/don-hang` | đơn hàng hóa, tìm kiếm/lọc, chi tiết và workflow mô phỏng |
 | `/dieu-phoi` | bàn điều phối xe, tài xế và cảnh báo xung đột |
 | `/doi-xe` | danh mục xe, tải/ghế và trạng thái khai thác |
@@ -57,8 +59,14 @@ Base path: `/api/v1`.
 | `GET /cargo-orders/{id}` | pilot | chi tiết đơn theo object-level scope |
 | `POST /cargo-orders` | pilot | tạo đơn idempotent trong transaction |
 | `POST /cargo-orders/{id}/transitions` | pilot | chuyển trạng thái bằng `If-Match` và idempotency |
+| `GET, POST /work-items` | kết nối PostgreSQL | đọc hàng đợi theo vai trò và giao việc mới |
+| `POST /work-items/{id}/actions` | kết nối PostgreSQL | nhận, xử lý, phê duyệt, chuyển cấp, bổ sung chứng từ và trao đổi |
+| `GET, PUT /role-notifications` | kết nối PostgreSQL | đọc và đánh dấu thông báo theo vai trò |
 
-Ở chế độ demo, các API nghiệp vụ không âm thầm dùng dữ liệu giả; chúng fail closed vì thiếu cấu hình pilot. Contract đầy đủ nằm tại [API Spec](docs/API_SPEC.md).
+Các API cargo ở chế độ pilot vẫn fail closed khi thiếu cấu hình bảo mật. Work Center
+dùng `DATABASE_URL` và vai trò đang chọn trên giao diện; bộ chuyển vai trò này phục vụ
+trình diễn quy trình, chưa phải ranh giới xác thực cho môi trường production. Contract
+pilot đầy đủ nằm tại [API Spec](docs/API_SPEC.md).
 
 ## Công nghệ và kiến trúc
 
@@ -82,8 +90,9 @@ npm ci
 npm run dev
 ```
 
-Không cần credential để mở giao diện. Khi có `DATABASE_URL`, các thao tác đơn hàng,
-điều phối, đặt vé, hợp đồng, checklist và thanh toán được đồng bộ qua API server.
+Không cần credential để mở giao diện. Khi có `DATABASE_URL`, hàng đợi công việc và
+các thao tác đơn hàng, điều phối, đặt vé, hợp đồng, checklist, thanh toán được đồng
+bộ qua API server.
 
 Quality gate:
 
@@ -130,7 +139,8 @@ npm run db:setup:supabase
 ```
 
 `NEXT_PUBLIC_SUPABASE_URL` chỉ dùng để nhận diện project; dữ liệu nghiệp vụ nằm trong
-các bảng quan hệ `public` và đi qua route server `/api/v1/workspace-state/[key]`.
+các bảng quan hệ `public` và đi qua các route server `/api/v1/workspace-state/[key]`,
+`/api/v1/work-items` và `/api/v1/role-notifications`.
 Có thể
 đặt PEM CA của Supabase trong `SUPABASE_DB_CA` để bật kiểm tra đầy đủ chuỗi chứng
 chỉ. Không commit `.env.local`, database password hoặc `service_role` key.

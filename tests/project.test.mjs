@@ -12,6 +12,7 @@ const execFileAsync = promisify(execFile);
 
 const routes = [
   ["app/page.tsx", "/"],
+  ["app/cong-viec/page.tsx", "/cong-viec"],
   ["app/don-hang/page.tsx", "/don-hang"],
   ["app/dieu-phoi/page.tsx", "/dieu-phoi"],
   ["app/doi-xe/page.tsx", "/doi-xe"],
@@ -105,7 +106,7 @@ test("portal navigation exposes every transport module exactly once", async () =
   assert.equal(new Set(PORTAL_ROUTES.map((route) => route.path)).size, routes.length);
   assert.deepEqual(
     PORTAL_ROUTES.map((route) => route.label),
-    ["Tổng quan", "Đơn hàng", "Điều phối", "Đội xe", "Tài xế", "Vé hành khách", "Hợp đồng xe", "Khách hàng", "Bảo dưỡng", "Tài chính", "Báo cáo"],
+    ["Tổng quan", "Công việc của tôi", "Đơn hàng", "Điều phối", "Đội xe", "Tài xế", "Vé hành khách", "Hợp đồng xe", "Khách hàng", "Bảo dưỡng", "Tài chính", "Báo cáo"],
   );
   assert.match(navigation, /PORTAL_ROUTES\.filter/);
   assert.match(navigation, /section\.routes\.map/);

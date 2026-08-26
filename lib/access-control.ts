@@ -9,6 +9,10 @@
 
 export const PERMISSIONS = [
   "dashboard:read",
+  "work-item:read",
+  "work-item:update",
+  "work-item:approve",
+  "work-item:audit",
   "cargo-order:read",
   "cargo-order:create",
   "cargo-order:transition",
@@ -56,6 +60,14 @@ export const PORTAL_ROUTES = [
     short: "TQ",
     label: "Tổng quan",
     viewPermission: "dashboard:read",
+  },
+  {
+    path: "/cong-viec",
+    section: "operations",
+    short: "CV",
+    label: "Công việc của tôi",
+    viewPermission: "work-item:read",
+    primaryActionPermission: "work-item:update",
   },
   {
     path: "/don-hang",
@@ -177,6 +189,8 @@ export const DEMO_ROLES = {
     scopeLabel: "Ca và khu vực được phân công",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
       "cargo-order:read",
       "cargo-order:transition",
       "dispatch:read",
@@ -197,6 +211,8 @@ export const DEMO_ROLES = {
     scopeLabel: "Đơn thuộc điểm giao dịch",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
       "cargo-order:read",
       "cargo-order:create",
       "cargo-order:transition",
@@ -212,6 +228,8 @@ export const DEMO_ROLES = {
     scopeLabel: "Phòng vé và chuyến được phục vụ",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
       "booking:read",
       "booking:create",
       "booking:cancel",
@@ -226,6 +244,8 @@ export const DEMO_ROLES = {
     scopeLabel: "Pipeline do nhóm phụ trách",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
       "dispatch:read",
       "vehicle:read",
       "contract:read",
@@ -242,6 +262,8 @@ export const DEMO_ROLES = {
     scopeLabel: "Xe và work order tại xưởng",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
       "dispatch:read",
       "vehicle:read",
       "maintenance:read",
@@ -258,6 +280,8 @@ export const DEMO_ROLES = {
     scopeLabel: "Chứng từ thuộc đơn vị kế toán",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
       "invoice:read",
       "invoice:record-payment",
       "report:read",
@@ -272,6 +296,9 @@ export const DEMO_ROLES = {
     scopeLabel: "Khu vực quản lý",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:update",
+      "work-item:approve",
       "cargo-order:read",
       "cargo-order:transition",
       "cargo-order:resolve-exception",
@@ -298,9 +325,11 @@ export const DEMO_ROLES = {
     label: "Kiểm soát nội bộ",
     short: "KS",
     department: "Kiểm soát nội bộ",
-    scopeLabel: "Chỉ đọc, dữ liệu nhạy cảm được che",
+    scopeLabel: "Hồ sơ kiểm soát và bằng chứng được phân công",
     permissions: [
       "dashboard:read",
+      "work-item:read",
+      "work-item:audit",
       "cargo-order:read",
       "dispatch:read",
       "vehicle:read",

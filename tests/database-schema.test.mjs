@@ -27,7 +27,11 @@ import {
   relationalTicketRoutes,
   relationalTicketTrips,
   relationalVehicles,
+  roleNotifications,
   transportOrders,
+  workItemComments,
+  workItemEvents,
+  workItems,
 } from "../db/schema.ts";
 
 const root = process.cwd();
@@ -42,6 +46,7 @@ const expectedMigrations = [
   "0004_platform_audit_reporting_rls.sql",
   "0005_workspace_state.sql",
   "0006_relational_operations.sql",
+  "0007_role_work_center.sql",
 ];
 
 async function readMigration(name) {
@@ -185,6 +190,32 @@ test("presentation data is normalized into guarded public business tables", asyn
   assert.match(sql, /ALTER TABLE platform\.workspace_state RENAME TO legacy_workspace_state/);
 });
 
+test("role work center has guarded queues, timelines, notifications, and IAM vocabulary", async () => {
+  const sql = await readMigration(expectedMigrations[6]);
+  for (const table of [
+    "work_items",
+    "work_item_comments",
+    "work_item_events",
+    "role_notifications",
+  ]) {
+    assert.match(sql, new RegExp(`CREATE TABLE public\\.${table}`));
+    assert.ok(sql.includes(`'public.${table}'::regclass`), `${table} is missing from the RLS closed list`);
+  }
+  assert.match(sql, /REFERENCES public\.organizations\(id\)/);
+  assert.match(sql, /REFERENCES public\.work_items\(id\) ON DELETE CASCADE/);
+  assert.match(sql, /work_items_role_queue_idx/);
+  assert.match(sql, /role_notifications_unread_idx/);
+  assert.match(sql, /FORCE ROW LEVEL SECURITY/);
+  for (const permission of [
+    "work-item:read",
+    "work-item:update",
+    "work-item:approve",
+    "work-item:audit",
+  ]) {
+    assert.ok(sql.includes(`'${permission}'`), `migration is missing ${permission}`);
+  }
+});
+
 test("Drizzle runtime mappings retain migration schema and table names", () => {
   const expectedTables = new Map([
     [organizations, ["org", "organization"]],
@@ -223,6 +254,10 @@ test("Drizzle runtime mappings retain migration schema and table names", () => {
     [relationalContractRequests, "contract_requests"],
     [relationalMaintenanceOrders, "maintenance_orders"],
     [relationalInvoices, "invoices"],
+    [workItems, "work_items"],
+    [workItemComments, "work_item_comments"],
+    [workItemEvents, "work_item_events"],
+    [roleNotifications, "role_notifications"],
   ]) {
     const config = getTableConfig(table);
     assert.equal(config.schema, undefined);
@@ -232,6 +267,20 @@ test("Drizzle runtime mappings retain migration schema and table names", () => {
   const cargoConfig = getTableConfig(cargoOrders);
   for (const column of ["public_code", "status", "version", "sla_due_at"]) {
     assert.ok(cargoConfig.columns.some((candidate) => candidate.name === column));
+  }
+
+  const workItemConfig = getTableConfig(workItems);
+  for (const column of [
+    "organization_id", "module", "work_kind", "priority", "status",
+    "assigned_role", "origin_role", "due_at", "version",
+  ]) {
+    assert.ok(workItemConfig.columns.some((candidate) => candidate.name === column));
+  }
+  assert.ok(workItemConfig.foreignKeys.some((foreignKey) => foreignKey.reference().foreignTable === relationalOrganizations));
+
+  for (const table of [workItemComments, workItemEvents, roleNotifications]) {
+    const config = getTableConfig(table);
+    assert.ok(config.foreignKeys.some((foreignKey) => foreignKey.reference().foreignTable === workItems));
   }
 });
 

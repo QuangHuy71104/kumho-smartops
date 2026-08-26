@@ -12,6 +12,7 @@ Apply every file in `migrations/` in lexical order with `ON_ERROR_STOP` enabled:
 4. `0004_platform_audit_reporting_rls.sql`
 5. `0005_workspace_state.sql`
 6. `0006_relational_operations.sql`
+7. `0007_role_work_center.sql`
 
 The application must create UUIDv7 identifiers. Database columns deliberately have no random UUID default so identity generation remains explicit and testable. All timestamps use UTC-capable `timestamptz`; the UI is responsible for rendering a branch timezone.
 
@@ -45,6 +46,27 @@ documents once, and contains only the repository's fictional operating data.
 The application reads and writes orders, dispatch, bookings, contracts, maintenance,
 and invoices through those relational tables; `platform.legacy_workspace_state` is
 retained as an empty compatibility marker after its records are migrated.
+
+## Role Work Center
+
+Migration `0007_role_work_center.sql` adds the shared work queue used by all eight
+operating roles. `public.work_items` stores ownership, priority, due time, linked
+business resources, and optimistic-concurrency versioning. Comments, status events,
+and role notifications are stored in separate append-oriented tables with cascading
+foreign keys. All four tables have forced RLS and no direct `PUBLIC`, `anon`, or
+`authenticated` privileges; access is expected to flow through reviewed server APIs.
+
+After applying migrations and initializing the relational operating data, populate
+the role queues with:
+
+```powershell
+npm run db:seed:work-center
+```
+
+The command reads `DATABASE_URL` from `.env.local` when needed, inserts exactly three
+initial work items for each role, and is safe to run again because work items, events,
+and notifications use conflict guards. `npm run db:setup:supabase` now runs migrations,
+the relational seed, and the Work Center seed in that order.
 
 ## Operational notes
 

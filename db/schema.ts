@@ -14,6 +14,7 @@ import {
   pgSchema,
   pgTable,
   smallint,
+  text,
   timestamp,
   unique,
   uniqueIndex,
@@ -655,8 +656,183 @@ export const relationalInvoices = pgTable("invoices", {
   ...mutableTimestamps(),
 });
 
+export const workItems = pgTable(
+  "work_items",
+  {
+    id: varchar("id", { length: 32 }).primaryKey(),
+    organizationId: varchar("organization_id", { length: 24 })
+      .notNull()
+      .references(() => relationalOrganizations.id),
+    module: varchar("module", {
+      length: 24,
+      enum: ["cargo", "dispatch", "passenger", "contract", "maintenance", "billing", "reporting", "audit"],
+    }).notNull(),
+    workKind: varchar("work_kind", {
+      length: 16,
+      enum: ["standard", "approval", "audit"],
+    }).notNull().default("standard"),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description").notNull(),
+    resourceType: varchar("resource_type", { length: 40 }).notNull(),
+    resourceId: varchar("resource_id", { length: 64 }),
+    routePath: varchar("route_path", { length: 180 }).notNull(),
+    priority: varchar("priority", {
+      length: 12,
+      enum: ["low", "normal", "high", "urgent"],
+    }).notNull().default("normal"),
+    status: varchar("status", {
+      length: 24,
+      enum: [
+        "new", "claimed", "in_progress", "waiting_approval",
+        "waiting_evidence", "completed", "rejected",
+      ],
+    }).notNull().default("new"),
+    assignedRole: varchar("assigned_role", {
+      length: 32,
+      enum: [
+        "dispatcher", "cargo-agent", "ticket-agent", "contract-sales",
+        "maintenance-technician", "finance-officer", "operations-manager", "auditor",
+      ],
+    }).notNull(),
+    originRole: varchar("origin_role", {
+      length: 32,
+      enum: [
+        "dispatcher", "cargo-agent", "ticket-agent", "contract-sales",
+        "maintenance-technician", "finance-officer", "operations-manager", "auditor",
+      ],
+    }).notNull(),
+    assignedTo: varchar("assigned_to", { length: 120 }),
+    dueAt: timestamp("due_at", { withTimezone: true }).notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    version: bigint("version", { mode: "number" }).notNull().default(1),
+    ...mutableTimestamps(),
+  },
+  (table) => [
+    index("work_items_role_queue_idx").on(
+      table.organizationId,
+      table.assignedRole,
+      table.status,
+      table.dueAt,
+    ),
+    index("work_items_module_status_idx").on(
+      table.organizationId,
+      table.module,
+      table.status,
+      table.updatedAt,
+    ),
+    index("work_items_resource_idx")
+      .on(table.resourceType, table.resourceId)
+      .where(sql`${table.resourceId} IS NOT NULL`),
+    check("work_items_version_positive", sql`${table.version} > 0`),
+  ],
+);
+
+export const workItemComments = pgTable(
+  "work_item_comments",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    workItemId: varchar("work_item_id", { length: 32 })
+      .notNull()
+      .references(() => workItems.id, { onDelete: "cascade" }),
+    authorRole: varchar("author_role", {
+      length: 32,
+      enum: [
+        "dispatcher", "cargo-agent", "ticket-agent", "contract-sales",
+        "maintenance-technician", "finance-officer", "operations-manager", "auditor",
+      ],
+    }).notNull(),
+    authorLabel: varchar("author_label", { length: 120 }).notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("work_item_comments_timeline_idx").on(table.workItemId, table.createdAt, table.id),
+  ],
+);
+
+export const workItemEvents = pgTable(
+  "work_item_events",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    workItemId: varchar("work_item_id", { length: 32 })
+      .notNull()
+      .references(() => workItems.id, { onDelete: "cascade" }),
+    action: varchar("action", { length: 48 }).notNull(),
+    fromStatus: varchar("from_status", {
+      length: 24,
+      enum: [
+        "new", "claimed", "in_progress", "waiting_approval",
+        "waiting_evidence", "completed", "rejected",
+      ],
+    }),
+    toStatus: varchar("to_status", {
+      length: 24,
+      enum: [
+        "new", "claimed", "in_progress", "waiting_approval",
+        "waiting_evidence", "completed", "rejected",
+      ],
+    }),
+    actorRole: varchar("actor_role", {
+      length: 32,
+      enum: [
+        "dispatcher", "cargo-agent", "ticket-agent", "contract-sales",
+        "maintenance-technician", "finance-officer", "operations-manager", "auditor",
+      ],
+    }).notNull(),
+    actorLabel: varchar("actor_label", { length: 120 }).notNull(),
+    note: text("note").notNull().default(""),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("work_item_events_timeline_idx").on(table.workItemId, table.occurredAt, table.id),
+    uniqueIndex("work_item_events_seed_guard_idx").on(
+      table.workItemId,
+      table.action,
+      table.occurredAt,
+    ),
+  ],
+);
+
+export const roleNotifications = pgTable(
+  "role_notifications",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    recipientRole: varchar("recipient_role", {
+      length: 32,
+      enum: [
+        "dispatcher", "cargo-agent", "ticket-agent", "contract-sales",
+        "maintenance-technician", "finance-officer", "operations-manager", "auditor",
+      ],
+    }).notNull(),
+    workItemId: varchar("work_item_id", { length: 32 })
+      .notNull()
+      .references(() => workItems.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 200 }).notNull(),
+    message: varchar("message", { length: 1000 }).notNull(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("role_notifications_inbox_idx").on(table.recipientRole, table.createdAt, table.id),
+    index("role_notifications_unread_idx")
+      .on(table.recipientRole, table.createdAt)
+      .where(sql`${table.readAt} IS NULL`),
+    uniqueIndex("role_notifications_seed_guard_idx").on(
+      table.workItemId,
+      table.recipientRole,
+      table.title,
+      table.createdAt,
+    ),
+  ],
+);
+
 export type CargoOrderRow = typeof cargoOrders.$inferSelect;
 export type NewCargoOrderRow = typeof cargoOrders.$inferInsert;
 export type CargoPackageRow = typeof cargoPackages.$inferSelect;
 export type NewCargoPackageRow = typeof cargoPackages.$inferInsert;
 export type CargoOrderEventRow = typeof cargoOrderEvents.$inferSelect;
+export type WorkItemRow = typeof workItems.$inferSelect;
+export type NewWorkItemRow = typeof workItems.$inferInsert;
+export type WorkItemCommentRow = typeof workItemComments.$inferSelect;
+export type WorkItemEventRow = typeof workItemEvents.$inferSelect;
+export type RoleNotificationRow = typeof roleNotifications.$inferSelect;

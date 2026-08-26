@@ -20,6 +20,7 @@ const root = process.cwd();
 
 const expectedPaths = [
   "/",
+  "/cong-viec",
   "/don-hang",
   "/dieu-phoi",
   "/doi-xe",
@@ -33,7 +34,7 @@ const expectedPaths = [
 ];
 
 test("portal registry is complete, unique and permission-backed", () => {
-  assert.equal(PORTAL_ROUTES.length, 11);
+  assert.equal(PORTAL_ROUTES.length, 12);
   assert.deepEqual(PORTAL_ROUTES.map((route) => route.path), expectedPaths);
   assert.equal(new Set(PORTAL_ROUTES.map((route) => route.path)).size, PORTAL_ROUTES.length);
   assert.equal(new Set(PORTAL_SECTIONS.map((section) => section.id)).size, PORTAL_SECTIONS.length);
@@ -79,12 +80,12 @@ test("role decoder is an allowlist and falls back safely at the provider boundar
 
 test("role navigation matches the operating model", () => {
   const expectedByRole = {
-    dispatcher: ["/", "/don-hang", "/dieu-phoi", "/doi-xe", "/tai-xe", "/ve-xe", "/hop-dong", "/bao-duong"],
-    "cargo-agent": ["/", "/don-hang", "/dieu-phoi", "/khach-hang"],
-    "ticket-agent": ["/", "/ve-xe", "/khach-hang"],
-    "contract-sales": ["/", "/dieu-phoi", "/doi-xe", "/hop-dong", "/khach-hang"],
-    "maintenance-technician": ["/", "/dieu-phoi", "/doi-xe", "/bao-duong"],
-    "finance-officer": ["/", "/tai-chinh", "/bao-cao"],
+    dispatcher: ["/", "/cong-viec", "/don-hang", "/dieu-phoi", "/doi-xe", "/tai-xe", "/ve-xe", "/hop-dong", "/bao-duong"],
+    "cargo-agent": ["/", "/cong-viec", "/don-hang", "/dieu-phoi", "/khach-hang"],
+    "ticket-agent": ["/", "/cong-viec", "/ve-xe", "/khach-hang"],
+    "contract-sales": ["/", "/cong-viec", "/dieu-phoi", "/doi-xe", "/hop-dong", "/khach-hang"],
+    "maintenance-technician": ["/", "/cong-viec", "/dieu-phoi", "/doi-xe", "/bao-duong"],
+    "finance-officer": ["/", "/cong-viec", "/tai-chinh", "/bao-cao"],
     "operations-manager": expectedPaths,
     auditor: expectedPaths,
   };
@@ -108,6 +109,9 @@ test("separation of duties denies high-impact actions by default", () => {
   assert.equal(demoRoleCan("ticket-agent", "contract:create"), false);
   assert.equal(demoRoleCan("maintenance-technician", "maintenance:update-checklist"), true);
   assert.equal(demoRoleCan("maintenance-technician", "cargo-order:transition"), false);
+  assert.equal(demoRoleCan("operations-manager", "work-item:approve"), true);
+  assert.equal(demoRoleCan("auditor", "work-item:audit"), true);
+  assert.equal(demoRoleCan("auditor", "work-item:update"), false);
 
   const auditorMutationPermissions = [
     "cargo-order:create",

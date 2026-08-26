@@ -13,6 +13,7 @@
     "db:migrate": "node scripts/migrate.mjs",
     "db:migrate:status": "node scripts/migrate.mjs --status",
     "db:seed:relational": "node --experimental-transform-types scripts/seed-relational-data.mjs",
+    "db:seed:work-center": "node scripts/seed-work-center.mjs",
     "db:setup:supabase": "node --experimental-transform-types scripts/setup-supabase.mjs",
     "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
     "typecheck": "tsc --noEmit",
