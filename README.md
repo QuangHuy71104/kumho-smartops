@@ -145,6 +145,10 @@ Có thể
 đặt PEM CA của Supabase trong `SUPABASE_DB_CA` để bật kiểm tra đầy đủ chuỗi chứng
 chỉ. Không commit `.env.local`, database password hoặc `service_role` key.
 
+Vercel không đọc `.env.local` trên máy phát triển. Trước khi phát hành, thêm
+`DATABASE_URL` dưới dạng secret cho cả **Production** và **Preview** trong phần
+Environment Variables của project, rồi redeploy để Functions nhận cấu hình mới.
+
 Runtime role phải được tạo ngoài migration rồi nhận đúng bộ quyền cargo qua `db/admin/grant_runtime_role.sql` theo [hướng dẫn admin](db/admin/README.md). `DATABASE_URL` tới host từ xa bắt buộc dùng TLS hostname/certificate verification với `sslmode=verify-full`; runtime không được dùng owner/migration credential.
 
 ## Biến môi trường
