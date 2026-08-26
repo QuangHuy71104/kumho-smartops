@@ -64,7 +64,7 @@ export default function ContractPipelineClient() {
     setSelectedId(request.id);
     setDraft(EMPTY_CONTRACT_DRAFT);
     setFormError("");
-    setAnnouncement(`Đã tạo yêu cầu ${request.id} trong pipeline vận hành.`);
+    setAnnouncement(`Đã tạo yêu cầu ${request.id}.`);
   }
 
   function advanceRequest(request: ContractRequest) {
@@ -93,21 +93,21 @@ export default function ContractPipelineClient() {
     <div className={styles.module}>
       <p className="sr-only" aria-atomic="true" aria-live="polite">{announcement}</p>
 
-      <section className={styles.metrics} aria-label="Tổng hợp pipeline hợp đồng">
-        <article><span>Yêu cầu đang mở</span><strong>{String(requests.filter((item) => item.status !== "Đã xác nhận").length).padStart(2, "0")}</strong><small>toàn bộ pipeline</small></article>
+      <section className={styles.metrics} aria-label="Tổng hợp quy trình hợp đồng">
+        <article><span>Yêu cầu đang mở</span><strong>{String(requests.filter((item) => item.status !== "Đã xác nhận").length).padStart(2, "0")}</strong><small>toàn bộ quy trình</small></article>
         <article><span>Chờ lập báo giá</span><strong>{String(requests.filter((item) => item.status === "Chờ báo giá").length).padStart(2, "0")}</strong><small>cần hoàn thiện phương án</small></article>
-        <article><span>Giá trị pipeline</span><strong>{formatContractValue(requests.reduce((sum, item) => sum + item.estimatedValue, 0))}</strong><small>tổng cơ hội đang theo dõi</small></article>
+        <article><span>Giá trị dự kiến</span><strong>{formatContractValue(requests.reduce((sum, item) => sum + item.estimatedValue, 0))}</strong><small>tổng yêu cầu đang theo dõi</small></article>
         <article><span>Tỷ lệ xác nhận</span><strong>68%</strong><small>30 ngày gần nhất</small></article>
       </section>
 
       <section className={styles.controlBar} aria-label="Tìm và lọc yêu cầu">
-        <label><span>Tìm kiếm pipeline</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Mã, hành trình, nhóm phụ trách..." /></label>
+        <label><span>Tìm yêu cầu</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Mã, hành trình, nhóm phụ trách..." /></label>
         <label><span>Trạng thái</span><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as (typeof CONTRACT_FILTERS)[number])}>{CONTRACT_FILTERS.map((item) => <option key={item}>{item}</option>)}</select></label>
         {created.length > 0 ? <button onClick={resetCreated} type="button">Xóa yêu cầu tự tạo</button> : <span>{visible.length} yêu cầu phù hợp</span>}
       </section>
 
       <section className={styles.pipeline} aria-labelledby="pipeline-title">
-        <div className={styles.sectionHeading}><div><span>Sales workflow</span><h2 id="pipeline-title">Pipeline yêu cầu thuê xe</h2></div><p>Kéo ngang để xem toàn bộ giai đoạn trên màn hình nhỏ.</p></div>
+        <div className={styles.sectionHeading}><div><span>QUY TRÌNH BÁN HÀNG</span><h2 id="pipeline-title">Yêu cầu thuê xe</h2></div><p>Từ tiếp nhận đến xác nhận.</p></div>
         <div className={styles.pipelineScroller}>
           {CONTRACT_STAGES.map((stage) => {
             const stageRequests = visible.filter((request) => request.status === stage);
@@ -118,7 +118,7 @@ export default function ContractPipelineClient() {
 
       <div className={styles.lowerGrid}>
         <section className={styles.detail} aria-labelledby="request-detail-title" aria-live="polite">
-          {selected ? <><div className={styles.detailHeading}><div><span>{selected.id}</span><h2 id="request-detail-title">{selected.title}</h2><p>{selected.groupType} · Tạo {selected.createdAt}</p></div><i data-status={selected.status}>{selected.status}</i></div><dl className={styles.detailGrid}><div><dt>Quy mô đoàn</dt><dd>{selected.passengerCount} khách</dd></div><div><dt>Phương án xe</dt><dd>{selected.vehicleCount} × {selected.vehicleType}</dd></div><div><dt>Thời gian</dt><dd>{formatContractDate(selected.startDate)} – {formatContractDate(selected.endDate)}</dd></div><div><dt>Chủ sở hữu</dt><dd>{selected.owner}</dd></div><div><dt>Điểm đón</dt><dd>{selected.pickup}</dd></div><div><dt>Điểm đến</dt><dd>{selected.destination}</dd></div></dl><div className={styles.capacity}><div><span>Nhu cầu ghế</span><strong>{selected.passengerCount}/{vehicleCapacity(selected.vehicleType) * selected.vehicleCount}</strong></div><div className={styles.capacityBar} role="progressbar" aria-label="Tỷ lệ sử dụng ghế dự kiến" aria-valuemin={0} aria-valuemax={vehicleCapacity(selected.vehicleType) * selected.vehicleCount} aria-valuenow={selected.passengerCount}><span style={{ width: `${Math.min(100, (selected.passengerCount / (vehicleCapacity(selected.vehicleType) * selected.vehicleCount)) * 100)}%` }} /></div></div><div className={styles.gates}><h3>Kiểm soát trước báo giá</h3>{["Xác nhận quy mô và thời gian", "Kiểm tra khả dụng loại xe", "Ước tính hành trình và chi phí", "Peer review trước khi gửi"].map((item, index) => <div key={item}><span>{index + 1}</span><p><strong>{item}</strong><small>{index < CONTRACT_STAGES.indexOf(selected.status) ? "Đã hoàn tất" : "Chờ thực hiện"}</small></p></div>)}</div>{nextStage ? <button className={styles.advanceButton} disabled={!canTransitionContract} title={canTransitionContract ? undefined : "Vai trò hiện tại không có quyền chuyển trạng thái hợp đồng."} onClick={() => advanceRequest(selected)} type="button">Chuyển sang “{nextStage}”</button> : <div className={styles.confirmed}>Yêu cầu đã ở trạng thái đã xác nhận.</div>}</> : null}
+          {selected ? <><div className={styles.detailHeading}><div><span>{selected.id}</span><h2 id="request-detail-title">{selected.title}</h2><p>{selected.groupType} · Tạo {selected.createdAt}</p></div><i data-status={selected.status}>{selected.status}</i></div><dl className={styles.detailGrid}><div><dt>Quy mô đoàn</dt><dd>{selected.passengerCount} khách</dd></div><div><dt>Phương án xe</dt><dd>{selected.vehicleCount} × {selected.vehicleType}</dd></div><div><dt>Thời gian</dt><dd>{formatContractDate(selected.startDate)} – {formatContractDate(selected.endDate)}</dd></div><div><dt>Phụ trách</dt><dd>{selected.owner}</dd></div><div><dt>Điểm đón</dt><dd>{selected.pickup}</dd></div><div><dt>Điểm đến</dt><dd>{selected.destination}</dd></div></dl><div className={styles.capacity}><div><span>Nhu cầu ghế</span><strong>{selected.passengerCount}/{vehicleCapacity(selected.vehicleType) * selected.vehicleCount}</strong></div><div className={styles.capacityBar} role="progressbar" aria-label="Tỷ lệ sử dụng ghế dự kiến" aria-valuemin={0} aria-valuemax={vehicleCapacity(selected.vehicleType) * selected.vehicleCount} aria-valuenow={selected.passengerCount}><span style={{ width: `${Math.min(100, (selected.passengerCount / (vehicleCapacity(selected.vehicleType) * selected.vehicleCount)) * 100)}%` }} /></div></div><div className={styles.gates}><h3>Kiểm soát trước báo giá</h3>{["Xác nhận quy mô và thời gian", "Kiểm tra khả dụng loại xe", "Ước tính hành trình và chi phí", "Kiểm tra chéo trước khi gửi"].map((item, index) => <div key={item}><span>{index + 1}</span><p><strong>{item}</strong><small>{index < CONTRACT_STAGES.indexOf(selected.status) ? "Đã hoàn tất" : "Chờ thực hiện"}</small></p></div>)}</div>{nextStage ? <button className={styles.advanceButton} disabled={!canTransitionContract} title={canTransitionContract ? undefined : "Vai trò hiện tại không có quyền chuyển trạng thái hợp đồng."} onClick={() => advanceRequest(selected)} type="button">Chuyển sang “{nextStage}”</button> : <div className={styles.confirmed}>Yêu cầu đã ở trạng thái đã xác nhận.</div>}</> : null}
         </section>
 
         <section className={styles.createPanel} id="tao-yeu-cau" aria-labelledby="create-request-title">

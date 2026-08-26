@@ -11,9 +11,9 @@ export default function MaintenancePage() {
   return (
     <PortalShell
       activePath="/bao-duong"
-      eyebrow="Maintenance control · Workshop schedule"
+      eyebrow="Điều hành kỹ thuật"
       title="Bảo dưỡng đội xe"
-      subtitle="Chủ động theo quãng đường, lịch xưởng và checklist kỹ thuật"
+      subtitle="Quãng đường · Lịch xưởng · Kiểm tra"
     >
       <MaintenanceDashboard />
     </PortalShell>

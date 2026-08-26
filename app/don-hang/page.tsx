@@ -6,7 +6,7 @@ import PilotOrderWorkspace from "./_components/PilotOrderWorkspace";
 
 export const dynamic = "force-dynamic";
 
-export function resolveCargoWorkspaceMode(value: string | undefined) {
+function resolveCargoWorkspaceMode(value: string | undefined) {
   return value === "pilot" ? "pilot" as const : "demo" as const;
 }
 
@@ -15,7 +15,7 @@ export function generateMetadata(): Metadata {
   return {
     title: "Quản lý đơn vận tải",
     description: mode === "pilot"
-      ? "Không gian vận hành đơn hàng hóa với SSO, phân quyền nội bộ và PostgreSQL."
+      ? "Không gian vận hành đơn hàng hóa theo quyền truy cập nội bộ."
       : "Không gian quản lý đơn hàng hóa, tuyến tỉnh và giao chặng cuối.",
   };
 }
@@ -27,12 +27,12 @@ export default function TransportOrdersPage() {
     <PortalShell
       activePath="/don-hang"
       eyebrow={mode === "pilot"
-        ? "Vận hành đơn hàng · Kết nối PostgreSQL"
-        : "Vận hành đơn hàng · Cập nhật 23/08/2026"}
+        ? "Đơn hàng theo quyền truy cập"
+        : "Vận hành đơn hàng"}
       title="Quản lý đơn vận tải"
       subtitle={mode === "pilot"
-        ? "Phân hệ hàng hóa dùng SSO và PostgreSQL"
-        : "SLA, tuyến hàng hóa và giao chặng cuối"}
+        ? "Dữ liệu theo phạm vi của bạn"
+        : "SLA · Tuyến · Giao chặng cuối"}
     >
       {mode === "pilot" ? (
         <PilotOrderWorkspace />

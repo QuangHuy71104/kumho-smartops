@@ -69,8 +69,8 @@ export default function MaintenanceDashboard() {
   return (
     <div className={styles.page}>
       <section className={styles.hero} aria-labelledby="maintenance-hero-title">
-        <div><span>WORKSHOP DESK · 3 KHOANG</span><h2 id="maintenance-hero-title">Bảo dưỡng trước khi bị động.</h2><p>Kết hợp quãng đường đã chạy, cường độ km/ngày và năng lực xưởng để ưu tiên đúng work order.</p></div>
-        <div className={styles.heroAction}><span aria-hidden="true">✓</span><div><strong>Checklist công việc</strong><small>Cập nhật theo tiến độ kỹ thuật</small></div></div>
+        <div><span>XƯỞNG BẢO DƯỠNG · 3 KHOANG</span><h2 id="maintenance-hero-title">Bảo dưỡng trước khi bị động</h2><p>Ưu tiên lệnh theo quãng đường và năng lực xưởng.</p></div>
+        <div className={styles.heroAction}><span aria-hidden="true">✓</span><div><strong>Danh mục kiểm tra</strong><small>Cập nhật theo tiến độ</small></div></div>
       </section>
 
       <section className={styles.metrics} aria-label="Chỉ số bảo dưỡng">
@@ -81,7 +81,7 @@ export default function MaintenanceDashboard() {
       </section>
 
       <section className={styles.alerts} aria-labelledby="mileage-alert-title">
-        <div className={styles.sectionHeading}><div><span>Km/day intelligence</span><h2 id="mileage-alert-title">Cảnh báo theo quãng đường & cường độ chạy</h2><p>Tổng hợp từ quãng đường và lịch khai thác gần nhất của từng xe.</p></div><b>{mileageAlerts.length} cảnh báo</b></div>
+        <div className={styles.sectionHeading}><div><span>PHÂN TÍCH QUÃNG ĐƯỜNG</span><h2 id="mileage-alert-title">Cảnh báo quãng đường</h2><p>Theo lịch khai thác gần nhất của từng xe.</p></div><b>{mileageAlerts.length} cảnh báo</b></div>
         <div className={styles.alertGrid}>
           {mileageAlerts.map((order) => {
             const days = order.remainingKm <= 0 ? 0 : Math.ceil(order.remainingKm / order.dailyKm);
@@ -92,19 +92,19 @@ export default function MaintenanceDashboard() {
 
       <div className={styles.mainGrid}>
         <section className={styles.orders} aria-labelledby="orders-title">
-          <div className={styles.sectionHeading}><div><span>Maintenance queue</span><h2 id="orders-title">Work orders</h2><p>Chọn một lệnh để cập nhật checklist kỹ thuật.</p></div><b role="status" aria-live="polite">{filteredOrders.length} kết quả</b></div>
-          <div className={styles.filters} role="search" aria-label="Tìm và lọc work order">
-            <label className={styles.searchField} htmlFor="maintenance-search"><span aria-hidden="true">⌕</span><span className={styles.srOnly}>Tìm work order</span><input id="maintenance-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mã lệnh, xe, hạng mục..." /></label>
+          <div className={styles.sectionHeading}><div><span>LỆNH BẢO DƯỠNG</span><h2 id="orders-title">Danh sách công việc</h2><p>Chọn lệnh để cập nhật tiến độ.</p></div><b role="status" aria-live="polite">{filteredOrders.length} kết quả</b></div>
+          <div className={styles.filters} role="search" aria-label="Tìm và lọc lệnh bảo dưỡng">
+            <label className={styles.searchField} htmlFor="maintenance-search"><span aria-hidden="true">⌕</span><span className={styles.srOnly}>Tìm lệnh bảo dưỡng</span><input id="maintenance-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Mã lệnh, xe, hạng mục..." /></label>
             <label><span className={styles.srOnly}>Trạng thái</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option>Tất cả</option>{statusOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
             <label><span className={styles.srOnly}>Ưu tiên</span><select value={priority} onChange={(event) => setPriority(event.target.value)}><option>Tất cả</option>{priorityOptions.map((item) => <option key={item}>{item}</option>)}</select></label>
             <button type="button" onClick={resetFilters}>Đặt lại</button>
           </div>
-          <div className={styles.tableWrap} role="region" aria-label="Bảng work order có thể cuộn ngang">
-            <table><caption className={styles.srOnly}>Danh sách lệnh bảo dưỡng</caption><thead><tr><th scope="col">Work order</th><th scope="col">Phương tiện</th><th scope="col">Hạn / km còn lại</th><th scope="col">Ưu tiên</th><th scope="col">Trạng thái</th></tr></thead><tbody>
+          <div className={styles.tableWrap} role="region" aria-label="Bảng lệnh bảo dưỡng có thể cuộn ngang">
+            <table><caption className={styles.srOnly}>Danh sách lệnh bảo dưỡng</caption><thead><tr><th scope="col">Lệnh bảo dưỡng</th><th scope="col">Phương tiện</th><th scope="col">Hạn / km còn lại</th><th scope="col">Ưu tiên</th><th scope="col">Trạng thái</th></tr></thead><tbody>
               {filteredOrders.map((order) => <tr key={order.id} data-selected={order.id === selectedOrder.id}><td><button type="button" onClick={() => setSelectedId(order.id)}><strong>{order.job}</strong><code>{order.id}</code></button></td><td><strong>{order.vehicle}</strong><small>{order.vehicleCode}</small></td><td><time>{order.dueDate}</time><small className={order.remainingKm <= 0 ? styles.dangerText : undefined}>{order.remainingKm <= 0 ? "Đã đến ngưỡng" : `${order.remainingKm.toLocaleString("vi-VN")} km`}</small></td><td><span className={`${styles.priority} ${priorityClass[order.priority]}`}>{order.priority}</span></td><td><span className={`${styles.status} ${statusClass[order.status]}`}><i aria-hidden="true" />{order.status}</span></td></tr>)}
             </tbody></table>
           </div>
-          {filteredOrders.length === 0 ? <div className={styles.empty} role="status"><strong>Không có work order phù hợp</strong><p>Thử thay đổi bộ lọc.</p><button type="button" onClick={resetFilters}>Xóa bộ lọc</button></div> : null}
+          {filteredOrders.length === 0 ? <div className={styles.empty} role="status"><strong>Không có lệnh phù hợp</strong><p>Thử thay đổi bộ lọc.</p><button type="button" onClick={resetFilters}>Xóa bộ lọc</button></div> : null}
         </section>
 
         <aside className={styles.detail} aria-labelledby="order-detail-title" aria-live="polite">
@@ -114,11 +114,11 @@ export default function MaintenanceDashboard() {
           <dl><div><dt>Ưu tiên</dt><dd><span className={`${styles.priority} ${priorityClass[selectedOrder.priority]}`}>{selectedOrder.priority}</span></dd></div><div><dt>Kỹ thuật phụ trách</dt><dd>{selectedOrder.technician}</dd></div><div><dt>Khoang xưởng</dt><dd>{selectedOrder.bay}</dd></div><div><dt>Thời lượng dự kiến</dt><dd>{selectedOrder.duration}</dd></div><div><dt>Ngưỡng ODO</dt><dd>{selectedOrder.dueOdometer.toLocaleString("vi-VN")} km</dd></div></dl>
 
           <section className={styles.checklist} aria-labelledby="checklist-title">
-            <div className={styles.checklistHeading}><div><h3 id="checklist-title">Checklist công việc</h3><span aria-live="polite">{completedItems}/{selectedChecklist.length} hoàn tất</span></div><button type="button" onClick={resetChecklist}>Làm mới checklist</button></div>
+            <div className={styles.checklistHeading}><div><h3 id="checklist-title">Danh mục kiểm tra</h3><span aria-live="polite">{completedItems}/{selectedChecklist.length} hoàn tất</span></div><button type="button" onClick={resetChecklist}>Khôi phục</button></div>
             <div className={styles.progressTrack} role="progressbar" aria-label="Tiến độ checklist" aria-valuemin={0} aria-valuemax={100} aria-valuenow={completion} aria-valuetext={`${completion} phần trăm`}><span style={{ "--progress": `${completion}%` } as CSSProperties} /></div>
-            <p className={styles.srOnly} id="maintenance-checklist-permission">Vai trò hiện tại không có quyền cập nhật checklist bảo dưỡng.</p>
-            <div className={styles.checkItems}>{selectedChecklist.map((item) => <label key={item.id}><input type="checkbox" checked={item.done} disabled={!canUpdateChecklist} aria-describedby={!canUpdateChecklist ? "maintenance-checklist-permission" : undefined} title={canUpdateChecklist ? undefined : "Vai trò hiện tại không có quyền cập nhật checklist bảo dưỡng."} onChange={() => toggleChecklist(item.id)} /><span aria-hidden="true">✓</span><strong>{item.label}</strong></label>)}</div>
-            <p>Tiến độ checklist được tự động lưu sau mỗi cập nhật.</p>
+            <p className={styles.srOnly} id="maintenance-checklist-permission">Vai trò hiện tại không có quyền cập nhật danh mục bảo dưỡng.</p>
+            <div className={styles.checkItems}>{selectedChecklist.map((item) => <label key={item.id}><input type="checkbox" checked={item.done} disabled={!canUpdateChecklist} aria-describedby={!canUpdateChecklist ? "maintenance-checklist-permission" : undefined} title={canUpdateChecklist ? undefined : "Vai trò hiện tại không có quyền cập nhật danh mục bảo dưỡng."} onChange={() => toggleChecklist(item.id)} /><span aria-hidden="true">✓</span><strong>{item.label}</strong></label>)}</div>
+            <p>Tự động lưu sau mỗi cập nhật.</p>
           </section>
         </aside>
       </div>

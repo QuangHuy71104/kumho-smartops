@@ -5,16 +5,16 @@ import ContractPipelineClient from "./_components/ContractPipelineClient";
 
 export const metadata: Metadata = {
   title: "Hợp đồng thuê xe",
-  description: "Pipeline tiếp nhận nhu cầu đoàn, lập báo giá và theo dõi hợp đồng thuê xe.",
+  description: "Quy trình tiếp nhận nhu cầu đoàn, lập báo giá và theo dõi hợp đồng thuê xe.",
 };
 
 export default function VehicleContractsPage() {
   return (
     <PortalShell
       activePath="/hop-dong"
-      eyebrow="Kinh doanh hợp đồng · Sales pipeline"
+      eyebrow="Kinh doanh hợp đồng"
       title="Hợp đồng xe"
-      subtitle="Tiếp nhận nhu cầu đoàn, lập phương án xe và theo dõi báo giá"
+      subtitle="Nhu cầu · Phương án xe · Báo giá"
       headerActions={<PortalAction href="#tao-yeu-cau">+ Yêu cầu báo giá</PortalAction>}
     >
       <ContractPipelineClient />

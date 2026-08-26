@@ -12,9 +12,9 @@ export default function CustomersPage() {
   return (
     <PortalShell
       activePath="/khach-hang"
-      eyebrow="Customer operations · Customer 360"
+      eyebrow="Hồ sơ khách hàng"
       title="Khách hàng"
-      subtitle="Phân khúc, chất lượng dịch vụ và lịch sử đơn trên một màn hình"
+      subtitle="Phân khúc · Dịch vụ · Lịch sử"
       headerActions={<PortalAction href="#danh-sach-khach-hang">Xem danh sách</PortalAction>}
     >
       <CustomerCrmClient />

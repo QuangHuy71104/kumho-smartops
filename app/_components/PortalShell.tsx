@@ -47,24 +47,26 @@ export default function PortalShell({
           </span>
         </Link>
 
-        <div className={styles.environmentPill}>
-          <span className={styles.pulseDot} aria-hidden="true" />
-          {pilotMode ? "Kết nối nghiệp vụ đơn hàng" : "Trung tâm điều phối trực tuyến"}
-        </div>
+        {pilotMode ? (
+          <div className={styles.environmentPill}>
+            <span className={styles.pulseDot} aria-hidden="true" />
+            Kết nối nghiệp vụ
+          </div>
+        ) : null}
 
         {pilotMode
           ? <PilotNavigation activePath={activePath} />
           : <DemoNavigation activePath={activePath} />}
 
-        <div className={styles.safetyNote}>
-          <span className={styles.shield} aria-hidden="true">✓</span>
-          <div>
-            <strong>{pilotMode ? "Phạm vi kết nối giới hạn" : "Hệ thống đang hoạt động"}</strong>
-            <p>{pilotMode
-              ? "Phân hệ Đơn hàng đang sử dụng SSO và PostgreSQL."
-              : "Dữ liệu vận hành được đồng bộ theo từng phân hệ."}</p>
+        {pilotMode ? (
+          <div className={styles.safetyNote}>
+            <span className={styles.shield} aria-hidden="true">✓</span>
+            <div>
+              <strong>Phạm vi có kiểm soát</strong>
+              <p>Dữ liệu hiển thị theo quyền truy cập.</p>
+            </div>
           </div>
-        </div>
+        ) : null}
       </aside>
 
       <div className={styles.workspace}>
@@ -87,9 +89,9 @@ export default function PortalShell({
               <i aria-hidden="true" /> {pilotMode ? "Đã kết nối" : "Trực tuyến"}
             </span>
             {pilotMode ? (
-              <nav className={styles.pilotSessionControls} aria-label="Điều khiển phiên SSO">
-                <a href={`/auth/login?returnTo=${encodeURIComponent(activePath)}`}>Đăng nhập SSO</a>
-                <a href={`/auth/logout?returnTo=${encodeURIComponent(activePath)}`}>Kết thúc phiên</a>
+              <nav className={styles.pilotSessionControls} aria-label="Điều khiển phiên đăng nhập">
+                <a href={`/auth/login?returnTo=${encodeURIComponent(activePath)}`}>Đăng nhập</a>
+                <a href={`/auth/logout?returnTo=${encodeURIComponent(activePath)}`}>Đăng xuất</a>
               </nav>
             ) : (
               <DemoRoleSwitcher />
@@ -101,32 +103,21 @@ export default function PortalShell({
           {pilotMode ? (
             <div className={activePath === "/don-hang" ? styles.pilotBanner : styles.mockBanner} role="note">
               <span className={activePath === "/don-hang" ? styles.pilotBadge : styles.mockBadge}>
-                {activePath === "/don-hang" ? "CARGO ONLINE" : "WORKSPACE"}
+                {activePath === "/don-hang" ? "ĐÃ KẾT NỐI" : "TÁC NGHIỆP"}
               </span>
-              <p>{activePath === "/don-hang" ? (
-                <><strong>Phân hệ nghiệp vụ đã kết nối.</strong> API đơn hàng dùng SSO nội bộ, tenant RLS, PostgreSQL và kiểm soát phiên bản.</>
-              ) : (
-                <><strong>Không gian tác nghiệp.</strong> Dữ liệu của phân hệ được đồng bộ theo phạm vi truy cập hiện tại.</>
-              )}</p>
+              <p>{activePath === "/don-hang"
+                ? "Dữ liệu đơn hàng đã đồng bộ."
+                : "Dữ liệu hiển thị theo quyền truy cập."}</p>
             </div>
-          ) : (
-            <div className={styles.mockBanner} role="status">
-              <span className={styles.mockBadge}>VẬN HÀNH</span>
-              <p>
-                <strong>Trung tâm dữ liệu vận tải.</strong> Xe, tài xế, khách hàng, hành trình và doanh thu được liên kết xuyên suốt.
-              </p>
-            </div>
-          )}
+          ) : null}
           {pilotMode
             ? children
             : <DemoRouteBoundary activePath={activePath}>{children}</DemoRouteBoundary>}
         </main>
 
         <footer className={styles.footer}>
-          <p><strong>KSOps Transport Control</strong> · {pilotMode
-            ? "Không gian vận hành có kiểm soát và phân quyền theo vai trò."
-            : "Nền tảng quản trị vận tải và điều phối tập trung."}</p>
-          <span>{pilotMode ? "Cargo connected · Role-based access" : "Fleet · Orders · Dispatch"}</span>
+          <p><strong>KSOps</strong> · Điều hành vận tải tập trung</p>
+          <span>{pilotMode ? "Kết nối theo quyền truy cập" : "Dữ liệu cập nhật liên tục"}</span>
         </footer>
       </div>
     </div>

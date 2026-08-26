@@ -41,8 +41,8 @@ export default function ReportsDashboard() {
       <section className={styles.hero} aria-labelledby="report-title">
         <div>
           <span className={styles.kicker}>Báo cáo điều hành</span>
-          <h2 id="report-title">Từ từng chuyến xe đến quyết định vận hành.</h2>
-          <p>Đối chiếu doanh thu, hiệu suất đội xe, đúng giờ và trải nghiệm khách hàng trên cùng bộ chỉ số.</p>
+          <h2 id="report-title">Báo cáo vận hành theo kỳ</h2>
+          <p>Doanh thu · Hiệu suất · Đúng giờ · Hài lòng</p>
         </div>
         <button disabled={!canExportReport} title={canExportReport ? undefined : "Vai trò hiện tại không có quyền xuất báo cáo."} type="button" onClick={exportCsv}>Xuất CSV</button>
       </section>

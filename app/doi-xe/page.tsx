@@ -11,9 +11,9 @@ export default function FleetPage() {
   return (
     <PortalShell
       activePath="/doi-xe"
-      eyebrow="Fleet control · Cập nhật 08:42"
+      eyebrow="Điều hành phương tiện"
       title="Quản lý đội xe"
-      subtitle="Theo dõi khả năng sẵn sàng, khai thác và bảo dưỡng phương tiện"
+      subtitle="Sẵn sàng · Khai thác · Bảo dưỡng"
     >
       <FleetDashboard />
     </PortalShell>

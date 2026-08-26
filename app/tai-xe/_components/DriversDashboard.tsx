@@ -40,7 +40,7 @@ export default function DriversDashboard() {
   return (
     <div className={styles.page}>
       <section className={styles.hero} aria-labelledby="drivers-hero-title">
-        <div><span>WORKFORCE DESK · 08:42</span><h2 id="drivers-hero-title">Đúng người, đủ điều kiện, khớp ca.</h2><p>Điều phối tài xế dựa trên ca làm, giờ công và hồ sơ tuân thủ trong một luồng thống nhất.</p></div>
+        <div><span>ĐIỀU PHỐI TÀI XẾ · 08:42</span><h2 id="drivers-hero-title">Đúng người, đủ điều kiện, khớp ca</h2><p>Ca làm · Giờ công · Hồ sơ tuân thủ</p></div>
         <div className={styles.complianceHero}><div className={styles.heroRing}><strong>{driverSummary.compliance}</strong><small>điểm</small></div><div><strong>Tuân thủ toàn đội</strong><small>2 hồ sơ cần xác minh</small></div></div>
       </section>
 

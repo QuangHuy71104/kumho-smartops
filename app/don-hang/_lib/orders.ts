@@ -103,7 +103,7 @@ export const demoOrders: TransportOrder[] = [
     status: "Đang vận chuyển",
     packageCount: 9,
     weightKg: 128,
-    assigneeAlias: "Tổ last-mile Quận 7",
+    assigneeAlias: "Tổ giao chặng cuối Quận 7",
     note: "Ưu tiên giao theo cụm tuyến Nguyễn Hữu Thọ, hoàn tất trước 11:45.",
     source: "seed",
   },

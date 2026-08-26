@@ -20,15 +20,13 @@ export default function DemoAccessNotice({
       <span className={styles.accessNoticeIcon} aria-hidden="true">RB</span>
       <div>
         <p>Phạm vi truy cập</p>
-        <h2 id="access-title">{role.label} chưa được cấp quyền vào phân hệ {routeLabel}</h2>
-        <p>
-          Điều hướng được giới hạn theo chức năng và phạm vi công việc của vai trò hiện tại.
-        </p>
+        <h2 id="access-title">Bạn chưa có quyền truy cập {routeLabel}</h2>
+        <p>Liên hệ quản trị viên nếu cần thêm quyền.</p>
         <dl>
           <div><dt>Phòng ban</dt><dd>{role.department}</dd></div>
           <div><dt>Phạm vi dữ liệu</dt><dd>{role.scopeLabel}</dd></div>
         </dl>
-        <Link href={fallbackPath}>Mở phân hệ được phép đầu tiên</Link>
+        <Link href={fallbackPath}>Về trang được phép</Link>
       </div>
     </section>
   );

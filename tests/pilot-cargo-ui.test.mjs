@@ -270,9 +270,9 @@ test("pilot shell is honest and removes demo role gates from the pilot branch", 
   assert.match(shell, /pilotMode\s*\? children\s*: <DemoRouteBoundary/);
   assert.match(shell, /\/auth\/login\?returnTo=/);
   assert.match(shell, /\/auth\/logout\?returnTo=/);
-  assert.match(shell, /Phân hệ Đơn hàng đang sử dụng SSO và PostgreSQL/);
-  assert.match(shell, /Dữ liệu của phân hệ được đồng bộ theo phạm vi truy cập hiện tại/);
-  assert.match(navigation, /isCargoPilot \? "SSO \+ DB" : "Workspace"/);
+  assert.match(shell, /Dữ liệu đơn hàng đã đồng bộ/);
+  assert.match(shell, /Dữ liệu hiển thị theo quyền truy cập/);
+  assert.match(navigation, /isCargoPilot \? "Đã kết nối" : "Tác nghiệp"/);
   assert.doesNotMatch(navigation, /useDemoAccess|demoRoleCan|viewPermission/);
   assert.match(styles, /\.pilotSessionControls/);
   assert.match(styles, /@media \(max-width: 620px\)/);

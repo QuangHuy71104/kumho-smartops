@@ -11,9 +11,9 @@ export default function DriversPage() {
   return (
     <PortalShell
       activePath="/tai-xe"
-      eyebrow="Driver operations · Workforce desk"
+      eyebrow="Nguồn lực vận hành"
       title="Điều hành tài xế"
-      subtitle="Xếp ca, kiểm soát giấy tờ và mức độ sẵn sàng của đội ngũ"
+      subtitle="Ca trực · Hồ sơ · Sẵn sàng"
     >
       <DriversDashboard />
     </PortalShell>

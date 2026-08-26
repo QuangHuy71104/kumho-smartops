@@ -281,11 +281,9 @@ export default function DispatchBoard() {
 
       <section className={styles.hero} aria-labelledby="dispatch-hero-title">
         <div>
-          <span className={styles.eyebrow}>Dispatch control · Lập kế hoạch đa dịch vụ</span>
-          <h2 id="dispatch-hero-title">Cân bằng chuyến, xe và tài xế theo từng ca.</h2>
-          <p>
-            Theo dõi chuyến cố định, xe hợp đồng và hàng hóa trên một bảng điều phối có cảnh báo xung đột.
-          </p>
+          <span className={styles.eyebrow}>ĐIỀU PHỐI ĐA DỊCH VỤ</span>
+          <h2 id="dispatch-hero-title">Cân bằng chuyến, xe và tài xế</h2>
+          <p>Chuyến cố định · Xe hợp đồng · Hàng hóa</p>
         </div>
         <div className={styles.heroActions}>
           <button className={styles.ghostButtonDark} type="button" onClick={resetBoard}>Tải lại kế hoạch</button>

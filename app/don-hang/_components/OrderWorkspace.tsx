@@ -244,11 +244,9 @@ export default function OrderWorkspace() {
 
       <section className={styles.hero} aria-labelledby="orders-hero-title">
         <div>
-          <span className={styles.eyebrow}>Order control tower · Dữ liệu tổng hợp</span>
-          <h2 id="orders-hero-title">Theo sát từng đơn, từ tiếp nhận đến giao hoàn tất.</h2>
-          <p>
-            Một luồng làm việc hợp nhất cho hàng ghép, nguyên chuyến và last-mile trên các tuyến tỉnh hiện hành.
-          </p>
+          <span className={styles.eyebrow}>ĐIỀU HÀNH ĐƠN HÀNG</span>
+          <h2 id="orders-hero-title">Theo sát từng đơn đến khi hoàn tất</h2>
+          <p>Hàng ghép · Nguyên chuyến · Giao chặng cuối</p>
         </div>
         <div className={styles.heroActions}>
           <button className={styles.ghostButtonDark} type="button" onClick={handleReset}>Tải lại dữ liệu</button>
@@ -280,7 +278,7 @@ export default function OrderWorkspace() {
         </article>
         <article className={styles.metricCard}>
           <span className={`${styles.metricIcon} ${styles.metricGreen}`}>LM</span>
-          <div><p>Đơn last-mile</p><strong>{summary.lastMile}</strong><small>tuyến giao chặng cuối</small></div>
+          <div><p>Đơn chặng cuối</p><strong>{summary.lastMile}</strong><small>tuyến giao chặng cuối</small></div>
         </article>
       </section>
 

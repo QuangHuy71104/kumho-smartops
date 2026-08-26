@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function ReportsPage() {
   return (
-    <PortalShell activePath="/bao-cao" eyebrow="Kiểm soát vận hành" title="Báo cáo" subtitle="KPI và khuyến nghị điều hành">
+    <PortalShell activePath="/bao-cao" eyebrow="Kiểm soát vận hành" title="Báo cáo" subtitle="KPI · Xu hướng · Khuyến nghị">
       <ReportsDashboard />
     </PortalShell>
   );

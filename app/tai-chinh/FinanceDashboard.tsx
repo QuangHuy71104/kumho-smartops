@@ -63,8 +63,8 @@ export default function FinanceDashboard() {
       <section className={styles.hero} aria-labelledby="finance-summary-title">
         <div>
           <span className={styles.kicker}>Đối soát ngày 23/08</span>
-          <h2 id="finance-summary-title">Dòng tiền bám theo từng chuyến xe.</h2>
-          <p>Doanh thu, công nợ và chi phí khai thác được liên kết bằng mã đơn hàng để dễ truy vết.</p>
+          <h2 id="finance-summary-title">Dòng tiền theo từng chuyến xe</h2>
+          <p>Thu · Công nợ · Chi phí theo đơn hàng</p>
         </div>
         <button className={styles.secondaryButton} type="button" onClick={resetFinanceData}>Tải lại dữ liệu</button>
       </section>

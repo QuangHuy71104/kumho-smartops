@@ -91,15 +91,15 @@ const MODULE_META: Record<string, { label: string; short: string; route: string 
 
 const ACTION_LABELS: Record<WorkAction, string> = {
   claim: "Nhận việc",
-  start: "Bắt đầu xử lý",
-  complete: "Hoàn tất công việc",
+  start: "Bắt đầu",
+  complete: "Hoàn tất",
   "submit-approval": "Trình phê duyệt",
   approve: "Phê duyệt",
   reject: "Từ chối",
-  escalate: "Báo cấp quản lý",
+  escalate: "Báo quản lý",
   "request-evidence": "Yêu cầu chứng từ",
-  "resolve-evidence": "Xác nhận đã bổ sung",
-  comment: "Thêm trao đổi",
+  "resolve-evidence": "Đã bổ sung",
+  comment: "Thêm bình luận",
 };
 
 const NOTE_ACTIONS = new Set<WorkAction>([
@@ -189,38 +189,38 @@ function intentFor(item: WorkItem, action: WorkAction): ActionIntent {
   const actionCopy: Partial<Record<WorkAction, Pick<ActionIntent, "noteLabel" | "placeholder" | "minLength">>> = {
     "submit-approval": {
       noteLabel: "Nội dung trình duyệt",
-      placeholder: "Tóm tắt kết quả xử lý và nội dung cần phê duyệt…",
+      placeholder: "Kết quả và nội dung cần duyệt…",
       minLength: 10,
     },
     reject: {
       noteLabel: "Lý do từ chối",
-      placeholder: "Nêu rõ điểm chưa đáp ứng và hướng xử lý tiếp theo…",
+      placeholder: "Lý do và hướng xử lý…",
       minLength: 10,
     },
     escalate: {
       noteLabel: "Lý do cần hỗ trợ",
-      placeholder: "Mô tả vướng mắc, mức độ ảnh hưởng và đề xuất xử lý…",
+      placeholder: "Vướng mắc và hỗ trợ cần thiết…",
       minLength: 10,
     },
     "request-evidence": {
       noteLabel: "Chứng từ cần bổ sung",
-      placeholder: "Ghi rõ tên chứng từ, nội dung cần đối chiếu và thời hạn…",
+      placeholder: "Chứng từ cần bổ sung và thời hạn…",
       minLength: 10,
     },
     "resolve-evidence": {
       noteLabel: "Nội dung đã bổ sung",
-      placeholder: "Liệt kê chứng từ hoặc thông tin đã hoàn thiện…",
+      placeholder: "Chứng từ đã bổ sung…",
       minLength: 10,
     },
     comment: {
       noteLabel: "Nội dung trao đổi",
-      placeholder: "Nhập cập nhật hoặc thông tin phối hợp…",
+      placeholder: "Nhập nội dung…",
       minLength: 3,
     },
   };
   const copy = actionCopy[action] ?? {
     noteLabel: "Ghi chú",
-    placeholder: "Bổ sung thông tin cho thao tác này…",
+    placeholder: "Thêm ghi chú…",
     minLength: 0,
   };
   return { item, action, label: ACTION_LABELS[action], ...copy };
@@ -312,6 +312,20 @@ export default function WorkCenterClient() {
   const [now, setNow] = useState(() => Date.now());
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
   const assignmentTitleRef = useRef<HTMLInputElement>(null);
+  const noteDialogRef = useRef<HTMLDialogElement>(null);
+  const assignmentDialogRef = useRef<HTMLDialogElement>(null);
+  const actionTriggerRef = useRef<HTMLElement | null>(null);
+  const assignmentTriggerRef = useRef<HTMLElement | null>(null);
+  const busyItemIdRef = useRef(busyItemId);
+  const creatingAssignmentRef = useRef(creatingAssignment);
+
+  useEffect(() => {
+    busyItemIdRef.current = busyItemId;
+  }, [busyItemId]);
+
+  useEffect(() => {
+    creatingAssignmentRef.current = creatingAssignment;
+  }, [creatingAssignment]);
 
   const load = useCallback(async (signal?: AbortSignal, quiet = false) => {
     if (quiet) setRefreshing(true);
@@ -357,11 +371,39 @@ export default function WorkCenterClient() {
   }, [announcement]);
 
   useEffect(() => {
-    if (intent) noteTextareaRef.current?.focus();
+    const dialog = noteDialogRef.current;
+    if (!intent || !dialog) return;
+    if (!dialog.open) dialog.showModal();
+    noteTextareaRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (!busyItemIdRef.current) setIntent(null);
+    };
+    window.addEventListener("keydown", closeOnEscape, { capture: true });
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape, { capture: true });
+      if (dialog.open) dialog.close();
+      actionTriggerRef.current?.focus();
+    };
   }, [intent]);
 
   useEffect(() => {
-    if (assignmentOpen) assignmentTitleRef.current?.focus();
+    const dialog = assignmentDialogRef.current;
+    if (!assignmentOpen || !dialog) return;
+    if (!dialog.open) dialog.showModal();
+    assignmentTitleRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (!creatingAssignmentRef.current) setAssignmentOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape, { capture: true });
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape, { capture: true });
+      if (dialog.open) dialog.close();
+      assignmentTriggerRef.current?.focus();
+    };
   }, [assignmentOpen]);
 
   useEffect(() => {
@@ -407,6 +449,7 @@ export default function WorkCenterClient() {
 
   function requestAction(item: WorkItem, action: WorkAction) {
     if (NOTE_ACTIONS.has(action)) {
+      actionTriggerRef.current = document.activeElement as HTMLElement | null;
       setNote("");
       setNoteError("");
       setIntent(intentFor(item, action));
@@ -420,7 +463,7 @@ export default function WorkCenterClient() {
     if (!intent) return;
     const meaningfulNote = note.trim();
     if (meaningfulNote.length < intent.minLength) {
-      setNoteError(`Vui lòng nhập ít nhất ${intent.minLength} ký tự để người nhận hiểu rõ nội dung.`);
+      setNoteError(`Nhập tối thiểu ${intent.minLength} ký tự.`);
       return;
     }
     void executeAction(intent.item, intent.action, meaningfulNote);
@@ -448,6 +491,7 @@ export default function WorkCenterClient() {
   }
 
   function openAssignmentDialog() {
+    assignmentTriggerRef.current = document.activeElement as HTMLElement | null;
     const defaultDue = new Date(Date.now() + 24 * 60 * 60 * 1_000);
     defaultDue.setSeconds(0, 0);
     const offset = defaultDue.getTimezoneOffset() * 60_000;
@@ -459,12 +503,12 @@ export default function WorkCenterClient() {
   async function submitAssignment(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (assignment.title.trim().length < 5 || assignment.description.trim().length < 10) {
-      setAssignmentError("Tiêu đề cần ít nhất 5 ký tự và mô tả cần ít nhất 10 ký tự.");
+      setAssignmentError("Tiêu đề tối thiểu 5 ký tự; kết quả cần đạt tối thiểu 10 ký tự.");
       return;
     }
     const dueAt = new Date(assignment.dueAt);
     if (!assignment.dueAt || !Number.isFinite(dueAt.getTime()) || dueAt.getTime() <= Date.now()) {
-      setAssignmentError("Hạn xử lý phải là một thời điểm trong tương lai.");
+      setAssignmentError("Chọn thời hạn trong tương lai.");
       return;
     }
 
@@ -512,23 +556,6 @@ export default function WorkCenterClient() {
         </div>
       ) : null}
 
-      <section className={styles.hero} aria-labelledby="work-center-heading">
-        <div className={styles.heroCopy}>
-          <span>KHÔNG GIAN THEO VAI TRÒ · {role.short}</span>
-          <h2 id="work-center-heading">Một hàng đợi, trọn ca làm việc.</h2>
-          <p>Ưu tiên đúng việc, phối hợp đúng người và theo dõi toàn bộ tiến trình ngay tại một nơi.</p>
-        </div>
-        <div className={styles.roleCard}>
-          <span className={styles.roleAvatar}>{role.short}</span>
-          <div>
-            <small>Không gian hiện tại</small>
-            <strong>{role.label}</strong>
-            <p>{role.scopeLabel}</p>
-          </div>
-          <i aria-label="Đang trực tuyến" title="Đang trực tuyến" />
-        </div>
-      </section>
-
       <section className={styles.metrics} aria-label="Tổng hợp công việc theo trạng thái">
         {queueMetrics.map((metric) => (
           <button
@@ -554,7 +581,6 @@ export default function WorkCenterClient() {
               {unreadNotifications.slice(0, 3).map((notification) => (
                 <button key={notification.id} type="button" onClick={() => openNotification(notification)}>
                   <strong>{notification.title}</strong>
-                  <span>{notification.message}</span>
                 </button>
               ))}
             </div>
@@ -569,9 +595,8 @@ export default function WorkCenterClient() {
         <div className={styles.queuePanel}>
           <header className={styles.panelHeading}>
             <div>
-              <span>Công việc được giao</span>
-              <h2 id="queue-heading">Hàng đợi của tôi</h2>
-              <p>{summary.total} đầu việc trong phạm vi của {role.label.toLocaleLowerCase("vi-VN")}</p>
+              <h2 id="queue-heading">Danh sách công việc</h2>
+              <p>{summary.total} việc · {role.label}</p>
             </div>
             <div className={styles.headingActions}>
               {roleId === "operations-manager" ? (
@@ -592,7 +617,7 @@ export default function WorkCenterClient() {
               <input
                 type="search"
                 value={query}
-                placeholder="Tìm theo mã, nội dung hoặc hồ sơ…"
+                placeholder="Mã, tiêu đề, hồ sơ…"
                 onChange={(event) => setQuery(event.target.value)}
               />
             </label>
@@ -623,8 +648,8 @@ export default function WorkCenterClient() {
           </div>
 
           <div className={styles.resultBar}>
-            <span><strong>{visibleItems.length}</strong> công việc phù hợp</span>
-            {summary.overdue ? <small><i aria-hidden="true" /> {summary.overdue} việc cần xử lý SLA</small> : <small>Tiến độ đang trong kiểm soát</small>}
+            <span><strong>{visibleItems.length}</strong> kết quả</span>
+            {summary.overdue ? <small><i aria-hidden="true" /> {summary.overdue} việc quá hạn</small> : <small>Đúng tiến độ</small>}
           </div>
 
           {loading ? (
@@ -658,7 +683,6 @@ export default function WorkCenterClient() {
                           <PriorityBadge priority={item.priority} />
                         </span>
                         <strong>{item.title}</strong>
-                        <p>{item.description}</p>
                         <span className={styles.taskFooter}>
                           <StatusBadge status={item.status} />
                           <span className={overdue ? styles.dueOverdue : styles.due}><i aria-hidden="true">◷</i>{dueLabel(item, now)}</span>
@@ -675,7 +699,7 @@ export default function WorkCenterClient() {
             <div className={styles.emptyState}>
               <span aria-hidden="true">✓</span>
               <h3>Không có công việc phù hợp</h3>
-              <p>Hãy thay đổi bộ lọc hoặc chọn một nhóm trạng thái khác.</p>
+              <p>Thử đổi bộ lọc.</p>
               <button type="button" onClick={() => {
                 setQueue("all");
                 setQuery("");
@@ -709,7 +733,7 @@ export default function WorkCenterClient() {
 
               <dl className={styles.detailGrid}>
                 <div><dt>Phân hệ</dt><dd>{moduleMeta(selectedItem.module).label}</dd></div>
-                <div><dt>Hồ sơ liên kết</dt><dd><code>{selectedItem.resourceId ?? "Chưa liên kết"}</code></dd></div>
+                <div><dt>Hồ sơ</dt><dd><code>{selectedItem.resourceId ?? "Chưa liên kết"}</code></dd></div>
                 <div><dt>Vai trò xử lý</dt><dd>{roleLabel(selectedItem.assignedRole)}</dd></div>
                 <div><dt>Khởi tạo bởi</dt><dd>{roleLabel(selectedItem.originRole)}</dd></div>
                 <div><dt>Người nhận</dt><dd>{selectedItem.assignedTo || "Chưa có người nhận"}</dd></div>
@@ -718,13 +742,13 @@ export default function WorkCenterClient() {
 
               <Link className={styles.resourceLink} href={selectedItem.routePath || moduleMeta(selectedItem.module).route}>
                 <span aria-hidden="true">↗</span>
-                <span><small>Mở hồ sơ nghiệp vụ</small><strong>{selectedItem.resourceId ?? selectedItem.id}</strong></span>
+                <span><small>Mở hồ sơ</small><strong>{selectedItem.resourceId ?? selectedItem.id}</strong></span>
                 <i aria-hidden="true">→</i>
               </Link>
 
               <section className={styles.actionSection} aria-labelledby="action-heading">
                 <div className={styles.sectionHeading}>
-                  <div><span>Bước tiếp theo</span><h3 id="action-heading">Xử lý công việc</h3></div>
+                  <div><h3 id="action-heading">Thao tác</h3></div>
                   {busyItemId === selectedItem.id ? <small role="status">Đang ghi nhận…</small> : null}
                 </div>
                 <div className={styles.actions}>
@@ -744,7 +768,7 @@ export default function WorkCenterClient() {
 
               <section className={styles.historySection} aria-labelledby="history-heading">
                 <div className={styles.sectionHeading}>
-                  <div><span>Nhật ký xuyên suốt</span><h3 id="history-heading">Tiến trình & trao đổi</h3></div>
+                  <div><h3 id="history-heading">Lịch sử xử lý</h3></div>
                   <small>{selectedItem.events.length + selectedItem.comments.length} cập nhật</small>
                 </div>
                 <Timeline item={selectedItem} />
@@ -754,17 +778,23 @@ export default function WorkCenterClient() {
             <div className={styles.detailEmpty}>
               <span aria-hidden="true">CV</span>
               <h2 id="work-detail-heading">Chọn một công việc</h2>
-              <p>Thông tin chi tiết, lịch sử và thao tác phù hợp sẽ xuất hiện tại đây.</p>
+              <p>Chọn việc để xem chi tiết.</p>
             </div>
           )}
         </aside>
       </section>
 
       {intent ? (
-        <div className={styles.modalBackdrop} role="presentation" onMouseDown={(event) => {
-          if (event.currentTarget === event.target && !busyItemId) setIntent(null);
-        }}>
-          <dialog className={styles.noteDialog} open aria-modal="true" aria-labelledby="note-dialog-heading">
+          <dialog
+            ref={noteDialogRef}
+            className={styles.noteDialog}
+            aria-modal="true"
+            aria-labelledby="note-dialog-heading"
+            onCancel={(event) => {
+              event.preventDefault();
+              if (!busyItemId) setIntent(null);
+            }}
+          >
             <form onSubmit={submitNoteAction}>
               <header>
                 <span>{moduleMeta(intent.item.module).short}</span>
@@ -787,7 +817,7 @@ export default function WorkCenterClient() {
                 />
               </label>
               <div className={styles.noteHelp}>
-                <small id="note-help">Tối thiểu {intent.minLength} ký tự · Nội dung được lưu vào nhật ký.</small>
+                <small id="note-help">Tối thiểu {intent.minLength} ký tự.</small>
                 <small>{note.trim().length} ký tự</small>
               </div>
               {noteError ? <p className={styles.noteError} id="note-error" role="alert">{noteError}</p> : <span id="note-error" />}
@@ -799,29 +829,33 @@ export default function WorkCenterClient() {
               </footer>
             </form>
           </dialog>
-        </div>
       ) : null}
 
       {assignmentOpen ? (
-        <div className={styles.modalBackdrop} role="presentation" onMouseDown={(event) => {
-          if (event.currentTarget === event.target && !creatingAssignment) setAssignmentOpen(false);
-        }}>
-          <dialog className={`${styles.noteDialog} ${styles.assignmentDialog}`} open aria-modal="true" aria-labelledby="assignment-heading">
+          <dialog
+            ref={assignmentDialogRef}
+            className={`${styles.noteDialog} ${styles.assignmentDialog}`}
+            aria-modal="true"
+            aria-labelledby="assignment-heading"
+            onCancel={(event) => {
+              event.preventDefault();
+              if (!creatingAssignment) setAssignmentOpen(false);
+            }}
+          >
             <form onSubmit={submitAssignment}>
               <header>
                 <span>CV</span>
-                <div><small>ĐIỀU HÀNH CÔNG VIỆC</small><h2 id="assignment-heading">Giao công việc mới</h2></div>
+                <div><h2 id="assignment-heading">Giao việc</h2></div>
                 <button type="button" aria-label="Đóng" disabled={creatingAssignment} onClick={() => setAssignmentOpen(false)}>×</button>
               </header>
-              <p>Đầu việc sẽ xuất hiện ngay trong hàng đợi của vai trò được chọn.</p>
               <div className={styles.assignmentGrid}>
                 <label className={styles.assignmentWide}>
-                  <span>Tiêu đề công việc <b>*</b></span>
+                  <span>Tiêu đề <b>*</b></span>
                   <input ref={assignmentTitleRef} value={assignment.title} placeholder="Ví dụ: Xác minh hồ sơ chuyến QN-08" onChange={(event) => setAssignment((current) => ({ ...current, title: event.target.value }))} />
                 </label>
                 <label className={styles.assignmentWide}>
-                  <span>Mô tả và kết quả cần đạt <b>*</b></span>
-                  <textarea rows={3} value={assignment.description} placeholder="Mô tả bối cảnh, yêu cầu xử lý và kết quả bàn giao…" onChange={(event) => setAssignment((current) => ({ ...current, description: event.target.value }))} />
+                  <span>Kết quả cần đạt <b>*</b></span>
+                  <textarea rows={3} value={assignment.description} placeholder="Nêu yêu cầu và kết quả cần đạt…" onChange={(event) => setAssignment((current) => ({ ...current, description: event.target.value }))} />
                 </label>
                 <label>
                   <span>Phân hệ</span>
@@ -830,7 +864,7 @@ export default function WorkCenterClient() {
                   </select>
                 </label>
                 <label>
-                  <span>Giao cho vai trò</span>
+                  <span>Giao cho</span>
                   <select value={assignment.assignedRole} onChange={(event) => setAssignment((current) => ({ ...current, assignedRole: event.target.value as DemoRoleId }))}>
                     {Object.values(DEMO_ROLES).filter(({ id }) => id !== "operations-manager").map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>{candidate.label}</option>
@@ -838,7 +872,7 @@ export default function WorkCenterClient() {
                   </select>
                 </label>
                 <label>
-                  <span>Mức ưu tiên</span>
+                  <span>Ưu tiên</span>
                   <select value={assignment.priority} onChange={(event) => setAssignment((current) => ({ ...current, priority: event.target.value as WorkItemPriority }))}>
                     {(Object.keys(PRIORITY_META) as WorkItemPriority[]).map((priority) => <option key={priority} value={priority}>{PRIORITY_META[priority].label}</option>)}
                   </select>
@@ -851,11 +885,10 @@ export default function WorkCenterClient() {
               {assignmentError ? <p className={styles.noteError} role="alert">{assignmentError}</p> : null}
               <footer>
                 <button type="button" disabled={creatingAssignment} onClick={() => setAssignmentOpen(false)}>Hủy</button>
-                <button className={styles.confirmButton} type="submit" disabled={creatingAssignment}>{creatingAssignment ? "Đang giao việc…" : "Giao công việc"}</button>
+                <button className={styles.confirmButton} type="submit" disabled={creatingAssignment}>{creatingAssignment ? "Đang giao việc…" : "Giao việc"}</button>
               </footer>
             </form>
           </dialog>
-        </div>
       ) : null}
     </div>
   );

@@ -107,9 +107,9 @@ export default function TicketBookingClient() {
 
       <section className={styles.hero} aria-labelledby="ticket-search-title">
         <div>
-          <span className={styles.kicker}>Passenger booking</span>
-          <h2 id="ticket-search-title">Tìm chuyến phù hợp trong vài bước.</h2>
-          <p>Chọn tuyến, giờ khởi hành và ghế trống để tạo đặt chỗ. Thanh toán được đối soát tại quầy.</p>
+          <span className={styles.kicker}>ĐẶT VÉ HÀNH KHÁCH</span>
+          <h2 id="ticket-search-title">Tìm chuyến và chọn ghế</h2>
+          <p>Thanh toán được đối soát tại quầy.</p>
         </div>
         <div className={styles.heroMetrics} aria-label="Tổng quan vé">
           <div><strong>{ticketTrips.length}</strong><span>chuyến đang mở bán</span></div>
@@ -183,7 +183,7 @@ export default function TicketBookingClient() {
       </div>
 
       <section className={styles.history} aria-labelledby="booking-history-title">
-        <div className={styles.historyHeading}><div><span>Booking desk</span><h2 id="booking-history-title">Đặt chỗ gần đây</h2></div>{bookings.length > 0 ? <button type="button" onClick={clearBookingHistory}>Làm mới danh sách</button> : null}</div>
+        <div className={styles.historyHeading}><div><span>LỊCH SỬ ĐẶT VÉ</span><h2 id="booking-history-title">Đặt chỗ gần đây</h2></div>{bookings.length > 0 ? <button type="button" onClick={clearBookingHistory}>Làm mới danh sách</button> : null}</div>
         {bookings.length > 0 ? <div className={styles.historyList}>{bookings.map((booking) => <article key={booking.id}><div><span>{booking.id}</span><strong>{booking.routeLabel}</strong><small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small></div><div><strong>{formatDemoPrice(booking.total)}</strong><span data-status={booking.status}>{booking.status}</span>{booking.status === "Đã giữ chỗ" ? <button disabled={!canCancelBooking} title={canCancelBooking ? undefined : "Vai trò hiện tại không có quyền hủy đặt chỗ."} onClick={() => cancelBooking(booking.id)} type="button">Hủy bản ghi</button> : null}</div></article>)}</div> : <div className={styles.historyEmpty}><strong>Chưa có bản ghi đặt chỗ</strong><p>Đặt chỗ mới sẽ xuất hiện tại đây.</p></div>}
       </section>
     </div>

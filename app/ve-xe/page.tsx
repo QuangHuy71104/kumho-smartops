@@ -12,9 +12,9 @@ export default function PassengerTicketsPage() {
   return (
     <PortalShell
       activePath="/ve-xe"
-      eyebrow="Kinh doanh hành khách · Booking desk"
+      eyebrow="Dịch vụ hành khách"
       title="Vé hành khách"
-      subtitle="Tra cứu chuyến, chọn ghế và quản lý đặt chỗ theo hành trình"
+      subtitle="Chuyến · Ghế · Đặt chỗ"
       headerActions={<PortalAction href="#dat-cho">Đặt chỗ mới</PortalAction>}
     >
       <TicketBookingClient />

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function FinancePage() {
   return (
-    <PortalShell activePath="/tai-chinh" eyebrow="Kiểm soát vận hành" title="Tài chính" subtitle="Doanh thu, công nợ và chi phí theo chuyến">
+    <PortalShell activePath="/tai-chinh" eyebrow="Kiểm soát vận hành" title="Tài chính" subtitle="Doanh thu · Công nợ · Chi phí">
       <FinanceDashboard />
     </PortalShell>
   );

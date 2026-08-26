@@ -55,10 +55,10 @@ test("public copy identifies the transport operations scope", async () => {
   const readme = await read("README.md");
 
   assert.match(shell, /Transport Control/);
-  assert.match(shell, /Trung tâm dữ liệu vận tải/);
-  assert.match(shell, /Nền tảng quản trị vận tải và điều phối tập trung/);
+  assert.match(shell, /Điều hành vận tải tập trung/);
+  assert.match(shell, /Dữ liệu cập nhật liên tục/);
   assert.doesNotMatch(shell, /MOCK DATA|dữ liệu giả lập|không phải hệ thống chính thức/i);
-  assert.match(dashboard, /Điều phối mọi chuyến đi/);
+  assert.match(dashboard, /Tình hình vận hành/);
   assert.match(readme, /đội xe, tài xế, đơn vận chuyển hàng hóa/i);
 });
 

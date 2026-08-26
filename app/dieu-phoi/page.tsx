@@ -11,9 +11,9 @@ export default function DispatchPage() {
   return (
     <PortalShell
       activePath="/dieu-phoi"
-      eyebrow="Điều độ vận tải · Kế hoạch 23–25/08/2026"
+      eyebrow="Kế hoạch vận hành"
       title="Bảng điều phối vận tải"
-      subtitle="Ca vận hành, nguồn lực và cảnh báo xung đột"
+      subtitle="Ca trực · Nguồn lực · Xung đột"
     >
       <DispatchBoard />
     </PortalShell>

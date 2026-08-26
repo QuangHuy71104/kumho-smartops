@@ -199,7 +199,7 @@ function WorkspaceState({
         <div>
           <p className={styles.eyebrow}>Kết nối vùng dữ liệu được cấp quyền</p>
           <h2>Đang tải đơn hàng…</h2>
-          <p>KSOps đang xác minh phiên SSO, phạm vi chi nhánh và dữ liệu PostgreSQL.</p>
+          <p>Đang xác minh quyền và dữ liệu vận hành.</p>
         </div>
       </section>
     );
@@ -208,13 +208,13 @@ function WorkspaceState({
   if (phase === "unauthenticated") {
     return (
       <section className={styles.pilotState} aria-labelledby="pilot-login-title">
-        <span className={styles.pilotStateIcon} aria-hidden="true">SSO</span>
+        <span className={styles.pilotStateIcon} aria-hidden="true">→</span>
         <div>
           <p className={styles.eyebrow}>Yêu cầu xác thực doanh nghiệp</p>
           <h2 id="pilot-login-title">Đăng nhập để mở đơn hàng</h2>
-          <p>Phiên đăng nhập phải được Auth0 xác minh và ánh xạ tới quyền nội bộ đang hoạt động.</p>
+          <p>Đăng nhập doanh nghiệp để tiếp tục.</p>
           <div className={styles.pilotStateActions}>
-            <a className={styles.primaryButton} href="/auth/login?returnTo=%2Fdon-hang">Đăng nhập SSO</a>
+            <a className={styles.primaryButton} href="/auth/login?returnTo=%2Fdon-hang">Đăng nhập</a>
             <button className={styles.secondaryButton} type="button" onClick={onRetry}>Thử lại</button>
           </div>
         </div>
@@ -477,7 +477,7 @@ export default function PilotOrderWorkspace() {
       setCreateForm(initialCreateForm(referenceData, principal));
       closeCreateForm();
       createMutationRef.current = null;
-      setAnnouncement(`Đã tạo đơn ${created.publicCode} trong PostgreSQL.`);
+      setAnnouncement(`Đã tạo đơn ${created.publicCode}.`);
     } catch (error) {
       const apiError = error instanceof PilotApiError
         ? error
@@ -549,7 +549,7 @@ export default function PilotOrderWorkspace() {
             setMutationProblem(decodePilotProblem({
               code: "VERSION_REFRESH_FAILED",
               title: "Đơn hàng đã đổi phiên bản",
-              detail: "Không thể tải phiên bản mới nhất. Hãy dùng nút Đồng bộ dữ liệu trước khi thao tác lại.",
+              detail: "Không thể tải bản mới nhất. Hãy tải lại dữ liệu trước khi thao tác.",
               requestId: refreshProblem.requestId ?? apiError.problem.requestId,
             }, refreshProblem.status));
           }
@@ -580,13 +580,13 @@ export default function PilotOrderWorkspace() {
 
       <section className={`${styles.hero} ${styles.pilotHero}`} aria-labelledby="pilot-orders-title">
         <div>
-          <span className={styles.eyebrow}>Cargo operations · SSO + PostgreSQL</span>
-          <h2 id="pilot-orders-title">Điều hành đơn hàng trong phạm vi được cấp quyền.</h2>
-          <p>Phiên SSO đã được API xác minh. Mọi thao tác vẫn được kiểm tra quyền, tenant và phiên bản ở máy chủ.</p>
+          <span className={styles.eyebrow}>Đơn hàng theo quyền truy cập</span>
+          <h2 id="pilot-orders-title">Điều hành đơn hàng theo phạm vi của bạn.</h2>
+          <p>Dữ liệu đã đồng bộ và được kiểm tra quyền khi thao tác.</p>
         </div>
         <div className={styles.heroActions}>
           <button className={styles.ghostButtonDark} type="button" disabled={busy !== null} onClick={() => void handleRefresh()}>
-            {busy === "refresh" ? "Đang đồng bộ…" : "Đồng bộ dữ liệu"}
+            {busy === "refresh" ? "Đang tải…" : "Tải lại dữ liệu"}
           </button>
           <button ref={createTriggerRef} className={styles.heroButton} type="button" disabled={!canCreate || busy !== null} onClick={openCreateForm}>
             <span aria-hidden="true">＋</span> Tạo đơn
@@ -596,8 +596,8 @@ export default function PilotOrderWorkspace() {
 
       <section className={styles.pilotIdentityBar} aria-label="Phiên và phạm vi vận hành">
         <span className={styles.pilotVerifiedDot} aria-hidden="true" />
-        <p><strong>Phiên SSO đã xác minh</strong><span>Principal {principal?.id.slice(0, 8)}… · {cargoReadScope === "*" ? "Toàn doanh nghiệp" : `${cargoReadScope?.length ?? 0} chi nhánh cho cargo-order:read`}</span></p>
-        <small>Quyền hiển thị lấy từ ánh xạ nội bộ; API luôn kiểm tra lại.</small>
+        <p><strong>Quyền truy cập đã xác minh</strong><span>Người dùng {principal?.id.slice(0, 8)}… · {cargoReadScope === "*" ? "Toàn doanh nghiệp" : `${cargoReadScope?.length ?? 0} chi nhánh`}</span></p>
+        <small>Mỗi thao tác được kiểm tra lại khi xác nhận.</small>
       </section>
 
       {mutationProblem ? (
@@ -611,7 +611,7 @@ export default function PilotOrderWorkspace() {
       {createOpen ? (
         <section className={styles.pilotCreatePanel} aria-labelledby="pilot-create-title">
           <div className={styles.panelHeading}>
-            <div><span className={styles.eyebrow}>Lệnh vận chuyển mới</span><h2 id="pilot-create-title">Tạo đơn vào PostgreSQL</h2><p>Chỉ sử dụng mã chi nhánh và địa điểm vận hành không chứa PII.</p></div>
+            <div><span className={styles.eyebrow}>Lệnh vận chuyển mới</span><h2 id="pilot-create-title">Tạo đơn vận chuyển</h2><p>Chọn chi nhánh và địa điểm vận hành.</p></div>
             <button className={styles.iconButton} type="button" aria-label="Đóng biểu mẫu tạo đơn" onClick={closeCreateForm}>×</button>
           </div>
           <form className={styles.pilotCreateForm} aria-describedby={mutationProblem ? "pilot-mutation-problem" : undefined} onSubmit={(event) => void handleCreate(event)}>
@@ -626,7 +626,7 @@ export default function PilotOrderWorkspace() {
               <label className={styles.field}><span>Giá trị khai báo (VND)</span><input type="number" min="0" max="9000000000000" step="1" placeholder="Không bắt buộc" value={createForm.declaredValueMinor} onChange={(event) => setCreateForm((current) => ({ ...current, declaredValueMinor: event.target.value }))} /></label>
               <label className={styles.field}><span>Hạn SLA</span><input required type="datetime-local" min={minimumSla} max={maximumSla} value={createForm.slaDueAt} onChange={(event) => setCreateForm((current) => ({ ...current, slaDueAt: event.target.value }))} /></label>
             </fieldset>
-            <div className={styles.pilotFormActions}><p>Origin được trình duyệt gửi theo same-origin; khóa idempotency không chứa dữ liệu nghiệp vụ.</p><button className={styles.primaryButton} type="submit" disabled={!canCreate || busy !== null || creatableBranchOptions.length === 0 || referenceData.locations.length < 2}>{busy === "create" ? "Đang ghi đơn…" : "Tạo đơn"}</button></div>
+            <div className={styles.pilotFormActions}><p>Quyền được kiểm tra khi xác nhận.</p><button className={styles.primaryButton} type="submit" disabled={!canCreate || busy !== null || creatableBranchOptions.length === 0 || referenceData.locations.length < 2}>{busy === "create" ? "Đang ghi đơn…" : "Tạo đơn"}</button></div>
           </form>
         </section>
       ) : null}
@@ -653,7 +653,7 @@ export default function PilotOrderWorkspace() {
 
           {selectedOrder ? (
             <aside className={styles.detailPanel} aria-labelledby="pilot-order-detail-title">
-              <div className={styles.detailHeading}><div><span className={styles.eyebrow}>Chi tiết aggregate</span><h2 id="pilot-order-detail-title">{selectedOrder.publicCode}</h2></div><StatusBadge status={selectedOrder.status} /></div>
+              <div className={styles.detailHeading}><div><span className={styles.eyebrow}>Chi tiết đơn</span><h2 id="pilot-order-detail-title">{selectedOrder.publicCode}</h2></div><StatusBadge status={selectedOrder.status} /></div>
               <div className={styles.routeCard}><div className={styles.routeNodes} aria-hidden="true"><span>ĐI</span><i /><span>ĐẾN</span></div><div className={styles.routeCopy}><strong>{locationById.get(selectedOrder.originLocationId)?.displayName ?? selectedOrder.originLocationId}</strong><span>{pilotServiceLevelLabel(selectedOrder.serviceLevel)}</span><strong>{locationById.get(selectedOrder.destinationLocationId)?.displayName ?? selectedOrder.destinationLocationId}</strong></div></div>
               <dl className={styles.detailGrid}>
                 <div><dt>Chi nhánh</dt><dd>{branchById.get(selectedOrder.owningBranchId)?.name ?? selectedOrder.owningBranchId}</dd></div><div><dt>Phiên bản</dt><dd>v{selectedOrder.version}</dd></div>
@@ -662,8 +662,8 @@ export default function PilotOrderWorkspace() {
                 <div className={styles.detailWide}><dt>Khởi tạo / cập nhật</dt><dd>{formatPilotDate(selectedOrder.createdAt)} · {formatPilotDate(selectedOrder.updatedAt)}</dd></div>
               </dl>
               <form className={styles.pilotTransitionForm} aria-describedby={mutationProblem ? "pilot-mutation-problem" : undefined} onSubmit={(event) => void handleTransition(event)}>
-                <div className={styles.sectionTitleRow}><h3>Chuyển trạng thái có điều kiện</h3><span>If-Match v{selectedOrder.version}</span></div>
-                {transitionTargets.length ? <><label className={styles.field}><span>Trạng thái đích</span><select value={activeTransitionTarget} onChange={(event) => { const target = event.target.value as PilotOrderStatus; setTransitionTarget(target); setReasonCode(reasonForTarget(target)); transitionMutationRef.current = null; }}>{transitionTargets.map((target) => <option key={target} value={target}>{pilotOrderStatusLabel(target)}</option>)}</select></label><label className={styles.field}><span>Mã lý do</span><input required minLength={3} maxLength={60} pattern="[A-Z][A-Z0-9_:-]*" value={activeReasonCode} onChange={(event) => { setReasonCode(event.target.value.toUpperCase()); setTransitionTarget(activeTransitionTarget); transitionMutationRef.current = null; }} /></label><button className={styles.primaryButton} type="submit" disabled={!canTransition || busy !== null}>{busy === "transition" ? "Đang cập nhật…" : "Xác nhận chuyển trạng thái"}</button><small>{canTransition ? "API sẽ kiểm tra lại quyền, idempotency và optimistic version." : "Principal hiện tại không có quyền thực hiện chuyển trạng thái này."}</small></> : <p className={styles.pilotTerminalNote}>Đơn ở trạng thái kết thúc, không còn bước chuyển hợp lệ.</p>}
+                <div className={styles.sectionTitleRow}><h3>Chuyển trạng thái</h3><span>Bản cập nhật {selectedOrder.version}</span></div>
+                {transitionTargets.length ? <><label className={styles.field}><span>Trạng thái đích</span><select value={activeTransitionTarget} onChange={(event) => { const target = event.target.value as PilotOrderStatus; setTransitionTarget(target); setReasonCode(reasonForTarget(target)); transitionMutationRef.current = null; }}>{transitionTargets.map((target) => <option key={target} value={target}>{pilotOrderStatusLabel(target)}</option>)}</select></label><label className={styles.field}><span>Mã lý do</span><input required minLength={3} maxLength={60} pattern="[A-Z][A-Z0-9_:-]*" value={activeReasonCode} onChange={(event) => { setReasonCode(event.target.value.toUpperCase()); setTransitionTarget(activeTransitionTarget); transitionMutationRef.current = null; }} /></label><button className={styles.primaryButton} type="submit" disabled={!canTransition || busy !== null}>{busy === "transition" ? "Đang cập nhật…" : "Xác nhận chuyển trạng thái"}</button><small>{canTransition ? "Quyền và trạng thái sẽ được kiểm tra khi xác nhận." : "Bạn không có quyền chuyển trạng thái này."}</small></> : <p className={styles.pilotTerminalNote}>Đơn ở trạng thái kết thúc, không còn bước chuyển hợp lệ.</p>}
               </form>
             </aside>
           ) : null}

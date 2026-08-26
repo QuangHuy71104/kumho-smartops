@@ -35,9 +35,9 @@ export default function FleetDashboard() {
     <div className={styles.page}>
       <section className={styles.hero} aria-labelledby="fleet-hero-title">
         <div>
-          <span className={styles.eyebrow}>FLEET LIVEBOARD · 08:42</span>
-          <h2 id="fleet-hero-title">Sẵn sàng đúng xe, đúng thời điểm.</h2>
-          <p>Một góc nhìn thống nhất cho xe khách, xe giường nằm và xe hàng trong toàn bộ mạng lưới điều phối.</p>
+          <span className={styles.eyebrow}>ĐỘI XE TRỰC TUYẾN · 08:42</span>
+          <h2 id="fleet-hero-title">Đúng xe, đúng thời điểm</h2>
+          <p>Xe khách · Xe giường nằm · Xe hàng</p>
         </div>
         <div className={styles.heroStatus}>
           <span className={styles.heroPulse} aria-hidden="true" />

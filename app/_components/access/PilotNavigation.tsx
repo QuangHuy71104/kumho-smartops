@@ -1,4 +1,6 @@
-import { Fragment } from "react";
+"use client";
+
+import { Fragment, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   PORTAL_ROUTES,
@@ -12,8 +14,16 @@ import styles from "../PortalShell.module.css";
  * slice is connected to the pilot backend; API authorization remains decisive.
  */
 export default function PilotNavigation({ activePath }: { activePath: PortalPath }) {
+  const navigationRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (!window.matchMedia("(max-width: 900px)").matches) return;
+    const activeItem = navigationRef.current?.querySelector<HTMLElement>("[aria-current='page']");
+    activeItem?.scrollIntoView({ behavior: "auto", block: "nearest", inline: "center" });
+  }, [activePath]);
+
   return (
-    <nav className={styles.navigation} aria-label="Điều hướng môi trường kết nối">
+    <nav ref={navigationRef} className={styles.navigation} aria-label="Điều hướng môi trường kết nối">
       {PORTAL_SECTIONS.map((section, sectionIndex) => (
         <Fragment key={section.id}>
           <p className={`${styles.navLabel} ${sectionIndex > 0 ? styles.projectLabel : ""}`}>
@@ -34,7 +44,7 @@ export default function PilotNavigation({ activePath }: { activePath: PortalPath
                   <span className={styles.pilotNavCopy}>
                     <span>{route.label}</span>
                     <small className={isCargoPilot ? styles.pilotNavLive : styles.pilotNavMock}>
-                      {isCargoPilot ? "SSO + DB" : "Workspace"}
+                      {isCargoPilot ? "Đã kết nối" : "Tác nghiệp"}
                     </small>
                   </span>
                 </Link>

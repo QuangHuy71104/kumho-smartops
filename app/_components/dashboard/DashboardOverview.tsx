@@ -29,8 +29,8 @@ function RecentOrders() {
     <section className={`${styles.panel} ${styles.ordersPanel}`} aria-labelledby="orders-title">
       <div className={styles.panelHeading}>
         <div>
-          <span className={styles.sectionKicker}>Luồng công việc hôm nay</span>
-          <h2 id="orders-title">Đơn hàng cần theo dõi</h2>
+          <span className={styles.sectionKicker}>Hôm nay</span>
+          <h2 id="orders-title">Đơn cần theo dõi</h2>
         </div>
         <Link href="/don-hang">Xem tất cả <span aria-hidden="true">→</span></Link>
       </div>
@@ -70,11 +70,11 @@ function RecentOrders() {
 
 function FleetReadinessPanel() {
   return (
-    <aside className={`${styles.panel} ${styles.healthPanel}`} aria-labelledby="health-title">
+    <aside className={styles.panel} aria-labelledby="health-title">
       <div className={styles.panelHeading}>
         <div>
-          <span className={styles.sectionKicker}>Năng lực khai thác</span>
-          <h2 id="health-title">Mức sẵn sàng đội xe</h2>
+          <span className={styles.sectionKicker}>Đội xe</span>
+          <h2 id="health-title">Sẵn sàng đội xe</h2>
         </div>
         <span className={styles.statusOk}><i aria-hidden="true" /> Ổn định</span>
       </div>
@@ -85,7 +85,7 @@ function FleetReadinessPanel() {
         </div>
         <div>
           <strong>{dashboardFleetSummary.running} xe đang khai thác</strong>
-          <p>{dashboardFleetSummary.maintenance} xe bảo dưỡng · điểm sẵn sàng bình quân {dashboardFleetSummary.averageReadiness}%.</p>
+          <p>{dashboardFleetSummary.maintenance} xe bảo dưỡng · Sẵn sàng {dashboardFleetSummary.averageReadiness}%</p>
         </div>
       </div>
       <div className={styles.serviceList}>
@@ -128,7 +128,7 @@ function MaintenancePreview() {
         </div>
       </div>
       <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/bao-duong">
-        Chi tiết công việc
+        Xem lịch
       </Link>
     </section>
   );
@@ -139,14 +139,13 @@ export default function DashboardOverview() {
     <div className={styles.dashboard}>
       <section className={styles.heroPanel} aria-labelledby="welcome-title">
         <div>
-          <span className={styles.sectionKicker}>Ca vận hành 23/08</span>
-          <h2 id="welcome-title">Điều phối mọi chuyến đi từ một màn hình.</h2>
-          <p>Theo dõi đội xe, đơn hàng, tài xế và cam kết giao nhận trong cùng một luồng vận hành minh bạch.</p>
+          <span className={styles.sectionKicker}>Đang vận hành</span>
+          <h2 id="welcome-title">Tình hình vận hành</h2>
+          <p>Theo dõi đơn hàng, đội xe và SLA theo thời gian thực.</p>
         </div>
         <div className={styles.heroActions}>
-          <Link className={`${styles.button} ${styles.buttonPrimary}`} href={createOrderHref}>+ Tạo đơn hàng</Link>
-          <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/cong-viec">Công việc của tôi</Link>
-          <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/dieu-phoi">Mở bàn điều phối</Link>
+          <Link className={`${styles.button} ${styles.buttonPrimary}`} href={createOrderHref}>+ Tạo đơn</Link>
+          <Link className={`${styles.button} ${styles.buttonSecondary}`} href="/cong-viec">Việc của tôi</Link>
         </div>
       </section>
 
