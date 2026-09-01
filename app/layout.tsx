@@ -6,7 +6,7 @@ import "./globals.css";
 const sans = Be_Vietnam_Pro({
   variable: "--font-sans",
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const mono = IBM_Plex_Mono({
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" data-scroll-behavior="smooth">
       <body className={`${sans.variable} ${mono.variable}`}>
         <DemoAccessProvider>{children}</DemoAccessProvider>
       </body>

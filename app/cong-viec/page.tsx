@@ -13,9 +13,9 @@ export default function WorkCenterPage() {
   return (
     <PortalShell
       activePath="/cong-viec"
-      eyebrow="Ca làm việc"
+      eyebrow="Không gian làm việc"
       title="Công việc của tôi"
-      subtitle="Tiến độ · Ưu tiên · SLA"
+      subtitle="Tập trung vào việc cần làm, cập nhật kết quả ngay tại đây."
     >
       <WorkCenterClient />
     </PortalShell>

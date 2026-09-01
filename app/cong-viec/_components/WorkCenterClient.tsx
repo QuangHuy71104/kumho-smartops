@@ -539,11 +539,10 @@ export default function WorkCenterClient() {
   }
 
   const queueMetrics: { id: QueueFilter; label: string; count: number; short: string }[] = [
-    { id: "new", label: "Việc mới", count: summary.new, short: "MỚI" },
+    { id: "new", label: "Cần làm", count: summary.new, short: "MỚI" },
     { id: "in_progress", label: "Đang xử lý", count: summary.claimed + summary.inProgress, short: "ĐXL" },
-    { id: "waiting", label: "Đang chờ", count: summary.waitingApproval + summary.waitingEvidence, short: "CHỜ" },
-    { id: "overdue", label: "Quá hạn", count: summary.overdue, short: "SLA" },
-    { id: "completed", label: "Đã hoàn tất", count: summary.completed, short: "XONG" },
+    { id: "waiting", label: "Chờ duyệt", count: summary.waitingApproval + summary.waitingEvidence, short: "CHỜ" },
+    { id: "completed", label: "Hoàn thành", count: summary.completed, short: "XONG" },
   ];
 
   return (
@@ -595,7 +594,7 @@ export default function WorkCenterClient() {
         <div className={styles.queuePanel}>
           <header className={styles.panelHeading}>
             <div>
-              <h2 id="queue-heading">Danh sách công việc</h2>
+              <h2 id="queue-heading">Danh sách ưu tiên</h2>
               <p>{summary.total} việc · {role.label}</p>
             </div>
             <div className={styles.headingActions}>
@@ -683,6 +682,7 @@ export default function WorkCenterClient() {
                           <PriorityBadge priority={item.priority} />
                         </span>
                         <strong>{item.title}</strong>
+                        <p>{item.description}</p>
                         <span className={styles.taskFooter}>
                           <StatusBadge status={item.status} />
                           <span className={overdue ? styles.dueOverdue : styles.due}><i aria-hidden="true">◷</i>{dueLabel(item, now)}</span>
@@ -845,17 +845,18 @@ export default function WorkCenterClient() {
             <form onSubmit={submitAssignment}>
               <header>
                 <span>CV</span>
-                <div><h2 id="assignment-heading">Giao việc</h2></div>
+                <div><small>Điều hành công việc</small><h2 id="assignment-heading">Tạo công việc mới</h2></div>
                 <button type="button" aria-label="Đóng" disabled={creatingAssignment} onClick={() => setAssignmentOpen(false)}>×</button>
               </header>
+              <p className={styles.assignmentIntro}>Giao đúng người, theo dõi đến khi hoàn tất.</p>
               <div className={styles.assignmentGrid}>
                 <label className={styles.assignmentWide}>
-                  <span>Tiêu đề <b>*</b></span>
-                  <input ref={assignmentTitleRef} value={assignment.title} placeholder="Ví dụ: Xác minh hồ sơ chuyến QN-08" onChange={(event) => setAssignment((current) => ({ ...current, title: event.target.value }))} />
+                  <span>Tiêu đề công việc <b>*</b></span>
+                  <input ref={assignmentTitleRef} value={assignment.title} placeholder="Ví dụ: Xác nhận tài xế cho chuyến KS-317" onChange={(event) => setAssignment((current) => ({ ...current, title: event.target.value }))} />
                 </label>
                 <label className={styles.assignmentWide}>
-                  <span>Kết quả cần đạt <b>*</b></span>
-                  <textarea rows={3} value={assignment.description} placeholder="Nêu yêu cầu và kết quả cần đạt…" onChange={(event) => setAssignment((current) => ({ ...current, description: event.target.value }))} />
+                  <span>Mô tả kết quả <b>*</b></span>
+                  <textarea rows={3} value={assignment.description} placeholder="Nêu yêu cầu và kết quả cần đạt." onChange={(event) => setAssignment((current) => ({ ...current, description: event.target.value }))} />
                 </label>
                 <label>
                   <span>Phân hệ</span>
@@ -872,7 +873,7 @@ export default function WorkCenterClient() {
                   </select>
                 </label>
                 <label>
-                  <span>Ưu tiên</span>
+                  <span>Mức ưu tiên</span>
                   <select value={assignment.priority} onChange={(event) => setAssignment((current) => ({ ...current, priority: event.target.value as WorkItemPriority }))}>
                     {(Object.keys(PRIORITY_META) as WorkItemPriority[]).map((priority) => <option key={priority} value={priority}>{PRIORITY_META[priority].label}</option>)}
                   </select>
@@ -883,6 +884,7 @@ export default function WorkCenterClient() {
                 </label>
               </div>
               {assignmentError ? <p className={styles.noteError} role="alert">{assignmentError}</p> : null}
+              {!assignmentError ? <p className={styles.assignmentReady}><span aria-hidden="true">✓</span> Biểu mẫu sẵn sàng gửi</p> : null}
               <footer>
                 <button type="button" disabled={creatingAssignment} onClick={() => setAssignmentOpen(false)}>Hủy</button>
                 <button className={styles.confirmButton} type="submit" disabled={creatingAssignment}>{creatingAssignment ? "Đang giao việc…" : "Giao việc"}</button>

@@ -43,7 +43,7 @@ export default function PortalShell({
           <span className={styles.brandMark} aria-hidden="true">KS</span>
           <span className={styles.brandCopy}>
             <strong>KSOps</strong>
-            <small>Transport Control</small>
+            <small>Kumho Samco</small>
           </span>
         </Link>
 
@@ -71,19 +71,11 @@ export default function PortalShell({
 
       <div className={styles.workspace}>
         <header className={styles.topbar}>
-          <div className={styles.titleBlock}>
+          <div className={styles.workspaceLabel}>
+            <span aria-hidden="true" />
             <p>{eyebrow}</p>
-            <h1>{title}</h1>
-            {subtitle ? <span>{subtitle}</span> : null}
           </div>
           <div className={styles.topbarActions}>
-            {headerActions && pilotMode ? (
-              <div className={styles.headerActionsSlot}>{headerActions}</div>
-            ) : headerActions ? (
-              <Can permission={headerPermission}>
-                <div className={styles.headerActionsSlot}>{headerActions}</div>
-              </Can>
-            ) : null}
             {pilotMode ? null : <QuickSearch />}
             <span className={pilotMode ? styles.pilotFlag : styles.demoFlag}>
               <i aria-hidden="true" /> {pilotMode ? "Đã kết nối" : "Trực tuyến"}
@@ -100,6 +92,19 @@ export default function PortalShell({
         </header>
 
         <main className={styles.main} id="noi-dung-chinh">
+          <div className={styles.pageHeader}>
+            <div className={styles.titleBlock}>
+              <h1>{title}</h1>
+              {subtitle ? <span>{subtitle}</span> : null}
+            </div>
+            {headerActions && pilotMode ? (
+              <div className={styles.headerActionsSlot}>{headerActions}</div>
+            ) : headerActions ? (
+              <Can permission={headerPermission}>
+                <div className={styles.headerActionsSlot}>{headerActions}</div>
+              </Can>
+            ) : null}
+          </div>
           {pilotMode ? (
             <div className={activePath === "/don-hang" ? styles.pilotBanner : styles.mockBanner} role="note">
               <span className={activePath === "/don-hang" ? styles.pilotBadge : styles.mockBadge}>

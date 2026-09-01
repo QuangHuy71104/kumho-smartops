@@ -1,8 +1,8 @@
 .page {
   --red: #c91524;
-  --ink: #17202f;
+  --ink: #101828;
   --muted: #667085;
-  --line: #e5e8ed;
+  --line: #e4e7ec;
   display: grid;
   gap: 16px;
 }
@@ -42,8 +42,8 @@
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .metric,
@@ -53,10 +53,10 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 10px;
-  min-height: 76px;
-  padding: 15px 16px;
+  min-height: 102px;
+  padding: 17px 18px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 16px;
   background: #fff;
   color: var(--ink);
   box-shadow: 0 3px 11px rgba(16,24,40,.025);
@@ -74,7 +74,7 @@
   height: 40px;
   display: grid;
   place-items: center;
-  border-radius: 9px;
+  border-radius: 12px;
   background: #f0f3f6;
   color: #63707e;
   font-family: var(--font-mono), monospace;
@@ -85,8 +85,8 @@
 .metricDangerIcon { background: #fff0f1; color: #b71927; }
 .metric span:nth-child(2), .metricActive span:nth-child(2) { min-width: 0; }
 .metric small, .metric strong, .metricActive small, .metricActive strong { display: block; }
-.metric small, .metricActive small { overflow: hidden; color: #6f7986; font-size: 0.8125rem; white-space: nowrap; text-overflow: ellipsis; }
-.metric strong, .metricActive strong { margin-top: 3px; font-family: var(--font-mono), monospace; font-size: 1.375rem; letter-spacing: -.05em; }
+.metric small, .metricActive small { overflow: hidden; color: #667085; font-size: 0.75rem; font-weight: 800; letter-spacing: .04em; white-space: nowrap; text-overflow: ellipsis; text-transform: uppercase; }
+.metric strong, .metricActive strong { margin-top: 8px; font-family: var(--font-mono), monospace; font-size: 1.75rem; letter-spacing: -.05em; }
 .metric > i, .metricActive > i { color: #596675; font-size: 1rem; font-style: normal; }
 
 .notificationBar {
@@ -145,7 +145,7 @@
 .workspace {
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(410px, .92fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, .65fr);
   gap: 16px;
   align-items: start;
 }
@@ -155,7 +155,7 @@
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 16px;
   background: #fff;
   box-shadow: var(--shadow-sm);
 }
@@ -165,7 +165,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 22px 16px;
+  padding: 20px 24px 16px;
 }
 
 .panelHeading > div:first-child > span,
@@ -177,7 +177,7 @@
   text-transform: uppercase;
 }
 
-.panelHeading h2 { margin: 0 0 4px; font-size: 1.25rem; letter-spacing: -.025em; }
+.panelHeading h2 { margin: 0 0 4px; font-size: 1.1875rem; font-weight: 800; letter-spacing: -.025em; }
 .panelHeading p { margin: 0; color: #596675; font-size: 0.875rem; }
 .headingActions { display: flex; align-items: center; gap: 7px; }
 
@@ -204,10 +204,10 @@
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(115px, .52fr) minmax(105px, .46fr) auto;
   gap: 9px;
-  padding: 12px 14px;
+  padding: 12px 22px;
   border-top: 1px solid #edf0f2;
   border-bottom: 1px solid #e8ebee;
-  background: #fafbfc;
+  background: #f7f8fa;
 }
 
 .searchField {
@@ -252,7 +252,8 @@
 .resultBar small i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #c91524; }
 
 .taskList { max-height: 760px; margin: 0; padding: 0; overflow-y: auto; list-style: none; scrollbar-width: thin; }
-.taskList li + li { border-top: 1px solid #edf0f2; }
+.taskList { display: grid; gap: 12px; padding: 14px 22px 22px; }
+.taskList li + li { border-top: 0; }
 .taskCard,
 .taskCardSelected {
   width: 100%;
@@ -260,16 +261,17 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
   gap: 11px;
-  padding: 17px 16px;
-  border: 0;
-  background: #fff;
+  padding: 17px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fafbfc;
   color: var(--ink);
   text-align: left;
   cursor: pointer;
   transition: background 140ms ease, box-shadow 140ms ease;
 }
-.taskCard:hover { background: #fafbfc; }
-.taskCardSelected { background: #fffafb; box-shadow: inset 3px 0 var(--red); }
+.taskCard:hover { border-color: #d6dae1; background: #fff; }
+.taskCardSelected { border-color: #e0a6ad; background: #fffafb; box-shadow: inset 4px 0 var(--red); }
 
 .moduleMark,
 .detailModule {
@@ -291,7 +293,7 @@
 .taskTopline code { color: #596675; font-family: var(--font-mono), monospace; font-size: 0.8125rem; }
 .taskTopline small { color: #596675; font-size: 0.8125rem; }
 .taskCopy > strong { display: block; margin-top: 7px; overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
-.taskCopy > p { display: -webkit-box; margin: 4px 0 8px; overflow: hidden; color: #667085; font-size: 0.875rem; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.taskCopy > p { display: -webkit-box; margin: 6px 0 10px; overflow: hidden; color: #667085; font-size: 0.8125rem; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .taskFooter { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .cardArrow { align-self: center; color: #596675; font-size: 1.5rem; font-weight: 300; }
 
@@ -322,11 +324,11 @@
 .dueOverdue { color: #b71927; font-weight: 700; }
 .commentCount { margin-left: auto; color: #596675; }
 
-.detailPanel { position: sticky; top: 126px; padding: 24px; }
+.detailPanel { position: sticky; top: 96px; padding: 24px; }
 .detailHeader { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 11px; }
 .detailHeader > div { min-width: 0; }
 .detailHeader > div > span { color: var(--red); font-size: 0.75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.detailHeader h2 { margin: 4px 0 0; font-size: 1.25rem; letter-spacing: -.035em; }
+.detailHeader h2 { margin: 4px 0 0; font-size: 1.1875rem; font-weight: 800; letter-spacing: -.035em; }
 .detailDescription { margin: 15px 0; color: #66717f; font-size: 0.9375rem; line-height: 1.65; }
 .detailStatusRow { display: flex; align-items: center; justify-content: space-between; gap: 9px; padding: 10px 11px; border: 1px solid #e7eaee; border-radius: 9px; background: #fafbfc; }
 .detailGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; margin: 13px 0; }
@@ -406,7 +408,7 @@
   padding: 0;
   overflow: auto;
   border: 0;
-  border-radius: 20px;
+  border-radius: 22px;
   background: #fff;
   color: var(--ink);
   box-shadow: 0 28px 75px rgba(8,13,21,.28);
@@ -415,11 +417,11 @@
   background: rgba(11, 17, 26, .62);
   backdrop-filter: blur(5px);
 }
-.noteDialog form { padding: 24px; }
+.noteDialog form { padding: 26px; }
 .noteDialog header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
 .noteDialog header > span { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: #252e3a; color: #fff; font-family: var(--font-mono), monospace; font-size: 0.75rem; font-weight: 800; }
 .noteDialog header small { color: #667085; font-family: var(--font-mono), monospace; font-size: 0.75rem; }
-.noteDialog header h2 { margin: 3px 0 0; font-size: 1.1875rem; letter-spacing: -.03em; }
+.noteDialog header h2 { margin: 3px 0 0; font-size: 1.375rem; font-weight: 800; letter-spacing: -.035em; }
 .noteDialog header button { width: 44px; min-height: 44px; border: 0; border-radius: 10px; background: #f4f5f7; color: #6e7783; font-size: 1.3125rem; cursor: pointer; }
 .noteDialog form > p { margin: 16px 0; padding: 11px 12px; border-radius: 10px; background: #f7f8fa; color: #67717e; font-size: 0.875rem; line-height: 1.5; }
 .noteDialog label > span, .assignmentGrid label > span { display: block; margin-bottom: 7px; color: #46515f; font-size: 0.8125rem; font-weight: 700; }
@@ -428,10 +430,10 @@
 .assignmentGrid input,
 .assignmentGrid select {
   width: 100%;
-  min-height: 48px;
+  min-height: 52px;
   padding: 11px 12px;
   border: 1px solid #dce1e6;
-  border-radius: 9px;
+  border-radius: 12px;
   outline: 0;
   background: #fff;
   color: var(--ink);
@@ -453,7 +455,34 @@
 .assignmentDialog { width: min(100%, 680px); }
 .assignmentGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
 .assignmentWide { grid-column: 1 / -1; }
-.assignmentGrid textarea { width: 100%; padding: 11px 12px; border: 1px solid #dce1e6; border-radius: 9px; outline: 0; background: #fff; color: var(--ink); font: inherit; font-size: 1rem; line-height: 1.5; resize: vertical; }
+.assignmentGrid textarea { width: 100%; padding: 11px 12px; border: 1px solid #dce1e6; border-radius: 12px; outline: 0; background: #fff; color: var(--ink); font: inherit; font-size: 1rem; line-height: 1.5; resize: vertical; }
+
+.assignmentIntro { margin-block: 18px 0 !important; }
+
+.assignmentReady {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 18px 0 0 !important;
+  padding: 12px 14px !important;
+  border: 1px solid #abefc6;
+  border-radius: 12px !important;
+  background: #ecfdf3 !important;
+  color: #067647 !important;
+  font-size: .8125rem !important;
+  font-weight: 700;
+}
+
+.assignmentReady span {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #067647;
+  color: #fff;
+  font-size: .75rem;
+}
 
 @media (max-width: 1280px) {
   .workspace { grid-template-columns: 1fr; }
@@ -462,7 +491,7 @@
 }
 
 @media (max-width: 1100px) {
-  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {

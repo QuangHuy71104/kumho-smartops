@@ -11,9 +11,9 @@ export default function HomePage() {
   return (
     <PortalShell
       activePath="/"
-      eyebrow="Hôm nay"
+      eyebrow="Trung tâm điều hành"
       title="Tổng quan vận hành"
-      subtitle="Đội xe · Đơn hàng · Hành trình"
+      subtitle="Theo dõi chuyến xe, doanh thu và chất lượng dịch vụ hôm nay."
     >
       <DashboardOverview />
     </PortalShell>
