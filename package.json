@@ -23,16 +23,16 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "4.27.0",
+    "@auth0/nextjs-auth0": "4.28.0",
     "@vercel/functions": "3.9.5",
     "drizzle-orm": "0.45.2",
-    "next": "16.3.1",
+    "next": "16.3.4",
     "pg": "8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "0.0.1",
     "uuid": "14.0.2",
-    "zod": "4.4.3"
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
