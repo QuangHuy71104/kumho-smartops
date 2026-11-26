@@ -78,7 +78,7 @@ export const ticketTrips: TicketTrip[] = [
   { id: "TRP-DW2201", routeId: "RT-SG-CT", date: "2026-08-23", departure: "08:00", arrival: "11:45", vehicle: "Xe ghế 28 chỗ", serviceClass: "Linh hoạt", pickupPoint: "Quầy đón số 2 · Bến xe Miền Tây", dropoffPoint: "Bến xe Trung tâm Cần Thơ", capacity: 28, price: 210000, reservedSeats: ["A01", "D01", "A02", "D02", "B05"] },
 ];
 
-export const INITIAL_BOOKINGS: DemoBooking[] = [
+const PRIMARY_BOOKINGS: DemoBooking[] = [
   {
     id: "BK-2608-118201",
     tripId: "TRP-D2201",
@@ -129,6 +129,52 @@ export const INITIAL_BOOKINGS: DemoBooking[] = [
   },
 ];
 
+const FIXTURE_CUSTOMERS = [
+  "Phạm Ngọc Lan",
+  "Võ Quốc Bảo",
+  "Đặng Thu Trang",
+  "Bùi Đức Minh",
+  "Huỳnh Thanh Thảo",
+  "Ngô Gia Huy",
+  "Đỗ Khánh Linh",
+  "Trương Nhật Nam",
+] as const;
+
+const primarySeatKeys = new Set(
+  PRIMARY_BOOKINGS.flatMap((booking) => booking.seats.map((seat) => `${booking.tripId}:${seat}`)),
+);
+
+const fixtureBookings = ticketTrips.flatMap((trip, tripIndex) => {
+  const route = ticketRoutes.find((item) => item.id === trip.routeId) ?? ticketRoutes[0];
+  return trip.reservedSeats.flatMap((seat, seatIndex) => {
+    if (primarySeatKeys.has(`${trip.id}:${seat}`)) return [];
+    const fixtureIndex = tripIndex * 7 + seatIndex;
+    const paymentStatus: PaymentStatus = fixtureIndex % 3 === 0 ? "Chưa thanh toán" : "Đã thanh toán";
+    const paymentMethod: PaymentMethod = paymentStatus === "Chưa thanh toán"
+      ? fixtureIndex % 2 === 0 ? "Chuyển khoản" : "Chưa chọn"
+      : (["Tiền mặt", "Chuyển khoản", "Thẻ ngân hàng", "Ví điện tử"] as const)[fixtureIndex % 4];
+
+    return [{
+      id: `BK-2608-S${String(tripIndex + 1).padStart(2, "0")}${String(seatIndex + 1).padStart(2, "0")}`,
+      tripId: trip.id,
+      routeLabel: `${route.origin} → ${route.destination}`,
+      date: trip.date,
+      departure: trip.departure,
+      seats: [seat],
+      total: trip.price,
+      status: "Đã giữ chỗ" as const,
+      createdAt: `${String(8 + (fixtureIndex % 9)).padStart(2, "0")}:${String((fixtureIndex * 7) % 60).padStart(2, "0")}`,
+      customerName: FIXTURE_CUSTOMERS[fixtureIndex % FIXTURE_CUSTOMERS.length],
+      customerPhone: `09${(fixtureIndex % 8) + 1} ••• ${String(1200 + fixtureIndex).slice(-4)}`,
+      bookingChannel: BOOKING_CHANNELS[fixtureIndex % BOOKING_CHANNELS.length],
+      paymentStatus,
+      paymentMethod,
+    }];
+  });
+});
+
+export const INITIAL_BOOKINGS: DemoBooking[] = [...PRIMARY_BOOKINGS, ...fixtureBookings];
+
 export function routeLabel(route: TicketRoute) {
   return `${route.origin} → ${route.destination}`;
 }
@@ -147,9 +193,43 @@ function locallyHeldSeats(bookings: DemoBooking[], tripId: string) {
     .flatMap((booking) => booking.seats);
 }
 
+function locallyCancelledSeats(bookings: DemoBooking[], tripId: string) {
+  return bookings
+    .filter((booking) => booking.tripId === tripId && booking.status === "Đã hủy")
+    .flatMap((booking) => booking.seats);
+}
+
+export function bookingForSeat(bookings: DemoBooking[], tripId: string, seatCode: string) {
+  return bookings.find((booking) => booking.tripId === tripId
+    && booking.status === "Đã giữ chỗ"
+    && booking.seats.includes(seatCode)) ?? null;
+}
+
+export function withSeatBookingFixtures(bookings: DemoBooking[]) {
+  const coveredSeatKeys = new Set(
+    bookings.flatMap((booking) => booking.seats.map((seat) => `${booking.tripId}:${seat}`)),
+  );
+  const missingFixtures = INITIAL_BOOKINGS.flatMap((booking) => {
+    const missingSeats = booking.seats.filter((seat) => !coveredSeatKeys.has(`${booking.tripId}:${seat}`));
+    if (missingSeats.length === 0) return [];
+    const pricePerSeat = booking.total / booking.seats.length;
+    return [{
+      ...booking,
+      id: missingSeats.length === booking.seats.length ? booking.id : `${booking.id}-F`,
+      seats: missingSeats,
+      total: pricePerSeat * missingSeats.length,
+    }];
+  });
+  return [...bookings, ...missingFixtures];
+}
+
 export function seatsFor(trip: TicketTrip, bookings: DemoBooking[] = []): Seat[] {
   const positions = ["A", "B", "C", "D"] as const;
-  const reservedSeats = new Set([...trip.reservedSeats, ...locallyHeldSeats(bookings, trip.id)]);
+  const cancelledSeats = new Set(locallyCancelledSeats(bookings, trip.id));
+  const reservedSeats = new Set([
+    ...trip.reservedSeats.filter((seat) => !cancelledSeats.has(seat)),
+    ...locallyHeldSeats(bookings, trip.id),
+  ]);
   return Array.from({ length: trip.capacity }, (_, index) => {
     const position = positions[index % positions.length];
     const row = Math.floor(index / positions.length) + 1;
@@ -159,7 +239,7 @@ export function seatsFor(trip: TicketTrip, bookings: DemoBooking[] = []): Seat[]
 }
 
 export function availableSeatCount(trip: TicketTrip, bookings: DemoBooking[] = []) {
-  return trip.capacity - new Set([...trip.reservedSeats, ...locallyHeldSeats(bookings, trip.id)]).size;
+  return trip.capacity - seatsFor(trip, bookings).filter((seat) => seat.reserved).length;
 }
 
 export function formatDemoPrice(value: number) {

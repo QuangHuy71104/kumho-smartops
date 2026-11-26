@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   availableSeatCount,
+  bookingForSeat,
   createDemoBooking,
   decodeDemoBookings,
   INITIAL_BOOKINGS,
   seatsFor,
   ticketTrips,
+  withSeatBookingFixtures,
 } from "../app/ve-xe/_lib/ticket-data.ts";
 import {
   demoDispatchTasks,
@@ -68,6 +70,21 @@ test("bookings retain passenger contact, sales channel and payment details", () 
   assert.equal(decodeDemoBookings([{ ...booking, customerName: "" }]), null);
   assert.equal(decodeDemoBookings([{ ...booking, bookingChannel: "Kênh lạ" }])?.[0].bookingChannel, "Tại quầy");
   assert.ok(INITIAL_BOOKINGS.some((item) => item.paymentStatus === "Chưa thanh toán"));
+});
+
+test("every reserved seat exposes its active passenger booking", () => {
+  const fixtures = withSeatBookingFixtures([]);
+  for (const trip of ticketTrips) {
+    for (const seatCode of trip.reservedSeats) {
+      const booking = bookingForSeat(fixtures, trip.id, seatCode);
+      assert.ok(booking, `${trip.id} ${seatCode} should have passenger details`);
+      assert.ok(booking.customerName.length >= 2);
+      assert.ok(booking.customerPhone.length >= 7);
+    }
+  }
+
+  const booking = fixtures[0];
+  assert.equal(bookingForSeat([{ ...booking, status: "Đã hủy" }], booking.tripId, booking.seats[0]), null);
 });
 
 test("dispatch filtering, utilization and daily summary are bounded", () => {

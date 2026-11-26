@@ -1,10 +1,11 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import {
   availableSeatCount,
+  bookingForSeat,
   BOOKING_STORAGE_KEY,
   BOOKING_CHANNELS,
   createDemoBooking,
@@ -22,7 +23,9 @@ import {
   ticketRoutes,
   ticketTrips,
   tripsFor,
+  withSeatBookingFixtures,
   type BookingDetails,
+  type DemoBooking,
   type TicketTrip,
 } from "../_lib/ticket-data";
 import styles from "../Tickets.module.css";
@@ -52,7 +55,9 @@ export default function TicketBookingClient() {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails>(INITIAL_BOOKING_DETAILS);
   const [bookingSearch, setBookingSearch] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState<DemoBooking | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const bookingDialogRef = useRef<HTMLDialogElement>(null);
   const [bookings, setBookings, resetBookings] = useWorkspaceState({
     stateKey: "bookings",
     cacheKey: BOOKING_STORAGE_KEY,
@@ -60,26 +65,34 @@ export default function TicketBookingClient() {
     decode: decodeDemoBookings,
   });
 
+  const visibleBookings = useMemo(() => withSeatBookingFixtures(bookings), [bookings]);
   const matchingTrips = useMemo(() => tripsFor(search.routeId, search.date), [search]);
   const selectedTrip = matchingTrips.find((trip) => trip.id === selectedTripId) ?? matchingTrips[0] ?? null;
   const seatRows = useMemo(() => {
     if (!selectedTrip) return [];
-    const seats = seatsFor(selectedTrip, bookings);
+    const seats = seatsFor(selectedTrip, visibleBookings);
     return Array.from({ length: Math.ceil(seats.length / 4) }, (_, index) => seats.slice(index * 4, index * 4 + 4));
-  }, [bookings, selectedTrip]);
+  }, [selectedTrip, visibleBookings]);
   const contactReady = bookingDetails.customerName.trim().length >= 2
     && (bookingDetails.customerPhone.match(/\d/g)?.length ?? 0) >= 7;
   const filteredBookings = useMemo(() => {
     const keyword = bookingSearch.trim().toLocaleLowerCase("vi");
-    if (!keyword) return bookings;
-    return bookings.filter((booking) => [
+    if (!keyword) return visibleBookings;
+    return visibleBookings.filter((booking) => [
       booking.id,
       booking.customerName,
       booking.customerPhone,
       booking.routeLabel,
       booking.bookingChannel,
     ].some((value) => value.toLocaleLowerCase("vi").includes(keyword)));
-  }, [bookingSearch, bookings]);
+  }, [bookingSearch, visibleBookings]);
+
+  useEffect(() => {
+    const dialog = bookingDialogRef.current;
+    if (!dialog) return;
+    if (selectedBooking && !dialog.open) dialog.showModal();
+    if (!selectedBooking && dialog.open) dialog.close();
+  }, [selectedBooking]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -126,7 +139,11 @@ export default function TicketBookingClient() {
       setAnnouncement("Vai trò hiện tại không có quyền hủy đặt chỗ.");
       return;
     }
-    setBookings((current) => current.map((booking) => booking.id === id ? { ...booking, status: "Đã hủy" } : booking));
+    const target = visibleBookings.find((booking) => booking.id === id);
+    if (!target) return;
+    setBookings((current) => current.some((booking) => booking.id === id)
+      ? current.map((booking) => booking.id === id ? { ...booking, status: "Đã hủy" } : booking)
+      : [{ ...target, status: "Đã hủy" as const }, ...current].slice(0, 100));
     setAnnouncement(`Đã hủy bản ghi đặt chỗ ${id}.`);
   }
 
@@ -137,7 +154,7 @@ export default function TicketBookingClient() {
 
   const selectedRoute = selectedTrip ? routeForTrip(selectedTrip) : ticketRoutes.find((route) => route.id === search.routeId) ?? ticketRoutes[0];
   const estimate = selectedTrip ? selectedTrip.price * selectedSeats.length : 0;
-  const unpaidCount = bookings.filter((booking) => booking.status === "Đã giữ chỗ" && booking.paymentStatus === "Chưa thanh toán").length;
+  const unpaidCount = visibleBookings.filter((booking) => booking.status === "Đã giữ chỗ" && booking.paymentStatus === "Chưa thanh toán").length;
 
   return (
     <div className={styles.module}>
@@ -152,7 +169,7 @@ export default function TicketBookingClient() {
         <div className={styles.heroMetrics} aria-label="Tổng quan vé">
           <div><strong>{ticketTrips.length}</strong><span>chuyến đang mở bán</span></div>
           <div><strong>{ticketRoutes.length}</strong><span>tuyến khai thác</span></div>
-          <div><strong>{bookings.filter((booking) => booking.status === "Đã giữ chỗ").length}</strong><span>giao dịch trong ca</span></div>
+          <div><strong>{visibleBookings.filter((booking) => booking.status === "Đã giữ chỗ").length}</strong><span>giao dịch trong ca</span></div>
         </div>
       </section>
 
@@ -173,7 +190,7 @@ export default function TicketBookingClient() {
               <button className={selectedTrip?.id === trip.id ? styles.tripActive : styles.trip} aria-pressed={selectedTrip?.id === trip.id} key={trip.id} onClick={() => selectTrip(trip)} type="button">
                 <span className={styles.tripTime}><strong>{trip.departure}</strong><small>{trip.arrival}</small></span>
                 <span className={styles.tripRoute}><strong>{trip.vehicle}</strong><small>{trip.serviceClass} · {selectedRoute.duration}</small></span>
-                <span className={styles.tripAvailability}><strong>{availableSeatCount(trip, bookings)} ghế</strong><small>{formatDemoPrice(trip.price)}</small></span>
+                <span className={styles.tripAvailability}><strong>{availableSeatCount(trip, visibleBookings)} ghế</strong><small>{formatDemoPrice(trip.price)}</small></span>
               </button>
             ))}
             {matchingTrips.length === 0 ? <div className={styles.empty}><strong>Chưa có chuyến cho lựa chọn này</strong><p>Hãy thử ngày khác hoặc một tuyến khai thác khác.</p></div> : null}
@@ -195,7 +212,35 @@ export default function TicketBookingClient() {
                     <div className={styles.seatRow} key={row[0]?.row}>
                       {row.map((seat) => {
                         const selected = selectedSeats.includes(seat.code);
-                        return <button aria-label={`Ghế ${seat.code}: ${seat.reserved ? "đã giữ" : selected ? "đang chọn" : "còn trống"}`} aria-pressed={selected} className={styles.seat} data-state={seat.reserved ? "reserved" : selected ? "selected" : "available"} disabled={seat.reserved} key={seat.code} onClick={() => toggleSeat(seat.code)} type="button">{seat.code}</button>;
+                        const reservation = seat.reserved
+                          ? bookingForSeat(visibleBookings, selectedTrip.id, seat.code)
+                          : null;
+                        const tooltipId = `seat-tip-${selectedTrip.id}-${seat.code}`;
+                        return (
+                          <div className={styles.seatCell} key={seat.code}>
+                            <button
+                              aria-describedby={reservation ? tooltipId : undefined}
+                              aria-haspopup={reservation ? "dialog" : undefined}
+                              aria-label={`Ghế ${seat.code}: ${seat.reserved ? `đã giữ${reservation ? ` bởi ${reservation.customerName}` : ""}` : selected ? "đang chọn" : "còn trống"}`}
+                              aria-pressed={seat.reserved ? undefined : selected}
+                              className={styles.seat}
+                              data-state={seat.reserved ? "reserved" : selected ? "selected" : "available"}
+                              onClick={() => reservation ? setSelectedBooking(reservation) : toggleSeat(seat.code)}
+                              type="button"
+                            >
+                              {seat.code}
+                            </button>
+                            {reservation ? (
+                              <div className={styles.seatTooltip} id={tooltipId} role="tooltip">
+                                <span>Khách đã đặt</span>
+                                <strong>{reservation.customerName}</strong>
+                                <b>{reservation.customerPhone}</b>
+                                <small>{reservation.bookingChannel} · {reservation.paymentStatus}</small>
+                                <em>Bấm để xem đầy đủ</em>
+                              </div>
+                            ) : null}
+                          </div>
+                        );
                       })}
                     </div>
                   ))}
@@ -276,7 +321,7 @@ export default function TicketBookingClient() {
 
       <section className={styles.history} aria-labelledby="booking-history-title">
         <div className={styles.historyHeading}>
-          <div><span>DANH SÁCH KHÁCH</span><h2 id="booking-history-title">Hành khách đã đặt vé</h2><p>{bookings.length} đặt chỗ · {unpaidCount} chưa thanh toán</p></div>
+          <div><span>DANH SÁCH KHÁCH</span><h2 id="booking-history-title">Hành khách đã đặt vé</h2><p>{visibleBookings.length} đặt chỗ · {unpaidCount} chưa thanh toán</p></div>
           <div className={styles.historyControls}>
             <label><span className="sr-only">Tìm hành khách</span><input placeholder="Tìm tên, SĐT, mã vé..." type="search" value={bookingSearch} onChange={(event) => setBookingSearch(event.target.value)} /></label>
             <button type="button" onClick={clearBookingHistory}>Khôi phục mẫu</button>
@@ -313,6 +358,41 @@ export default function TicketBookingClient() {
           </div>
         ) : <div className={styles.historyEmpty}><strong>Không tìm thấy hành khách</strong><p>Thử tìm bằng tên, số điện thoại hoặc mã đặt chỗ khác.</p></div>}
       </section>
+
+      <dialog
+        aria-labelledby="booking-detail-title"
+        className={styles.bookingDialog}
+        onCancel={() => setSelectedBooking(null)}
+        ref={bookingDialogRef}
+      >
+        {selectedBooking ? (
+          <div className={styles.bookingDialogCard}>
+            <div className={styles.bookingDialogHeading}>
+              <div>
+                <span>CHI TIẾT GHẾ ĐÃ ĐẶT</span>
+                <h2 id="booking-detail-title">{selectedBooking.customerName}</h2>
+                <p>{selectedBooking.id}</p>
+              </div>
+              <button aria-label="Đóng thông tin đặt vé" onClick={() => setSelectedBooking(null)} type="button">×</button>
+            </div>
+            <dl className={styles.bookingDetailGrid}>
+              <div><dt>Số điện thoại</dt><dd>{selectedBooking.customerPhone}</dd></div>
+              <div><dt>Ghế</dt><dd>{selectedBooking.seats.join(", ")}</dd></div>
+              <div className={styles.bookingDetailWide}><dt>Hành trình</dt><dd>{selectedBooking.routeLabel}</dd></div>
+              <div><dt>Khởi hành</dt><dd>{formatTravelDate(selectedBooking.date)} · {selectedBooking.departure}</dd></div>
+              <div><dt>Hình thức đặt</dt><dd>{selectedBooking.bookingChannel}</dd></div>
+              <div><dt>Thanh toán</dt><dd>{selectedBooking.paymentStatus}</dd></div>
+              <div><dt>Phương thức</dt><dd>{selectedBooking.paymentMethod}</dd></div>
+              <div><dt>Tổng tiền</dt><dd>{formatDemoPrice(selectedBooking.total)}</dd></div>
+              <div><dt>Thời điểm tạo</dt><dd>{selectedBooking.createdAt}</dd></div>
+            </dl>
+            <div className={styles.bookingDialogActions}>
+              {contactHref(selectedBooking.customerPhone) ? <a href={contactHref(selectedBooking.customerPhone)}>Gọi khách hàng</a> : null}
+              <button onClick={() => setSelectedBooking(null)} type="button">Đóng</button>
+            </div>
+          </div>
+        ) : null}
+      </dialog>
     </div>
   );
 }
