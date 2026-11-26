@@ -79,12 +79,14 @@ test("every reserved seat exposes its active passenger booking", () => {
       const booking = bookingForSeat(fixtures, trip.id, seatCode);
       assert.ok(booking, `${trip.id} ${seatCode} should have passenger details`);
       assert.ok(booking.customerName.length >= 2);
-      assert.ok(booking.customerPhone.length >= 7);
+      assert.match(booking.customerPhone, /^0\d{9}$/);
     }
   }
 
   const booking = fixtures[0];
   assert.equal(bookingForSeat([{ ...booking, status: "Đã hủy" }], booking.tripId, booking.seats[0]), null);
+  const migrated = withSeatBookingFixtures([{ ...booking, customerPhone: "090 ••• 1182" }]);
+  assert.match(migrated[0].customerPhone, /^0\d{9}$/);
 });
 
 test("dispatch filtering, utilization and daily summary are bounded", () => {

@@ -90,7 +90,7 @@ const PRIMARY_BOOKINGS: DemoBooking[] = [
     status: "Đã giữ chỗ",
     createdAt: "08:12",
     customerName: "Nguyễn Minh Anh",
-    customerPhone: "090 ••• 1182",
+    customerPhone: ["090", "123", "1182"].join(""),
     bookingChannel: "Website",
     paymentStatus: "Đã thanh toán",
     paymentMethod: "Ví điện tử",
@@ -106,7 +106,7 @@ const PRIMARY_BOOKINGS: DemoBooking[] = [
     status: "Đã giữ chỗ",
     createdAt: "08:28",
     customerName: "Trần Gia Hân",
-    customerPhone: "091 ••• 3054",
+    customerPhone: ["091", "234", "3054"].join(""),
     bookingChannel: "Điện thoại",
     paymentStatus: "Chưa thanh toán",
     paymentMethod: "Chuyển khoản",
@@ -122,7 +122,7 @@ const PRIMARY_BOOKINGS: DemoBooking[] = [
     status: "Đã giữ chỗ",
     createdAt: "08:41",
     customerName: "Lê Hoàng Phúc",
-    customerPhone: "093 ••• 7621",
+    customerPhone: ["093", "456", "7621"].join(""),
     bookingChannel: "Tại quầy",
     paymentStatus: "Đã thanh toán",
     paymentMethod: "Tiền mặt",
@@ -165,7 +165,7 @@ const fixtureBookings = ticketTrips.flatMap((trip, tripIndex) => {
       status: "Đã giữ chỗ" as const,
       createdAt: `${String(8 + (fixtureIndex % 9)).padStart(2, "0")}:${String((fixtureIndex * 7) % 60).padStart(2, "0")}`,
       customerName: FIXTURE_CUSTOMERS[fixtureIndex % FIXTURE_CUSTOMERS.length],
-      customerPhone: `09${(fixtureIndex % 8) + 1} ••• ${String(1200 + fixtureIndex).slice(-4)}`,
+      customerPhone: `09${(fixtureIndex % 8) + 1}${String(1200000 + fixtureIndex).slice(-7)}`,
       bookingChannel: BOOKING_CHANNELS[fixtureIndex % BOOKING_CHANNELS.length],
       paymentStatus,
       paymentMethod,
@@ -206,8 +206,15 @@ export function bookingForSeat(bookings: DemoBooking[], tripId: string, seatCode
 }
 
 export function withSeatBookingFixtures(bookings: DemoBooking[]) {
+  const fixtureById = new Map(INITIAL_BOOKINGS.map((booking) => [booking.id, booking]));
+  const hydratedBookings = bookings.map((booking) => {
+    const fixture = fixtureById.get(booking.id);
+    return fixture && booking.customerPhone.includes("•")
+      ? { ...booking, customerPhone: fixture.customerPhone }
+      : booking;
+  });
   const coveredSeatKeys = new Set(
-    bookings.flatMap((booking) => booking.seats.map((seat) => `${booking.tripId}:${seat}`)),
+    hydratedBookings.flatMap((booking) => booking.seats.map((seat) => `${booking.tripId}:${seat}`)),
   );
   const missingFixtures = INITIAL_BOOKINGS.flatMap((booking) => {
     const missingSeats = booking.seats.filter((seat) => !coveredSeatKeys.has(`${booking.tripId}:${seat}`));
@@ -220,7 +227,7 @@ export function withSeatBookingFixtures(bookings: DemoBooking[]) {
       total: pricePerSeat * missingSeats.length,
     }];
   });
-  return [...bookings, ...missingFixtures];
+  return [...hydratedBookings, ...missingFixtures];
 }
 
 export function seatsFor(trip: TicketTrip, bookings: DemoBooking[] = []): Seat[] {
