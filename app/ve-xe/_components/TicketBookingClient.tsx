@@ -6,22 +6,39 @@ import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import {
   availableSeatCount,
   BOOKING_STORAGE_KEY,
+  BOOKING_CHANNELS,
   createDemoBooking,
   decodeDemoBookings,
   DEFAULT_ROUTE_ID,
   DEFAULT_TRAVEL_DATE,
-  EMPTY_BOOKINGS,
   formatDemoPrice,
   formatTravelDate,
+  INITIAL_BOOKINGS,
+  PAYMENT_METHODS,
+  PAYMENT_STATUSES,
   routeForTrip,
   routeLabel,
   seatsFor,
   ticketRoutes,
   ticketTrips,
   tripsFor,
+  type BookingDetails,
   type TicketTrip,
 } from "../_lib/ticket-data";
 import styles from "../Tickets.module.css";
+
+const INITIAL_BOOKING_DETAILS: BookingDetails = {
+  customerName: "",
+  customerPhone: "",
+  bookingChannel: "Tại quầy",
+  paymentStatus: "Chưa thanh toán",
+  paymentMethod: "Chưa chọn",
+};
+
+function contactHref(phone: string) {
+  const normalized = phone.replace(/[^\d+]/g, "");
+  return normalized.replace(/\D/g, "").length >= 7 ? `tel:${normalized}` : undefined;
+}
 
 export default function TicketBookingClient() {
   const { can } = useDemoAccess();
@@ -33,11 +50,13 @@ export default function TicketBookingClient() {
   const [search, setSearch] = useState({ routeId: DEFAULT_ROUTE_ID, date: DEFAULT_TRAVEL_DATE });
   const [selectedTripId, setSelectedTripId] = useState(initialTrips[0]?.id ?? "");
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
+  const [bookingDetails, setBookingDetails] = useState<BookingDetails>(INITIAL_BOOKING_DETAILS);
+  const [bookingSearch, setBookingSearch] = useState("");
   const [announcement, setAnnouncement] = useState("");
   const [bookings, setBookings, resetBookings] = useWorkspaceState({
     stateKey: "bookings",
     cacheKey: BOOKING_STORAGE_KEY,
-    initialValue: EMPTY_BOOKINGS,
+    initialValue: INITIAL_BOOKINGS,
     decode: decodeDemoBookings,
   });
 
@@ -48,6 +67,19 @@ export default function TicketBookingClient() {
     const seats = seatsFor(selectedTrip, bookings);
     return Array.from({ length: Math.ceil(seats.length / 4) }, (_, index) => seats.slice(index * 4, index * 4 + 4));
   }, [bookings, selectedTrip]);
+  const contactReady = bookingDetails.customerName.trim().length >= 2
+    && (bookingDetails.customerPhone.match(/\d/g)?.length ?? 0) >= 7;
+  const filteredBookings = useMemo(() => {
+    const keyword = bookingSearch.trim().toLocaleLowerCase("vi");
+    if (!keyword) return bookings;
+    return bookings.filter((booking) => [
+      booking.id,
+      booking.customerName,
+      booking.customerPhone,
+      booking.routeLabel,
+      booking.bookingChannel,
+    ].some((value) => value.toLocaleLowerCase("vi").includes(keyword)));
+  }, [bookingSearch, bookings]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -78,10 +110,15 @@ export default function TicketBookingClient() {
       setAnnouncement("Hãy chọn ít nhất một ghế còn trống trước khi giữ chỗ.");
       return;
     }
-    const booking = createDemoBooking(selectedTrip, selectedSeats, Date.now());
-    setBookings((current) => [booking, ...current].slice(0, 8));
+    if (!contactReady) {
+      setAnnouncement("Hãy nhập họ tên và số điện thoại hợp lệ để có thể liên hệ hành khách.");
+      return;
+    }
+    const booking = createDemoBooking(selectedTrip, selectedSeats, Date.now(), bookingDetails);
+    setBookings((current) => [booking, ...current].slice(0, 20));
     setSelectedSeats([]);
-    setAnnouncement(`Đã tạo ${booking.id}. Đặt chỗ đang chờ xác nhận thanh toán.`);
+    setBookingDetails(INITIAL_BOOKING_DETAILS);
+    setAnnouncement(`Đã tạo ${booking.id} cho ${booking.customerName}.`);
   }
 
   function cancelBooking(id: string) {
@@ -100,6 +137,7 @@ export default function TicketBookingClient() {
 
   const selectedRoute = selectedTrip ? routeForTrip(selectedTrip) : ticketRoutes.find((route) => route.id === search.routeId) ?? ticketRoutes[0];
   const estimate = selectedTrip ? selectedTrip.price * selectedSeats.length : 0;
+  const unpaidCount = bookings.filter((booking) => booking.status === "Đã giữ chỗ" && booking.paymentStatus === "Chưa thanh toán").length;
 
   return (
     <div className={styles.module}>
@@ -164,18 +202,72 @@ export default function TicketBookingClient() {
                 </div>
               </div>
               <div className={styles.tripFacts}><div><span>Điểm đón</span><strong>{selectedTrip.pickupPoint}</strong></div><div><span>Điểm trả</span><strong>{selectedTrip.dropoffPoint}</strong></div></div>
+              <div className={styles.customerForm}>
+                <div className={styles.customerFormHeading}>
+                  <div><span>Thông tin hành khách</span><strong>Liên hệ & thanh toán</strong></div>
+                  <small>* Bắt buộc</small>
+                </div>
+                <div className={styles.customerFields}>
+                  <label>
+                    <span>Họ và tên *</span>
+                    <input
+                      autoComplete="name"
+                      maxLength={100}
+                      placeholder="Nhập tên hành khách"
+                      required
+                      value={bookingDetails.customerName}
+                      onChange={(event) => setBookingDetails((current) => ({ ...current, customerName: event.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    <span>Số điện thoại *</span>
+                    <input
+                      autoComplete="tel"
+                      inputMode="tel"
+                      maxLength={32}
+                      placeholder="Nhập số để liên hệ"
+                      required
+                      type="tel"
+                      value={bookingDetails.customerPhone}
+                      onChange={(event) => setBookingDetails((current) => ({ ...current, customerPhone: event.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    <span>Hình thức đặt vé</span>
+                    <select value={bookingDetails.bookingChannel} onChange={(event) => setBookingDetails((current) => ({ ...current, bookingChannel: event.target.value as BookingDetails["bookingChannel"] }))}>
+                      {BOOKING_CHANNELS.map((channel) => <option key={channel}>{channel}</option>)}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Trạng thái thanh toán</span>
+                    <select value={bookingDetails.paymentStatus} onChange={(event) => setBookingDetails((current) => ({ ...current, paymentStatus: event.target.value as BookingDetails["paymentStatus"] }))}>
+                      {PAYMENT_STATUSES.map((status) => <option key={status}>{status}</option>)}
+                    </select>
+                  </label>
+                  <label className={styles.paymentMethod}>
+                    <span>Phương thức thanh toán</span>
+                    <select value={bookingDetails.paymentMethod} onChange={(event) => setBookingDetails((current) => ({ ...current, paymentMethod: event.target.value as BookingDetails["paymentMethod"] }))}>
+                      {PAYMENT_METHODS.map((method) => <option key={method}>{method}</option>)}
+                    </select>
+                  </label>
+                </div>
+              </div>
               <div className={styles.summary}>
                 <div><span>Ghế đã chọn</span><strong>{selectedSeats.length ? [...selectedSeats].sort().join(", ") : "Chưa chọn"}</strong></div>
                 <div><span>Tạm tính</span><strong>{formatDemoPrice(estimate)}</strong></div>
                 <button
-                  disabled={selectedSeats.length === 0 || !canCreateBooking}
-                  title={!canCreateBooking ? "Vai trò hiện tại không có quyền tạo đặt chỗ." : undefined}
+                  disabled={selectedSeats.length === 0 || !contactReady || !canCreateBooking}
+                  title={!canCreateBooking
+                    ? "Vai trò hiện tại không có quyền tạo đặt chỗ."
+                    : !contactReady
+                      ? "Nhập đầy đủ họ tên và số điện thoại hành khách."
+                      : undefined}
                   onClick={confirmBooking}
                   type="button"
                 >
                   Xác nhận giữ chỗ
                 </button>
-                <p>Đặt chỗ được giữ trong 15 phút và chờ xác nhận thanh toán tại quầy.</p>
+                <p>Thông tin liên hệ và thanh toán sẽ xuất hiện ngay trong danh sách khách đã đặt.</p>
               </div>
             </>
           ) : <div className={styles.seatEmpty}><span aria-hidden="true">VX</span><strong>Chọn một chuyến</strong><p>Sơ đồ ghế sẽ xuất hiện sau khi có kết quả phù hợp.</p></div>}
@@ -183,8 +275,43 @@ export default function TicketBookingClient() {
       </div>
 
       <section className={styles.history} aria-labelledby="booking-history-title">
-        <div className={styles.historyHeading}><div><span>LỊCH SỬ ĐẶT VÉ</span><h2 id="booking-history-title">Đặt chỗ gần đây</h2></div>{bookings.length > 0 ? <button type="button" onClick={clearBookingHistory}>Làm mới danh sách</button> : null}</div>
-        {bookings.length > 0 ? <div className={styles.historyList}>{bookings.map((booking) => <article key={booking.id}><div><span>{booking.id}</span><strong>{booking.routeLabel}</strong><small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small></div><div><strong>{formatDemoPrice(booking.total)}</strong><span data-status={booking.status}>{booking.status}</span>{booking.status === "Đã giữ chỗ" ? <button disabled={!canCancelBooking} title={canCancelBooking ? undefined : "Vai trò hiện tại không có quyền hủy đặt chỗ."} onClick={() => cancelBooking(booking.id)} type="button">Hủy bản ghi</button> : null}</div></article>)}</div> : <div className={styles.historyEmpty}><strong>Chưa có bản ghi đặt chỗ</strong><p>Đặt chỗ mới sẽ xuất hiện tại đây.</p></div>}
+        <div className={styles.historyHeading}>
+          <div><span>DANH SÁCH KHÁCH</span><h2 id="booking-history-title">Hành khách đã đặt vé</h2><p>{bookings.length} đặt chỗ · {unpaidCount} chưa thanh toán</p></div>
+          <div className={styles.historyControls}>
+            <label><span className="sr-only">Tìm hành khách</span><input placeholder="Tìm tên, SĐT, mã vé..." type="search" value={bookingSearch} onChange={(event) => setBookingSearch(event.target.value)} /></label>
+            <button type="button" onClick={clearBookingHistory}>Khôi phục mẫu</button>
+          </div>
+        </div>
+        {filteredBookings.length > 0 ? (
+          <div className={styles.historyList}>
+            {filteredBookings.map((booking) => {
+              const phoneLink = contactHref(booking.customerPhone);
+              return (
+                <article key={booking.id}>
+                  <div className={styles.customerIdentity}>
+                    <span>{booking.id}</span>
+                    <strong>{booking.customerName}</strong>
+                    {phoneLink ? <a href={phoneLink}>{booking.customerPhone}</a> : <small>{booking.customerPhone}</small>}
+                  </div>
+                  <div className={styles.bookingJourney}>
+                    <strong>{booking.routeLabel}</strong>
+                    <small>{formatTravelDate(booking.date)} · {booking.departure} · Ghế {booking.seats.join(", ")}</small>
+                    <span>{booking.bookingChannel} · Tạo lúc {booking.createdAt}</span>
+                  </div>
+                  <div className={styles.paymentInfo}>
+                    <strong>{formatDemoPrice(booking.total)}</strong>
+                    <span data-payment={booking.paymentStatus}>{booking.paymentStatus}</span>
+                    <small>{booking.paymentMethod}</small>
+                  </div>
+                  <div className={styles.bookingActions}>
+                    {phoneLink ? <a href={phoneLink}>Gọi khách</a> : null}
+                    {booking.status === "Đã giữ chỗ" ? <button disabled={!canCancelBooking} title={canCancelBooking ? undefined : "Vai trò hiện tại không có quyền hủy đặt chỗ."} onClick={() => cancelBooking(booking.id)} type="button">Hủy vé</button> : <span data-status={booking.status}>{booking.status}</span>}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : <div className={styles.historyEmpty}><strong>Không tìm thấy hành khách</strong><p>Thử tìm bằng tên, số điện thoại hoặc mã đặt chỗ khác.</p></div>}
       </section>
     </div>
   );

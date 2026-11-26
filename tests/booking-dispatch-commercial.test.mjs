@@ -4,6 +4,7 @@ import {
   availableSeatCount,
   createDemoBooking,
   decodeDemoBookings,
+  INITIAL_BOOKINGS,
   seatsFor,
   ticketTrips,
 } from "../app/ve-xe/_lib/ticket-data.ts";
@@ -45,6 +46,28 @@ test("booking decoder validates trip, seat, price and status", () => {
   assert.deepEqual(decodeDemoBookings([booking]), [booking]);
   assert.equal(decodeDemoBookings([{ ...booking, total: booking.total + 1 }]), null);
   assert.equal(decodeDemoBookings([{ ...booking, seats: ["Z99"] }]), null);
+});
+
+test("bookings retain passenger contact, sales channel and payment details", () => {
+  const trip = ticketTrips[0];
+  const seat = seatsFor(trip).find((item) => !item.reserved);
+  assert.ok(seat);
+  const booking = createDemoBooking(trip, [seat.code], 1_725_000_123_456, {
+    customerName: "Khách kiểm thử",
+    customerPhone: "+84 900 000 001",
+    bookingChannel: "Điện thoại",
+    paymentStatus: "Chưa thanh toán",
+    paymentMethod: "Chuyển khoản",
+  });
+
+  assert.equal(booking.customerName, "Khách kiểm thử");
+  assert.equal(booking.bookingChannel, "Điện thoại");
+  assert.equal(booking.paymentStatus, "Chưa thanh toán");
+  assert.equal(booking.paymentMethod, "Chuyển khoản");
+  assert.deepEqual(decodeDemoBookings([booking]), [booking]);
+  assert.equal(decodeDemoBookings([{ ...booking, customerName: "" }]), null);
+  assert.equal(decodeDemoBookings([{ ...booking, bookingChannel: "Kênh lạ" }])?.[0].bookingChannel, "Tại quầy");
+  assert.ok(INITIAL_BOOKINGS.some((item) => item.paymentStatus === "Chưa thanh toán"));
 });
 
 test("dispatch filtering, utilization and daily summary are bounded", () => {

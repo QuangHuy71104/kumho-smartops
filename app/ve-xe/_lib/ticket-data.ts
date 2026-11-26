@@ -21,8 +21,23 @@ export type TicketTrip = {
 };
 
 export type DemoBookingStatus = "Đã giữ chỗ" | "Đã hủy";
+export const BOOKING_CHANNELS = ["Tại quầy", "Website", "Điện thoại", "Đại lý"] as const;
+export const PAYMENT_STATUSES = ["Đã thanh toán", "Chưa thanh toán"] as const;
+export const PAYMENT_METHODS = ["Tiền mặt", "Chuyển khoản", "Thẻ ngân hàng", "Ví điện tử", "Chưa chọn"] as const;
 
-export type DemoBooking = {
+export type BookingChannel = (typeof BOOKING_CHANNELS)[number];
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export type BookingDetails = {
+  customerName: string;
+  customerPhone: string;
+  bookingChannel: BookingChannel;
+  paymentStatus: PaymentStatus;
+  paymentMethod: PaymentMethod;
+};
+
+export type DemoBooking = BookingDetails & {
   id: string;
   tripId: string;
   routeLabel: string;
@@ -42,7 +57,6 @@ export type Seat = {
 };
 
 export const BOOKING_STORAGE_KEY = "ksops-transport-demo-bookings-v1";
-export const EMPTY_BOOKINGS: DemoBooking[] = [];
 export const DEFAULT_ROUTE_ID = "RT-SG-VT";
 export const DEFAULT_TRAVEL_DATE = "2026-08-23";
 
@@ -62,6 +76,57 @@ export const ticketTrips: TicketTrip[] = [
   { id: "TRP-C2301", routeId: "RT-SG-BMT", date: "2026-08-24", departure: "20:00", arrival: "02:15 +1", vehicle: "Xe giường 24 chỗ", serviceClass: "Đường dài", pickupPoint: "Quầy đón số 8 · Bến xe Miền Đông Mới", dropoffPoint: "Bến xe phía Nam Buôn Ma Thuột", capacity: 24, price: 340000, reservedSeats: ["A02", "D02", "C03"] },
   { id: "TRP-A2201", routeId: "RT-VT-SG", date: "2026-08-23", departure: "10:00", arrival: "12:35", vehicle: "Xe ghế 24 chỗ", serviceClass: "Tiêu chuẩn", pickupPoint: "Quầy đón số 2 · Bến xe Vũng Tàu", dropoffPoint: "Bến xe Miền Đông Mới", capacity: 24, price: 145000, reservedSeats: ["B01", "C01", "D04"] },
   { id: "TRP-DW2201", routeId: "RT-SG-CT", date: "2026-08-23", departure: "08:00", arrival: "11:45", vehicle: "Xe ghế 28 chỗ", serviceClass: "Linh hoạt", pickupPoint: "Quầy đón số 2 · Bến xe Miền Tây", dropoffPoint: "Bến xe Trung tâm Cần Thơ", capacity: 28, price: 210000, reservedSeats: ["A01", "D01", "A02", "D02", "B05"] },
+];
+
+export const INITIAL_BOOKINGS: DemoBooking[] = [
+  {
+    id: "BK-2608-118201",
+    tripId: "TRP-D2201",
+    routeLabel: "Bến xe Miền Đông Mới → Bến xe Vũng Tàu",
+    date: "2026-08-23",
+    departure: "06:30",
+    seats: ["A01", "B01"],
+    total: 290000,
+    status: "Đã giữ chỗ",
+    createdAt: "08:12",
+    customerName: "Nguyễn Minh Anh",
+    customerPhone: "090 ••• 1182",
+    bookingChannel: "Website",
+    paymentStatus: "Đã thanh toán",
+    paymentMethod: "Ví điện tử",
+  },
+  {
+    id: "BK-2608-305402",
+    tripId: "TRP-D2202",
+    routeLabel: "Bến xe Miền Đông Mới → Bến xe Vũng Tàu",
+    date: "2026-08-23",
+    departure: "09:15",
+    seats: ["C01"],
+    total: 165000,
+    status: "Đã giữ chỗ",
+    createdAt: "08:28",
+    customerName: "Trần Gia Hân",
+    customerPhone: "091 ••• 3054",
+    bookingChannel: "Điện thoại",
+    paymentStatus: "Chưa thanh toán",
+    paymentMethod: "Chuyển khoản",
+  },
+  {
+    id: "BK-2608-762103",
+    tripId: "TRP-D2203",
+    routeLabel: "Bến xe Miền Đông Mới → Bến xe Vũng Tàu",
+    date: "2026-08-23",
+    departure: "14:00",
+    seats: ["A01"],
+    total: 145000,
+    status: "Đã giữ chỗ",
+    createdAt: "08:41",
+    customerName: "Lê Hoàng Phúc",
+    customerPhone: "093 ••• 7621",
+    bookingChannel: "Tại quầy",
+    paymentStatus: "Đã thanh toán",
+    paymentMethod: "Tiền mặt",
+  },
 ];
 
 export function routeLabel(route: TicketRoute) {
@@ -107,17 +172,17 @@ export function formatTravelDate(value: string) {
   return `${day}/${month}/${year}`;
 }
 
-function isDemoBooking(value: unknown): value is DemoBooking {
-  if (typeof value !== "object" || value === null) return false;
+function decodeDemoBooking(value: unknown): DemoBooking | null {
+  if (typeof value !== "object" || value === null) return null;
   const booking = value as Record<string, unknown>;
-  if (typeof booking.id !== "string" || !booking.id.startsWith("BK-2608-") || typeof booking.tripId !== "string") return false;
+  if (typeof booking.id !== "string" || !booking.id.startsWith("BK-2608-") || typeof booking.tripId !== "string") return null;
   const trip = ticketTrips.find((item) => item.id === booking.tripId);
-  if (!trip || !Array.isArray(booking.seats) || booking.seats.length < 1 || booking.seats.length > trip.capacity) return false;
+  if (!trip || !Array.isArray(booking.seats) || booking.seats.length < 1 || booking.seats.length > trip.capacity) return null;
   const validSeatCodes = new Set(seatsFor(trip).map((seat) => seat.code));
   const seatCodes = booking.seats.filter((seat): seat is string => typeof seat === "string");
-  if (seatCodes.length !== booking.seats.length || new Set(seatCodes).size !== seatCodes.length || seatCodes.some((seat) => !validSeatCodes.has(seat))) return false;
+  if (seatCodes.length !== booking.seats.length || new Set(seatCodes).size !== seatCodes.length || seatCodes.some((seat) => !validSeatCodes.has(seat))) return null;
 
-  return typeof booking.routeLabel === "string"
+  const baseIsValid = typeof booking.routeLabel === "string"
     && booking.routeLabel === routeLabel(routeForTrip(trip))
     && booking.date === trip.date
     && booking.departure === trip.departure
@@ -127,13 +192,58 @@ function isDemoBooking(value: unknown): value is DemoBooking {
     && Number.isFinite(booking.total)
     && booking.total === trip.price * seatCodes.length
     && (booking.status === "Đã giữ chỗ" || booking.status === "Đã hủy");
+  if (!baseIsValid) return null;
+
+  const customerName = typeof booking.customerName === "string" ? booking.customerName.trim() : "Khách tại quầy";
+  const customerPhone = typeof booking.customerPhone === "string" ? booking.customerPhone.trim() : "Chưa cập nhật";
+  const bookingChannel = BOOKING_CHANNELS.includes(booking.bookingChannel as BookingChannel)
+    ? booking.bookingChannel as BookingChannel
+    : "Tại quầy";
+  const paymentStatus = PAYMENT_STATUSES.includes(booking.paymentStatus as PaymentStatus)
+    ? booking.paymentStatus as PaymentStatus
+    : "Chưa thanh toán";
+  const paymentMethod = PAYMENT_METHODS.includes(booking.paymentMethod as PaymentMethod)
+    ? booking.paymentMethod as PaymentMethod
+    : "Chưa chọn";
+
+  if (!customerName || customerName.length > 100 || !customerPhone || customerPhone.length > 32) return null;
+
+  return {
+    id: booking.id as string,
+    tripId: booking.tripId as string,
+    routeLabel: booking.routeLabel as string,
+    date: booking.date as string,
+    departure: booking.departure as string,
+    seats: seatCodes,
+    total: booking.total as number,
+    status: booking.status as DemoBookingStatus,
+    createdAt: booking.createdAt as string,
+    customerName,
+    customerPhone,
+    bookingChannel,
+    paymentStatus,
+    paymentMethod,
+  };
 }
 
 export function decodeDemoBookings(value: unknown): DemoBooking[] | null {
-  return Array.isArray(value) && value.every(isDemoBooking) ? value : null;
+  if (!Array.isArray(value) || value.length > 100) return null;
+  const decoded = value.map(decodeDemoBooking);
+  return decoded.every((booking): booking is DemoBooking => booking !== null) ? decoded : null;
 }
 
-export function createDemoBooking(trip: TicketTrip, seats: string[], timestamp: number): DemoBooking {
+export function createDemoBooking(
+  trip: TicketTrip,
+  seats: string[],
+  timestamp: number,
+  details: BookingDetails = {
+    customerName: "Khách tại quầy",
+    customerPhone: "Chưa cập nhật",
+    bookingChannel: "Tại quầy",
+    paymentStatus: "Chưa thanh toán",
+    paymentMethod: "Chưa chọn",
+  },
+): DemoBooking {
   const route = routeForTrip(trip);
   const uniqueSeats = [...new Set(seats)].sort();
   return {
@@ -146,5 +256,10 @@ export function createDemoBooking(trip: TicketTrip, seats: string[], timestamp: 
     total: trip.price * uniqueSeats.length,
     status: "Đã giữ chỗ",
     createdAt: "Vừa tạo",
+    customerName: details.customerName.trim(),
+    customerPhone: details.customerPhone.trim(),
+    bookingChannel: details.bookingChannel,
+    paymentStatus: details.paymentStatus,
+    paymentMethod: details.paymentMethod,
   };
 }

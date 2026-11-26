@@ -56,6 +56,17 @@
 .tripFacts span, .tripFacts strong { display: block; }
 .tripFacts span { color: #667085; font-size: 0.75rem; }
 .tripFacts strong { margin-top: 4px; color: #46505f; font-size: 0.8125rem; }
+.customerForm { margin: 0 22px 12px; padding: 14px; border: 1px solid #e1e5ea; border-radius: 10px; background: #fff; }
+.customerFormHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.customerFormHeading div { display: grid; }
+.customerFormHeading span { color: #c91524; font-size: 0.75rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.customerFormHeading strong { margin-top: 3px; font-size: 0.9375rem; }
+.customerFormHeading small { color: #8a6470; font-size: 0.75rem; }
+.customerFields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.customerFields label { min-width: 0; display: grid; gap: 5px; color: #667085; font-size: 0.75rem; font-weight: 700; }
+.customerFields input,.customerFields select { width: 100%; min-width: 0; min-height: 44px; padding: 0 10px; border: 1px solid #dce1e7; border-radius: 8px; outline: 0; background: #fff; color: #283445; font-size: 0.8125rem; }
+.customerFields input:focus,.customerFields select:focus { border-color: #c91524; box-shadow: 0 0 0 3px rgba(201,21,36,.09); }
+.paymentMethod { grid-column: 1/-1; }
 .summary { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 10px; margin: 0 22px; padding: 13px; border: 1px solid #efd7da; border-radius: 10px; background: #fff8f8; }
 .summary span, .summary strong { display: block; }
 .summary span { color: #906d72; font-size: 0.75rem; }
@@ -68,19 +79,31 @@
 .seatEmpty p { max-width: 230px; margin: 5px 0 0; color: #596675; font-size: 0.875rem; line-height: 1.6; }
 .history { overflow: hidden; border: 1px solid #e3e6eb; border-radius: 13px; background: #fff; }
 .historyHeading { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 21px 13px; border-bottom: 1px solid #e9ebef; }
-.historyHeading button { border: 0; background: transparent; color: #747d8a; font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
-.historyList article { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 21px; border-bottom: 1px solid #edf0f3; }
+.historyHeading p { margin: 5px 0 0; color: #667085; font-size: 0.8125rem; }
+.historyControls { display: flex; align-items: center; gap: 8px; }
+.historyControls input { width: min(260px,30vw); min-height: 44px; padding: 0 12px; border: 1px solid #dce1e7; border-radius: 9px; outline: 0; font-size: 0.8125rem; }
+.historyControls input:focus { border-color: #c91524; box-shadow: 0 0 0 3px rgba(201,21,36,.09); }
+.historyHeading button { min-height: 44px; padding: 0 12px; border: 1px solid #e0e4e9; border-radius: 9px; background: #fff; color: #747d8a; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+.historyList article { display: grid; grid-template-columns: minmax(150px,.7fr) minmax(260px,1.35fr) minmax(135px,.55fr) auto; align-items: center; gap: 20px; padding: 16px 21px; border-bottom: 1px solid #edf0f3; }
 .historyList article:last-child { border-bottom: 0; }
-.historyList article > div > span, .historyList article > div > strong, .historyList article > div > small { display: block; }
-.historyList article > div:first-child > span { color: #c91524; font-family: var(--font-mono),monospace; font-size: 0.8125rem; }
-.historyList article > div:first-child > strong { margin: 4px 0; font-size: 0.9375rem; }
-.historyList article > div:first-child > small { color: #667085; font-size: 0.8125rem; }
-.historyList article > div:last-child { display: flex; align-items: center; gap: 9px; }
-.historyList article > div:last-child > strong { font-family: var(--font-mono),monospace; font-size: 0.875rem; }
+.customerIdentity,.bookingJourney,.paymentInfo { min-width: 0; display: grid; }
+.customerIdentity > span { color: #c91524; font-family: var(--font-mono),monospace; font-size: 0.75rem; }
+.customerIdentity > strong { margin-top: 4px; font-size: 0.9375rem; }
+.customerIdentity > a,.customerIdentity > small { width: fit-content; margin-top: 3px; color: #2c5d9b; font-size: 0.8125rem; font-weight: 700; }
+.bookingJourney > strong { overflow: hidden; font-size: 0.8125rem; text-overflow: ellipsis; white-space: nowrap; }
+.bookingJourney > small,.bookingJourney > span { margin-top: 4px; color: #667085; font-size: 0.75rem; }
+.paymentInfo > strong { font-family: var(--font-mono),monospace; font-size: 0.8125rem; }
+.paymentInfo > span { width: fit-content; margin-top: 5px; padding: 4px 7px; border-radius: 999px; background: #ebf8f2; color: #197153; font-size: 0.75rem; font-weight: 700; }
+.paymentInfo > span[data-payment="Chưa thanh toán"] { background: #fff4db; color: #8a5c00; }
+.paymentInfo > small { margin-top: 4px; color: #667085; font-size: 0.75rem; }
+.bookingActions { display: grid; gap: 5px; justify-items: end; }
+.bookingActions a,.bookingActions button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; border: 1px solid #dce1e7; border-radius: 8px; background: #fff; color: #344054; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+.bookingActions a { border-color: #cbdcf3; background: #f3f7fd; color: #245d9b; }
+.bookingActions button { color: #a01b26; }
 .historyList [data-status] { padding: 5px 7px; border-radius: 999px; background: #ebf8f2; color: #197153; font-size: 0.75rem; font-weight: 700; }
 .historyList [data-status="Đã hủy"] { background: #f0f2f5; color: #747c89; }
-.historyList button { border: 0; background: transparent; color: #a01b26; font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 @media (max-width: 1100px) { .hero { align-items: flex-start; flex-direction: column; } .bookingGrid { grid-template-columns: 1fr; } .tripPanel { border-right: 0; } .seatPanel { border-top: 1px solid #e6e9ee; } .tripList { min-height: 0; } }
-@media (max-width: 720px) { .heroMetrics { width: 100%; } .searchPanel { grid-template-columns: 1fr 1fr; } .searchPanel button { grid-column: 1/-1; } .summary { grid-template-columns: 1fr 1fr; } .summary button { grid-column: 1/-1; } .historyList article { align-items: flex-start; flex-direction: column; } }
-@media (max-width: 520px) { .hero { padding: 21px; } .heroMetrics { grid-template-columns: 1fr; } .searchPanel { grid-template-columns: 1fr; } .searchPanel button { grid-column: auto; } .trip { grid-template-columns: 72px 1fr; } .tripAvailability { grid-column: 2; text-align: left; } .tripFacts, .summary { grid-template-columns: 1fr; } .summary button, .summary p { grid-column: auto; } .coach { width: calc(100% - 28px); } .historyList article > div:last-child { align-items: flex-start; flex-wrap: wrap; } }
+@media (max-width: 980px) { .historyList article { grid-template-columns: minmax(140px,.7fr) minmax(240px,1.3fr) minmax(130px,.6fr); } .bookingActions { grid-column: 1/-1; display: flex; justify-content: flex-end; } }
+@media (max-width: 720px) { .heroMetrics { width: 100%; } .searchPanel { grid-template-columns: 1fr 1fr; } .searchPanel button { grid-column: 1/-1; } .summary { grid-template-columns: 1fr 1fr; } .summary button { grid-column: 1/-1; } .historyHeading { align-items: stretch; flex-direction: column; } .historyControls input { width: 100%; } .historyControls label { flex: 1; } .historyList article { grid-template-columns: 1fr 1fr; align-items: flex-start; } .bookingJourney { grid-column: 1/-1; grid-row: 2; } .paymentInfo { grid-column: 2; grid-row: 1; } .bookingActions { grid-column: 1/-1; } }
+@media (max-width: 520px) { .hero { padding: 21px; } .heroMetrics { grid-template-columns: 1fr; } .searchPanel { grid-template-columns: 1fr; } .searchPanel button { grid-column: auto; } .trip { grid-template-columns: 72px 1fr; } .tripAvailability { grid-column: 2; text-align: left; } .tripFacts, .customerFields, .summary { grid-template-columns: 1fr; } .paymentMethod,.summary button,.summary p { grid-column: auto; } .coach { width: calc(100% - 28px); } .historyControls { align-items: stretch; flex-direction: column; } .historyList article { grid-template-columns: 1fr; } .bookingJourney,.paymentInfo,.bookingActions { grid-column: auto; grid-row: auto; } .bookingActions { justify-content: stretch; } .bookingActions a,.bookingActions button { flex: 1; } }
 @media (prefers-reduced-motion: reduce) { .seat { transition: none; } }
