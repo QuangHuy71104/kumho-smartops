@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { filterVehicles, fleetSummary, vehicles, vehicleStatuses, vehicleTypes } from "../_lib/fleet";
+import { operatingClock } from "../../_lib/operating-time.ts";
+import { filterVehicles, getFleetSummary, getLiveVehicles, vehicles, vehicleStatuses, vehicleTypes } from "../_lib/fleet";
 import type { VehicleStatus } from "../_lib/fleet";
 import styles from "../page.module.css";
 
@@ -18,12 +19,20 @@ export default function FleetDashboard() {
   const [status, setStatus] = useState("Tất cả");
   const [view, setView] = useState<"table" | "cards">("table");
   const [selectedId, setSelectedId] = useState(vehicles[0].id);
+  const [now, setNow] = useState(() => new Date());
+  const liveVehicles = useMemo(() => getLiveVehicles(now), [now]);
+  const fleetSummary = useMemo(() => getFleetSummary(liveVehicles), [liveVehicles]);
 
   const filteredVehicles = useMemo(
-    () => filterVehicles(vehicles, search, type, status),
-    [search, status, type],
+    () => filterVehicles(liveVehicles, search, type, status),
+    [liveVehicles, search, status, type],
   );
-  const selectedVehicle = vehicles.find((vehicle) => vehicle.id === selectedId) ?? vehicles[0];
+  const selectedVehicle = liveVehicles.find((vehicle) => vehicle.id === selectedId) ?? liveVehicles[0];
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   function resetFilters() {
     setSearch("");
@@ -35,20 +44,20 @@ export default function FleetDashboard() {
     <div className={styles.page}>
       <section className={styles.hero} aria-labelledby="fleet-hero-title">
         <div>
-          <span className={styles.eyebrow}>ĐỘI XE TRỰC TUYẾN · 08:42</span>
+          <span className={styles.eyebrow}>ĐỘI XE TRỰC TUYẾN · {operatingClock(now)}</span>
           <h2 id="fleet-hero-title">Đúng xe, đúng thời điểm</h2>
           <p>Xe khách · Xe giường nằm · Xe hàng</p>
         </div>
         <div className={styles.heroStatus}>
           <span className={styles.heroPulse} aria-hidden="true" />
-          <div><strong>{fleetSummary.ready} xe sẵn sàng</strong><small>Cập nhật lúc 08:42</small></div>
+          <div><strong>{fleetSummary.ready} xe sẵn sàng</strong><small>Cập nhật lúc {operatingClock(now)}</small></div>
         </div>
       </section>
 
       <section className={styles.metrics} aria-label="Chỉ số đội xe vận hành">
         <article><span className={styles.metricGlyph}>DX</span><div><p>Tổng phương tiện</p><strong>{fleetSummary.total}</strong><small>5 nhóm phương tiện</small></div></article>
         <article><span className={`${styles.metricGlyph} ${styles.green}`}>✓</span><div><p>Sẵn sàng</p><strong>{fleetSummary.ready}</strong><small>{Math.round(fleetSummary.ready / fleetSummary.total * 100)}% quy mô đội xe</small></div></article>
-        <article><span className={`${styles.metricGlyph} ${styles.blue}`}>→</span><div><p>Đang chạy</p><strong>{fleetSummary.running}</strong><small>5 hành trình đang khai thác</small></div></article>
+        <article><span className={`${styles.metricGlyph} ${styles.blue}`}>→</span><div><p>Đang chạy</p><strong>{fleetSummary.running}</strong><small>{fleetSummary.running} hành trình đang khai thác</small></div></article>
         <article><span className={`${styles.metricGlyph} ${styles.amber}`}>BD</span><div><p>Trong xưởng</p><strong>{fleetSummary.maintenance}</strong><small>Sẵn sàng trung bình {fleetSummary.averageReadiness}%</small></div></article>
       </section>
 

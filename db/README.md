@@ -13,6 +13,7 @@ Apply every file in `migrations/` in lexical order with `ON_ERROR_STOP` enabled:
 5. `0005_workspace_state.sql`
 6. `0006_relational_operations.sql`
 7. `0007_role_work_center.sql`
+8. `0008_live_transport_simulation.sql`
 
 The application must create UUIDv7 identifiers. Database columns deliberately have no random UUID default so identity generation remains explicit and testable. All timestamps use UTC-capable `timestamptz`; the UI is responsible for rendering a branch timezone.
 
@@ -46,6 +47,13 @@ documents once, and contains only the repository's fictional operating data.
 The application reads and writes orders, dispatch, bookings, contracts, maintenance,
 and invoices through those relational tables; `platform.legacy_workspace_state` is
 retained as an empty compatibility marker after its records are migrated.
+
+Migration `0008_live_transport_simulation.sql` keeps a seven-day rolling schedule
+for passenger trips and dispatch work in `Asia/Ho_Chi_Minh`. Its refresh function
+derives trip, dispatch, and fleet states from the current time and Supabase Cron
+runs that function every five minutes when `pg_cron` is available. The relational
+seed also invokes the function, so local and managed databases start in a current
+state even when Cron is unavailable.
 
 ## Role Work Center
 

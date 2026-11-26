@@ -16,6 +16,7 @@ import { cashFlow, decodePaidInvoiceIds, expenseBreakdown, invoices } from "../a
 import { routePerformance, servicePerformance, snapshots } from "../app/bao-cao/_lib/reports.ts";
 import {
   decodeDemoBookings,
+  INITIAL_BOOKINGS,
   ticketRoutes,
   ticketTrips,
 } from "../app/ve-xe/_lib/ticket-data.ts";
@@ -74,7 +75,7 @@ try {
 
     const currentOrders = await legacyPayload(client, "orders", decodeStoredOrders, demoOrders);
     const currentDispatch = await legacyPayload(client, "dispatch", decodeStoredDispatchTasks, demoDispatchTasks);
-    const currentBookings = await legacyPayload(client, "bookings", decodeDemoBookings, []);
+    const currentBookings = await legacyPayload(client, "bookings", decodeDemoBookings, INITIAL_BOOKINGS);
     const createdContracts = await legacyPayload(client, "contracts", decodeCreatedContractRequests, []);
     const checklistStore = await legacyPayload(client, "maintenance-checklists", decodeChecklistStore, {});
     const manuallyPaidIds = await legacyPayload(client, "paid-invoices", decodePaidInvoiceIds, []);
@@ -233,7 +234,17 @@ try {
             origin, destination, vehicle_id, driver_id, vehicle_display, driver_display,
             capacity_label, used_capacity, total_capacity, capacity_unit, status, risk_level, warnings, note)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
-         ON CONFLICT (id) DO NOTHING`,
+         ON CONFLICT (id) DO UPDATE SET
+           service_date = EXCLUDED.service_date, shift = EXCLUDED.shift,
+           time_range = EXCLUDED.time_range, dispatch_type = EXCLUDED.dispatch_type,
+           route_code = EXCLUDED.route_code, origin = EXCLUDED.origin,
+           destination = EXCLUDED.destination, vehicle_id = EXCLUDED.vehicle_id,
+           driver_id = EXCLUDED.driver_id, vehicle_display = EXCLUDED.vehicle_display,
+           driver_display = EXCLUDED.driver_display, capacity_label = EXCLUDED.capacity_label,
+           used_capacity = EXCLUDED.used_capacity, total_capacity = EXCLUDED.total_capacity,
+           capacity_unit = EXCLUDED.capacity_unit, status = EXCLUDED.status,
+           risk_level = EXCLUDED.risk_level, warnings = EXCLUDED.warnings,
+           note = EXCLUDED.note, updated_at = now()`,
         [task.id, ORGANIZATION_ID, task.date, task.shift, task.time, task.type, task.routeCode,
           task.origin, task.destination, task.vehicleId, task.driverId, task.vehicleAlias,
           task.driverAlias, task.capacityLabel, task.usedCapacity, task.totalCapacity,
@@ -277,16 +288,24 @@ try {
       const createdAt = Number.isNaN(Date.parse(booking.createdAt))
         ? new Date().toISOString()
         : booking.createdAt;
-      const insertedBooking = await client.query(
+      await client.query(
         `INSERT INTO public.ticket_bookings
-           (id, trip_id, route_label, service_date, departure_time, total_amount, status, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (id) DO NOTHING
+           (id, trip_id, route_label, service_date, departure_time, total_amount, status, created_at,
+            customer_name, customer_phone, booking_channel, payment_status, payment_method)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         ON CONFLICT (id) DO UPDATE SET
+           trip_id = EXCLUDED.trip_id, route_label = EXCLUDED.route_label,
+           service_date = EXCLUDED.service_date, departure_time = EXCLUDED.departure_time,
+           total_amount = EXCLUDED.total_amount, status = EXCLUDED.status,
+           customer_name = EXCLUDED.customer_name, customer_phone = EXCLUDED.customer_phone,
+           booking_channel = EXCLUDED.booking_channel, payment_status = EXCLUDED.payment_status,
+           payment_method = EXCLUDED.payment_method, updated_at = now()
          RETURNING id`,
         [booking.id, booking.tripId, booking.routeLabel, booking.date, booking.departure,
-          booking.total, booking.status, createdAt],
+          booking.total, booking.status, createdAt, booking.customerName, booking.customerPhone,
+          booking.bookingChannel, booking.paymentStatus, booking.paymentMethod],
       );
-      if (!insertedBooking.rowCount) continue;
+      await client.query("DELETE FROM public.booking_seats WHERE booking_id = $1", [booking.id]);
       const unitPrice = booking.seats.length ? Math.round(booking.total / booking.seats.length) : 0;
       for (const seat of booking.seats) {
         await client.query(
@@ -445,6 +464,7 @@ try {
     }
 
     await client.query("DELETE FROM platform.legacy_workspace_state");
+    await client.query("SELECT public.refresh_live_transport_operations()");
     await client.query("COMMIT");
     process.stdout.write(
       `seeded relational operations: ${currentOrders.length} orders, ${currentDispatch.length} dispatch tasks, ${currentBookings.length} bookings\n`,

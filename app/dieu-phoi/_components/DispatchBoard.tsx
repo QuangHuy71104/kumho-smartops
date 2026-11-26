@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useDemoAccess } from "../../_components/access/DemoAccessProvider";
 import { useWorkspaceState } from "../../_hooks/useWorkspaceState";
 import {
@@ -12,6 +12,7 @@ import {
   demoDrivers,
   demoVehicles,
   decodeStoredDispatchTasks,
+  deriveLiveDispatchTasks,
   filterDispatchTasks,
   formatDispatchDate,
   getDispatchSummary,
@@ -25,7 +26,7 @@ import {
 import styles from "../page.module.css";
 
 const initialFilters: DispatchFilters = {
-  date: "2026-08-23",
+  date: DISPATCH_DATES[0],
   type: "Tất cả loại hình",
   status: "Tất cả trạng thái",
   shift: "Tất cả ca",
@@ -35,6 +36,7 @@ const statusClass: Record<DispatchStatus, string> = {
   "Chờ điều phối": styles.statusWaiting,
   "Sẵn sàng": styles.statusReady,
   "Đang chạy": styles.statusRunning,
+  "Hoàn tất": styles.statusCompleted,
   "Có xung đột": styles.statusConflict,
 };
 
@@ -230,10 +232,17 @@ export default function DispatchBoard() {
   const [filters, setFilters] = useState(initialFilters);
   const [selectedId, setSelectedId] = useState(demoDispatchTasks[0].id);
   const [announcement, setAnnouncement] = useState("Bảng điều phối đã sẵn sàng.");
+  const [now, setNow] = useState(() => new Date());
 
-  const visibleTasks = useMemo(() => filterDispatchTasks(tasks, filters), [filters, tasks]);
-  const summary = useMemo(() => getDispatchSummary(tasks, filters.date), [filters.date, tasks]);
+  const liveTasks = useMemo(() => deriveLiveDispatchTasks(tasks, now), [now, tasks]);
+  const visibleTasks = useMemo(() => filterDispatchTasks(liveTasks, filters), [filters, liveTasks]);
+  const summary = useMemo(() => getDispatchSummary(liveTasks, filters.date), [filters.date, liveTasks]);
   const selectedTask = visibleTasks.find((task) => task.id === selectedId) ?? visibleTasks[0] ?? null;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   function selectTask(task: DispatchTask) {
     setSelectedId(task.id);

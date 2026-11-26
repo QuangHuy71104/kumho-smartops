@@ -194,6 +194,11 @@ async function readBookings(queryable: Queryable) {
     total: Number(row.total_amount),
     status: row.status,
     createdAt: new Date(row.created_at).toISOString(),
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
+    bookingChannel: row.booking_channel,
+    paymentStatus: row.payment_status,
+    paymentMethod: row.payment_method,
   }));
 }
 
@@ -464,10 +469,12 @@ async function writeBookings(client: PoolClient, data: unknown) {
       : booking.createdAt;
     await client.query(
       `INSERT INTO public.ticket_bookings
-         (id, trip_id, route_label, service_date, departure_time, total_amount, status, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         (id, trip_id, route_label, service_date, departure_time, total_amount, status, created_at,
+          customer_name, customer_phone, booking_channel, payment_status, payment_method)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [booking.id, booking.tripId, booking.routeLabel, booking.date, booking.departure,
-        booking.total, booking.status, createdAt],
+        booking.total, booking.status, createdAt, booking.customerName, booking.customerPhone,
+        booking.bookingChannel, booking.paymentStatus, booking.paymentMethod],
     );
     const unitPrice = booking.seats.length ? Math.round(booking.total / booking.seats.length) : 0;
     for (const seat of booking.seats) {

@@ -162,6 +162,7 @@
 .statusWaiting { background: #fff5e5; color: #995606; }
 .statusReady { background: #eaf8f1; color: #14714e; }
 .statusRunning { background: #edf5ff; color: #2865a8; }
+.statusCompleted { background: #f0f2f5; color: #667085; }
 .statusConflict { background: #fff0f1; color: #ae1522; }
 .taskIdentity strong { display: block; font-family: var(--font-mono), monospace; font-size: 1rem; }
 .taskIdentity small { display: block; margin-top: 3px; color: #596675; font-size: 0.875rem; }

@@ -5,18 +5,22 @@ import {
   bookingForSeat,
   createDemoBooking,
   decodeDemoBookings,
+  DEFAULT_TRAVEL_DATE,
   INITIAL_BOOKINGS,
   seatsFor,
   ticketTrips,
+  TRAVEL_DATES,
   withSeatBookingFixtures,
 } from "../app/ve-xe/_lib/ticket-data.ts";
 import {
   demoDispatchTasks,
+  deriveLiveDispatchTasks,
   filterDispatchTasks,
   getDispatchSummary,
   getUtilization,
   simulateAssignment,
 } from "../app/dieu-phoi/_lib/dispatch.ts";
+import { operatingDate } from "../app/_lib/operating-time.ts";
 import {
   EMPTY_CONTRACT_DRAFT,
   buildContractRequest,
@@ -26,6 +30,13 @@ import {
 } from "../app/hop-dong/_lib/contract-data.ts";
 import { decodePaidInvoiceIds } from "../app/tai-chinh/_lib/finance.ts";
 import { buildReportCsv, protectCsvCell } from "../app/bao-cao/_lib/reports.ts";
+
+test("rolling operations begin today and schedule passenger trips every day", () => {
+  assert.equal(DEFAULT_TRAVEL_DATE, operatingDate());
+  assert.equal(TRAVEL_DATES.length, 7);
+  assert.ok(TRAVEL_DATES.every((date) => ticketTrips.some((trip) => trip.date === date)));
+  assert.ok(deriveLiveDispatchTasks(demoDispatchTasks).some((task) => task.status === "Đang chạy"));
+});
 
 test("seat inventory is unique and local bookings cannot be counted twice", () => {
   const trip = ticketTrips[0];

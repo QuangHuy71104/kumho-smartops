@@ -1,12 +1,14 @@
+import { addOperatingDays, clockToMinutes, operatingDate, operatingMinutes } from "../../_lib/operating-time.ts";
+
 export const DISPATCH_TYPES = ["Chuyến cố định", "Xe hợp đồng", "Hàng hóa"] as const;
 export const DISPATCH_SHIFTS = ["Ca sáng", "Ca chiều", "Ca tối"] as const;
-export const DISPATCH_STATUSES = ["Chờ điều phối", "Sẵn sàng", "Đang chạy", "Có xung đột"] as const;
-export const DISPATCH_DATES = ["2026-08-23", "2026-08-24", "2026-08-25"] as const;
+export const DISPATCH_STATUSES = ["Chờ điều phối", "Sẵn sàng", "Đang chạy", "Hoàn tất", "Có xung đột"] as const;
+export const DISPATCH_DATES = Array.from({ length: 7 }, (_, index) => addOperatingDays(operatingDate(), index));
 
 export type DispatchType = (typeof DISPATCH_TYPES)[number];
 export type DispatchShift = (typeof DISPATCH_SHIFTS)[number];
 export type DispatchStatus = (typeof DISPATCH_STATUSES)[number];
-export type DispatchDate = (typeof DISPATCH_DATES)[number];
+export type DispatchDate = string;
 export type RiskLevel = "Ổn định" | "Theo dõi" | "Cao";
 
 export type DispatchTask = {
@@ -65,10 +67,32 @@ function resourceIdForAlias(
   return options.find((option) => option.label === alias)?.id ?? null;
 }
 
-export const demoDispatchTasks: DispatchTask[] = [
+const dispatchTaskCatalog: DispatchTask[] = [
+  {
+    id: "DP-HD-220",
+    date: DISPATCH_DATES[0],
+    shift: "Ca sáng",
+    time: "00:00–23:59",
+    type: "Xe hợp đồng",
+    routeCode: "HD-SG-BD-LIVE",
+    origin: "TP. Hồ Chí Minh",
+    destination: "Bình Dương",
+    vehicleId: "51B-276.41",
+    driverId: "NVTX-0005",
+    vehicleAlias: "51B-276.41 · 45 chỗ",
+    driverAlias: "Võ Thành Trung",
+    capacityLabel: "31 / 45 ghế",
+    usedCapacity: 31,
+    totalCapacity: 45,
+    capacityUnit: "ghế",
+    status: "Đang chạy",
+    risk: "Ổn định",
+    warnings: [],
+    note: "Xe trung chuyển chạy vòng liên tục trong ngày theo các khung giờ đã điều phối.",
+  },
   {
     id: "DP-CD-081",
-    date: "2026-08-23",
+    date: DISPATCH_DATES[0],
     shift: "Ca sáng",
     time: "05:30–08:10",
     type: "Chuyến cố định",
@@ -90,7 +114,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-HH-114",
-    date: "2026-08-23",
+    date: DISPATCH_DATES[0],
     shift: "Ca sáng",
     time: "06:15–10:30",
     type: "Hàng hóa",
@@ -112,7 +136,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-HD-207",
-    date: "2026-08-23",
+    date: DISPATCH_DATES[0],
     shift: "Ca sáng",
     time: "08:00–11:30",
     type: "Xe hợp đồng",
@@ -134,7 +158,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-HH-118",
-    date: "2026-08-23",
+    date: DISPATCH_DATES[0],
     shift: "Ca chiều",
     time: "13:00–17:20",
     type: "Hàng hóa",
@@ -156,7 +180,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-CD-086",
-    date: "2026-08-23",
+    date: DISPATCH_DATES[0],
     shift: "Ca chiều",
     time: "14:15–17:00",
     type: "Chuyến cố định",
@@ -178,7 +202,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-HD-211",
-    date: "2026-08-23",
+    date: DISPATCH_DATES[0],
     shift: "Ca tối",
     time: "18:30–22:00",
     type: "Xe hợp đồng",
@@ -200,7 +224,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-HH-122",
-    date: "2026-08-24",
+    date: DISPATCH_DATES[1],
     shift: "Ca sáng",
     time: "06:00–09:45",
     type: "Hàng hóa",
@@ -222,7 +246,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-CD-091",
-    date: "2026-08-24",
+    date: DISPATCH_DATES[1],
     shift: "Ca chiều",
     time: "15:00–18:15",
     type: "Chuyến cố định",
@@ -244,7 +268,7 @@ export const demoDispatchTasks: DispatchTask[] = [
   },
   {
     id: "DP-HD-216",
-    date: "2026-08-25",
+    date: DISPATCH_DATES[2],
     shift: "Ca sáng",
     time: "07:30–12:00",
     type: "Xe hợp đồng",
@@ -264,6 +288,18 @@ export const demoDispatchTasks: DispatchTask[] = [
     warnings: ["Cần chốt nguồn lực trước ca"],
     note: "Đưa đón nhóm kỹ sư đến KCN VSIP I, cần chốt nguồn lực trước ca.",
   },
+];
+
+const continuousRoute = dispatchTaskCatalog[0];
+
+export const demoDispatchTasks: DispatchTask[] = [
+  ...dispatchTaskCatalog,
+  ...DISPATCH_DATES.slice(1).map((date) => ({
+    ...continuousRoute,
+    id: `${continuousRoute.id}-${date.slice(5).replace("-", "")}`,
+    date,
+    status: "Sẵn sàng" as const,
+  })),
 ];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -302,6 +338,28 @@ export function decodeStoredDispatchTasks(value: unknown): DispatchTask[] | null
   if (tasks.some((task) => task === null)) return null;
   const decoded = tasks as DispatchTask[];
   return new Set(decoded.map((task) => task.id)).size === decoded.length ? decoded : null;
+}
+
+export function deriveLiveDispatchTasks(tasks: DispatchTask[], now = new Date()) {
+  const today = operatingDate(now);
+  const currentMinutes = operatingMinutes(now);
+  return tasks.map((task) => {
+    const [startLabel = "00:00", endLabel = "23:59"] = task.time.split("–");
+    const startMinutes = clockToMinutes(startLabel);
+    const endMinutes = clockToMinutes(endLabel);
+    const hasResources = Boolean(task.vehicleId && task.driverId);
+
+    if (task.status === "Có xung đột") return task;
+    if (task.date < today || (task.date === today && currentMinutes > endMinutes)) {
+      return hasResources
+        ? { ...task, status: "Hoàn tất" as const }
+        : { ...task, status: "Có xung đột" as const, risk: "Cao" as const, warnings: ["Đã quá giờ khởi hành nhưng chưa đủ nguồn lực"] };
+    }
+    if (task.date > today || currentMinutes < startMinutes) {
+      return { ...task, status: hasResources ? "Sẵn sàng" as const : "Chờ điều phối" as const };
+    }
+    return { ...task, status: hasResources ? "Đang chạy" as const : "Chờ điều phối" as const };
+  });
 }
 
 export function filterDispatchTasks(tasks: DispatchTask[], filters: DispatchFilters) {

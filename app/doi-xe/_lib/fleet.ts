@@ -1,3 +1,5 @@
+import { operatingClock, operatingDate, operatingMinutes } from "../../_lib/operating-time.ts";
+
 export type VehicleType = "Xe 16 chỗ" | "Xe 29 chỗ" | "Xe 45 chỗ" | "Xe giường nằm" | "Xe hàng";
 export type VehicleStatus = "Sẵn sàng" | "Đang chạy" | "Bảo dưỡng";
 
@@ -27,7 +29,7 @@ export const vehicleTypes: readonly VehicleType[] = [
 
 export const vehicleStatuses: readonly VehicleStatus[] = ["Sẵn sàng", "Đang chạy", "Bảo dưỡng"];
 
-export const vehicles: readonly Vehicle[] = [
+const vehicleCatalog: readonly Vehicle[] = [
   { id: "51B-317.42", name: "Ford Transit 16 chỗ", type: "Xe 16 chỗ", status: "Sẵn sàng", depot: "Bãi xe Thủ Đức", driver: "Chờ phân công", assignment: "HĐ-SG-BD-0730", nextMilestone: "Khởi hành dự kiến 10:30", odometer: 82430, serviceRemaining: 1240, readiness: 98, capacity: "16 ghế", lastInspection: "08:12 · 23/08/2026" },
   { id: "51B-329.18", name: "Ford Transit 16 chỗ", type: "Xe 16 chỗ", status: "Đang chạy", depot: "Bãi xe Thủ Đức", driver: "Trần Quốc Huy", assignment: "HĐ-BH-SG-1830", nextMilestone: "Về bãi dự kiến 12:15", odometer: 96520, serviceRemaining: 680, readiness: 94, capacity: "16 ghế", lastInspection: "06:45 · 23/08/2026" },
   { id: "51B-305.76", name: "Hyundai Solati 16 chỗ", type: "Xe 16 chỗ", status: "Bảo dưỡng", depot: "Xưởng kỹ thuật Thủ Đức", driver: "Chưa phân công", assignment: "BD-2608-031", nextMilestone: "Hoàn tất dự kiến 15:00", odometer: 112840, serviceRemaining: 0, readiness: 76, capacity: "16 ghế", lastInspection: "17:20 · 22/08/2026" },
@@ -45,6 +47,46 @@ export const vehicles: readonly Vehicle[] = [
   { id: "51D-571.84", name: "Isuzu NPR thùng kín", type: "Xe hàng", status: "Sẵn sàng", depot: "Kho trung chuyển Sóng Thần", driver: "Lê Hoàng Nam", assignment: "HH-DN-BP-1300", nextMilestone: "Nhận hàng dự kiến 13:00", odometer: 68940, serviceRemaining: 4220, readiness: 100, capacity: "Tải trọng 5 tấn", lastInspection: "08:20 · 23/08/2026" },
 ];
 
+const LIVE_ASSIGNMENTS = [
+  "CD-SG-VT · Miền Đông → Vũng Tàu",
+  "CD-VT-SG · Vũng Tàu → Miền Đông",
+  "CD-SG-CT · Miền Tây → Cần Thơ",
+  "CD-SG-BMT · Miền Đông → Buôn Ma Thuột",
+  "HD-SG-BD · Trung chuyển Bình Dương",
+] as const;
+
+function inspectionLabel(value: Date) {
+  const [year, month, day] = operatingDate(value).split("-");
+  return `${operatingClock(value)} · ${day}/${month}/${year}`;
+}
+
+export function getLiveVehicles(now = new Date()): Vehicle[] {
+  const candidates = vehicleCatalog.filter((vehicle) => vehicle.status !== "Bảo dưỡng");
+  const rotation = Math.floor(operatingMinutes(now) / 180);
+  const runningIds = new Set(Array.from({ length: 5 }, (_, index) => (
+    candidates[(rotation + index * 2) % candidates.length].id
+  )));
+
+  return vehicleCatalog.map((vehicle, index) => {
+    if (vehicle.status === "Bảo dưỡng") {
+      return { ...vehicle, lastInspection: inspectionLabel(now) };
+    }
+    const running = runningIds.has(vehicle.id);
+    const assignment = LIVE_ASSIGNMENTS[(rotation + index) % LIVE_ASSIGNMENTS.length];
+    return {
+      ...vehicle,
+      status: running ? "Đang chạy" : "Sẵn sàng",
+      depot: running ? `Đang trên tuyến · cập nhật ${operatingClock(now)}` : vehicle.depot,
+      assignment: running ? assignment : "Chờ lượt điều phối tiếp theo",
+      nextMilestone: running ? `Điểm kiểm soát tiếp theo · ${operatingClock(new Date(now.getTime() + 45 * 60_000))}` : "Sẵn sàng nhận chuyến mới",
+      odometer: vehicle.odometer + Math.floor(operatingMinutes(now) / 10),
+      lastInspection: inspectionLabel(now),
+    };
+  });
+}
+
+export const vehicles: readonly Vehicle[] = getLiveVehicles();
+
 export function filterVehicles(list: readonly Vehicle[], search: string, type: string, status: string) {
   const keyword = search.trim().toLocaleLowerCase("vi");
   return list.filter((vehicle) => {
@@ -56,10 +98,14 @@ export function filterVehicles(list: readonly Vehicle[], search: string, type: s
   });
 }
 
-export const fleetSummary = {
-  total: vehicles.length,
-  ready: vehicles.filter((vehicle) => vehicle.status === "Sẵn sàng").length,
-  running: vehicles.filter((vehicle) => vehicle.status === "Đang chạy").length,
-  maintenance: vehicles.filter((vehicle) => vehicle.status === "Bảo dưỡng").length,
-  averageReadiness: Math.round(vehicles.reduce((sum, vehicle) => sum + vehicle.readiness, 0) / vehicles.length),
-};
+export function getFleetSummary(list: readonly Vehicle[]) {
+  return {
+    total: list.length,
+    ready: list.filter((vehicle) => vehicle.status === "Sẵn sàng").length,
+    running: list.filter((vehicle) => vehicle.status === "Đang chạy").length,
+    maintenance: list.filter((vehicle) => vehicle.status === "Bảo dưỡng").length,
+    averageReadiness: Math.round(list.reduce((sum, vehicle) => sum + vehicle.readiness, 0) / list.length),
+  };
+}
+
+export const fleetSummary = getFleetSummary(vehicles);

@@ -15,6 +15,7 @@ import {
   pgTable,
   smallint,
   text,
+  time,
   timestamp,
   unique,
   uniqueIndex,
@@ -619,8 +620,16 @@ export const relationalTicketTrips = pgTable("ticket_trips", {
 export const relationalTicketBookings = pgTable("ticket_bookings", {
   id: varchar("id", { length: 32 }).primaryKey(),
   tripId: varchar("trip_id", { length: 24 }).notNull().references(() => relationalTicketTrips.id),
+  routeLabel: varchar("route_label", { length: 360 }).notNull(),
+  serviceDate: date("service_date").notNull(),
+  departureTime: time("departure_time").notNull(),
   totalAmount: bigint("total_amount", { mode: "number" }).notNull(),
   status: varchar("status", { length: 24 }).notNull(),
+  customerName: varchar("customer_name", { length: 100 }).notNull(),
+  customerPhone: varchar("customer_phone", { length: 32 }).notNull(),
+  bookingChannel: varchar("booking_channel", { length: 24 }).notNull(),
+  paymentStatus: varchar("payment_status", { length: 24 }).notNull(),
+  paymentMethod: varchar("payment_method", { length: 24 }).notNull(),
   ...mutableTimestamps(),
 });
 

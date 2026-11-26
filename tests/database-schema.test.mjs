@@ -47,6 +47,7 @@ const expectedMigrations = [
   "0005_workspace_state.sql",
   "0006_relational_operations.sql",
   "0007_role_work_center.sql",
+  "0008_live_transport_simulation.sql",
 ];
 
 async function readMigration(name) {
@@ -64,6 +65,16 @@ test("database migrations have a deterministic PostgreSQL transaction order", as
     assert.match(sql, /\bCOMMIT;\s*$/);
     assert.doesNotMatch(sql, /DROP\s+(TABLE|SCHEMA|DATABASE)/i);
   }
+});
+
+test("live transport migration rolls schedules and operational states in Vietnam time", async () => {
+  const sql = await readMigration(expectedMigrations[7]);
+  assert.match(sql, /refresh_live_transport_operations/);
+  assert.match(sql, /Asia\/Ho_Chi_Minh/);
+  assert.match(sql, /generate_series\(local_day, local_day \+ 6/);
+  assert.match(sql, /customer_phone varchar\(32\)/);
+  assert.match(sql, /payment_method varchar\(24\)/);
+  assert.match(sql, /'\*\/5 \* \* \* \*'/);
 });
 
 test("organization and IAM tables enforce tenant-safe role scopes", async () => {
