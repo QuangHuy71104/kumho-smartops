@@ -1,152 +1,196 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
-import { demoDispatchTasks } from "../../dieu-phoi/_lib/dispatch";
-import { workOrders } from "../../bao-duong/_lib/maintenance";
 import {
-  createOrderHref,
-  dashboardFleetSummary,
-  dashboardMetrics,
-  recentOrders,
-} from "../../../lib/dashboard-data";
+  DEFAULT_TRAVEL_DATE,
+  formatDemoPrice,
+  formatTravelDate,
+  routeForTrip,
+  ticketTrips,
+} from "../../ve-xe/_lib/ticket-data";
 import styles from "./DashboardOverview.module.css";
 
-const METRIC_ICON: Record<(typeof dashboardMetrics)[number]["tone"], string> = {
-  brand: "₫",
-  success: "✓",
-  warning: "!",
-  info: "↗",
-};
+const todayTrips = ticketTrips.filter((trip) => trip.date === DEFAULT_TRAVEL_DATE);
+const soldSeats = todayTrips.reduce((total, trip) => total + trip.reservedSeats.length, 0);
+const totalSeats = todayTrips.reduce((total, trip) => total + trip.capacity, 0);
+const occupancy = Math.round((soldSeats / totalSeats) * 100);
+const ticketRevenue = todayTrips.reduce(
+  (total, trip) => total + trip.reservedSeats.length * trip.price,
+  0,
+);
 
-const STATUS_TONE: Record<string, string> = {
-  "Đang chạy": styles.statusRunning,
-  "Sẵn sàng": styles.statusReady,
-  "Chờ điều phối": styles.statusWaiting,
-  "Có xung đột": styles.statusRisk,
-};
-
-const currentDate = demoDispatchTasks[0]?.date;
-const upcomingTrips = demoDispatchTasks
-  .filter((task) => task.date === currentDate)
-  .slice(0, 5);
-
-const priorityItems = [
+const metrics = [
   {
-    title: `${workOrders.find((order) => order.status === "Quá hạn")?.vehicleCode ?? "51B-254.97"} cần kiểm tra hệ thống phanh`,
-    module: "Đội xe",
-    due: "10 phút trước",
-    label: "Khẩn cấp",
-    tone: styles.priorityUrgent,
-    href: "/bao-duong",
+    label: "Doanh thu hôm nay",
+    value: formatDemoPrice(ticketRevenue).replace("₫", "").trim(),
+    unit: "₫",
+    note: "+8,4% so với cùng kỳ",
+    tone: "brand",
   },
   {
-    title: `Xác nhận nguồn lực cho chuyến ${upcomingTrips.find((trip) => !trip.driverId)?.id ?? "DP-HD-207"}`,
-    module: "Điều phối",
-    due: "Hạn 09:00",
-    label: "Ưu tiên",
-    tone: styles.priorityHigh,
-    href: "/dieu-phoi",
+    label: "Vé đã bán",
+    value: String(soldSeats),
+    unit: `/${totalSeats} ghế`,
+    note: `${totalSeats - soldSeats} ghế còn trống`,
+    tone: "blue",
   },
   {
-    title: "Duyệt đề xuất đổi ca của nhân viên vận hành",
-    module: "Nhân sự",
-    due: "Hạn hôm nay",
-    label: "Bình thường",
-    tone: styles.priorityNormal,
-    href: "/cong-viec",
+    label: "Hệ số lấp đầy",
+    value: `${occupancy}%`,
+    unit: "",
+    note: "Mục tiêu ca 75%",
+    tone: "success",
+  },
+  {
+    label: "Chuyến mở bán",
+    value: String(todayTrips.length),
+    unit: "chuyến",
+    note: "1 chuyến sắp khởi hành",
+    tone: "warning",
   },
 ] as const;
 
-function MetricGrid() {
-  const metrics = [...dashboardMetrics].sort((left, right) => {
-    const order = ["Chuyến đang chạy", "Đúng giờ 7 ngày", "Đơn cần xử lý", "Xe sẵn sàng"];
-    return order.indexOf(left.label) - order.indexOf(right.label);
-  });
+const quickActions = [
+  { label: "Bán vé mới", detail: "Tìm chuyến & chọn ghế", href: "/ve-xe#dat-cho", icon: "+" },
+  { label: "Danh sách khách", detail: "Tra cứu hành khách", href: "/khach-hang", icon: "KH" },
+  { label: "Điều hành chuyến", detail: "Xe, tài xế & giờ chạy", href: "/dieu-phoi", icon: "CX" },
+  { label: "Xem báo cáo", detail: "Doanh thu & hiệu suất", href: "/bao-cao", icon: "BC" },
+] as const;
 
+function MetricCards() {
   return (
-    <section className={styles.metricGrid} aria-label="Chỉ số vận hành chính">
+    <section className={styles.metricGrid} aria-label="Chỉ số bán vé trong ngày">
       {metrics.map((metric) => (
-        <article className={styles.metricCard} key={metric.label} data-tone={metric.tone}>
-          <span className={styles.metricIcon} aria-hidden="true">{METRIC_ICON[metric.tone]}</span>
-          <p>{metric.label}</p>
-          <div>
-            <strong>{metric.value}</strong>
-            <small>{metric.note}</small>
+        <article className={styles.metricCard} data-tone={metric.tone} key={metric.label}>
+          <div className={styles.metricHeading}>
+            <span>{metric.label}</span>
+            <i aria-hidden="true" />
           </div>
+          <div className={styles.metricValue}>
+            <strong>{metric.value}</strong>
+            {metric.unit ? <small>{metric.unit}</small> : null}
+          </div>
+          <p>{metric.note}</p>
         </article>
       ))}
     </section>
   );
 }
 
-function TripActivity() {
+function TodayTrips() {
   return (
-    <section className={`${styles.panel} ${styles.tripsPanel}`} aria-labelledby="trips-title">
+    <section className={`${styles.panel} ${styles.tripsPanel}`} aria-labelledby="today-trips-title">
       <div className={styles.panelHeading}>
         <div>
-          <h2 id="trips-title">Hoạt động tuyến</h2>
-          <p>Các chuyến cần điều phối trong ca hiện tại</p>
+          <span>Lịch chạy hôm nay</span>
+          <h2 id="today-trips-title">Chuyến sắp khởi hành</h2>
         </div>
-        <Link href="/dieu-phoi">Xem tất cả {demoDispatchTasks.length}</Link>
+        <Link href="/dieu-phoi">Xem điều hành <span aria-hidden="true">→</span></Link>
       </div>
-      <div className={styles.tableWrap}>
-        <table>
-          <caption className="sr-only">Các chuyến cần điều phối trong ca hiện tại</caption>
-          <thead>
-            <tr>
-              <th>Mã chuyến</th>
-              <th>Tuyến</th>
-              <th>Giờ</th>
-              <th>Trạng thái</th>
-              <th>Phụ trách</th>
-            </tr>
-          </thead>
-          <tbody>
-            {upcomingTrips.map((trip) => (
-              <tr key={trip.id}>
-                <td><Link href="/dieu-phoi">{trip.id}</Link></td>
-                <td>{trip.origin} → {trip.destination}</td>
-                <td>{trip.time.split("–")[0]}</td>
-                <td><span className={`${styles.statusBadge} ${STATUS_TONE[trip.status] ?? styles.statusWaiting}`}>{trip.status}</span></td>
-                <td>{trip.driverAlias.replace("Chưa gán tài xế", "Chưa phân công")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className={styles.tripList}>
+        {todayTrips.map((trip, index) => {
+          const route = routeForTrip(trip);
+          const fill = Math.round((trip.reservedSeats.length / trip.capacity) * 100);
+          return (
+            <article className={styles.tripRow} key={trip.id}>
+              <time dateTime={`${trip.date}T${trip.departure}`}>
+                <strong>{trip.departure}</strong>
+                <span>{index === 0 ? "Sắp chạy" : "Hôm nay"}</span>
+              </time>
+              <div className={styles.tripRoute}>
+                <div>
+                  <strong>{route.origin}</strong>
+                  <span aria-hidden="true">→</span>
+                  <strong>{route.destination}</strong>
+                </div>
+                <small>{trip.id} · {trip.vehicle} · {trip.serviceClass}</small>
+              </div>
+              <div className={styles.occupancy}>
+                <div><span>{trip.reservedSeats.length}/{trip.capacity} ghế</span><strong>{fill}%</strong></div>
+                <div className={styles.progress} role="progressbar" aria-label={`Lấp đầy chuyến ${trip.id}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={fill}>
+                  <span style={{ width: `${fill}%` }} />
+                </div>
+              </div>
+              <Link aria-label={`Mở bán vé chuyến ${trip.id}`} href="/ve-xe#dat-cho">Bán vé</Link>
+            </article>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function FleetPanel() {
-  const readyPercent = Math.round((dashboardFleetSummary.ready / dashboardFleetSummary.total) * 100);
-  const fleetStates = [
-    { label: "Đang chạy", value: dashboardFleetSummary.running, tone: styles.legendRunning },
-    { label: "Sẵn sàng", value: dashboardFleetSummary.ready, tone: styles.legendReady },
-    { label: "Bảo trì", value: dashboardFleetSummary.maintenance, tone: styles.legendMaintenance },
+function QuickActions() {
+  return (
+    <aside className={`${styles.panel} ${styles.quickPanel}`} aria-labelledby="quick-actions-title">
+      <div className={styles.panelHeading}>
+        <div>
+          <span>Thao tác nhanh</span>
+          <h2 id="quick-actions-title">Bắt đầu công việc</h2>
+        </div>
+      </div>
+      <div className={styles.quickList}>
+        {quickActions.map((action) => (
+          <Link href={action.href} key={action.label}>
+            <i aria-hidden="true">{action.icon}</i>
+            <span><strong>{action.label}</strong><small>{action.detail}</small></span>
+            <b aria-hidden="true">›</b>
+          </Link>
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function AttentionPanel() {
+  return (
+    <section className={`${styles.panel} ${styles.attentionPanel}`} aria-labelledby="attention-title">
+      <div className={styles.panelHeading}>
+        <div>
+          <span>Cần xử lý</span>
+          <h2 id="attention-title">Ưu tiên trong ca</h2>
+        </div>
+        <strong>3 việc</strong>
+      </div>
+      <div className={styles.attentionList}>
+        <Link href="/ve-xe">
+          <i data-tone="warning" aria-hidden="true">!</i>
+          <span><strong>3 đặt chỗ sắp hết thời gian giữ</strong><small>Xác nhận thanh toán trước 09:10</small></span>
+          <em>Vé xe</em>
+        </Link>
+        <Link href="/dieu-phoi">
+          <i data-tone="danger" aria-hidden="true">!</i>
+          <span><strong>Chuyến 14:00 chưa hoàn tất danh sách khách</strong><small>TRP-D2203 · TP.HCM → Vũng Tàu</small></span>
+          <em>Chuyến xe</em>
+        </Link>
+        <Link href="/khach-hang">
+          <i data-tone="info" aria-hidden="true">i</i>
+          <span><strong>1 phản hồi khách hàng cần gọi lại</strong><small>Hạn xử lý trong ca sáng</small></span>
+          <em>CSKH</em>
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function SalesMix() {
+  const channels = [
+    { label: "Quầy vé", value: 52, amount: "5,8 tr" },
+    { label: "Trực tuyến", value: 34, amount: "3,8 tr" },
+    { label: "Đại lý", value: 14, amount: "1,5 tr" },
   ];
 
   return (
-    <aside className={`${styles.panel} ${styles.fleetPanel}`} aria-labelledby="fleet-title">
+    <aside className={`${styles.panel} ${styles.salesPanel}`} aria-labelledby="sales-mix-title">
       <div className={styles.panelHeading}>
         <div>
-          <h2 id="fleet-title">Tình trạng đội xe</h2>
-          <p>{dashboardFleetSummary.total} phương tiện</p>
+          <span>Kênh bán</span>
+          <h2 id="sales-mix-title">Cơ cấu doanh thu</h2>
         </div>
       </div>
-      <div
-        className={styles.fleetRing}
-        style={{ "--fleet-score": `${readyPercent * 3.6}deg` } as CSSProperties}
-        role="img"
-        aria-label={`${readyPercent}% đội xe sẵn sàng`}
-      >
-        <strong>{readyPercent}%</strong>
-        <span>sẵn sàng</span>
-      </div>
-      <div className={styles.fleetLegend}>
-        {fleetStates.map((state) => (
-          <div key={state.label}>
-            <span><i className={state.tone} aria-hidden="true" />{state.label}</span>
-            <strong>{state.value}</strong>
+      <div className={styles.salesList}>
+        {channels.map((channel) => (
+          <div key={channel.label}>
+            <div><span>{channel.label}</span><strong>{channel.amount} · {channel.value}%</strong></div>
+            <div className={styles.channelBar}><span style={{ width: `${channel.value}%` }} /></div>
           </div>
         ))}
       </div>
@@ -154,58 +198,29 @@ function FleetPanel() {
   );
 }
 
-function PriorityWork() {
-  return (
-    <section className={`${styles.panel} ${styles.priorityPanel}`} aria-labelledby="priority-title">
-      <div className={styles.panelHeading}>
-        <div>
-          <h2 id="priority-title">Việc cần xử lý</h2>
-          <p>Ưu tiên theo rủi ro và thời hạn</p>
-        </div>
-        <div className={styles.panelLinks}>
-          <Link href={createOrderHref}>Tạo đơn</Link>
-          <Link href="/cong-viec">Mở không gian làm việc</Link>
-        </div>
-      </div>
-      <div className={styles.priorityList}>
-        {recentOrders.slice(0, 1).map((order) => (
-          <Link href={order.href} key={order.id}>
-            <i className={styles.priorityHigh} aria-hidden="true" />
-            <strong>{order.title}</strong>
-            <span>{order.service}</span>
-            <small>{order.deadline}</small>
-            <b className={styles.priorityHigh}>{order.status}</b>
-            <em aria-hidden="true">›</em>
-          </Link>
-        ))}
-        {priorityItems.map((item) => (
-          <Link href={item.href} key={item.title}>
-            <i className={item.tone} aria-hidden="true" />
-            <strong>{item.title}</strong>
-            <span>{item.module}</span>
-            <small>{item.due}</small>
-            <b className={item.tone}>{item.label}</b>
-            <em aria-hidden="true">›</em>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default function DashboardOverview() {
   return (
     <div className={styles.dashboard}>
-      <div className={styles.dashboardActionRow}>
-        <p><span aria-hidden="true" /> Tình hình vận hành được cập nhật theo ca.</p>
-        <Link className={styles.primaryButton} href="/cong-viec">+ Tạo công việc</Link>
+      <section className={styles.welcome} aria-labelledby="shift-overview-title">
+        <div>
+          <span className={styles.live}><i aria-hidden="true" /> Đang trong ca</span>
+          <h2 id="shift-overview-title">Chào buổi sáng, Minh</h2>
+          <p>{formatTravelDate(DEFAULT_TRAVEL_DATE)} · Theo dõi bán vé và chuyến xe trên một màn hình.</p>
+        </div>
+        <div className={styles.welcomeActions}>
+          <Link href="/dieu-phoi">Mở điều hành</Link>
+          <Link href="/ve-xe#dat-cho">+ Bán vé mới</Link>
+        </div>
+      </section>
+      <MetricCards />
+      <div className={styles.primaryGrid}>
+        <TodayTrips />
+        <QuickActions />
       </div>
-      <MetricGrid />
-      <div className={styles.dashboardGrid}>
-        <TripActivity />
-        <FleetPanel />
+      <div className={styles.secondaryGrid}>
+        <AttentionPanel />
+        <SalesMix />
       </div>
-      <PriorityWork />
     </div>
   );
 }

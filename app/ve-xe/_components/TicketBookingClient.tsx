@@ -107,14 +107,14 @@ export default function TicketBookingClient() {
 
       <section className={styles.hero} aria-labelledby="ticket-search-title">
         <div>
-          <span className={styles.kicker}>ĐẶT VÉ HÀNH KHÁCH</span>
-          <h2 id="ticket-search-title">Tìm chuyến và chọn ghế</h2>
-          <p>Thanh toán được đối soát tại quầy.</p>
+          <span className={styles.kicker}>QUẦY VÉ TRONG CA</span>
+          <h2 id="ticket-search-title">Tìm chuyến, chọn ghế, xuất vé</h2>
+          <p>Mọi thao tác bán vé được gom trong một quy trình duy nhất.</p>
         </div>
         <div className={styles.heroMetrics} aria-label="Tổng quan vé">
           <div><strong>{ticketTrips.length}</strong><span>chuyến đang mở bán</span></div>
           <div><strong>{ticketRoutes.length}</strong><span>tuyến khai thác</span></div>
-          <div><strong>{bookings.filter((booking) => booking.status === "Đã giữ chỗ").length}</strong><span>đặt chỗ hôm nay</span></div>
+          <div><strong>{bookings.filter((booking) => booking.status === "Đã giữ chỗ").length}</strong><span>giao dịch trong ca</span></div>
         </div>
       </section>
 

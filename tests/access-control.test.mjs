@@ -70,7 +70,7 @@ test("all eight demo roles reference explicit known permissions", () => {
 });
 
 test("role decoder is an allowlist and falls back safely at the provider boundary", () => {
-  assert.equal(DEFAULT_DEMO_ROLE, "dispatcher");
+  assert.equal(DEFAULT_DEMO_ROLE, "operations-manager");
   for (const roleId of DEMO_ROLE_IDS) assert.equal(decodeDemoRole(roleId), roleId);
 
   for (const invalid of [null, undefined, 0, true, {}, [], "admin", "__proto__", " dispatcher "]) {

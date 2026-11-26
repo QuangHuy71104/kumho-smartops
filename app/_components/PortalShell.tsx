@@ -1,11 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { portalRouteFor, type PortalPath } from "../../lib/access-control";
-import Can from "./access/Can";
+import { type PortalPath } from "../../lib/access-control";
 import DemoNavigation from "./access/DemoNavigation";
 import PilotNavigation from "./access/PilotNavigation";
-import DemoRoleSwitcher from "./access/DemoRoleSwitcher";
-import DemoRouteBoundary from "./access/DemoRouteBoundary";
 import QuickSearch from "./QuickSearch";
 import styles from "./PortalShell.module.css";
 
@@ -27,10 +24,6 @@ export default function PortalShell({
   children,
 }: PortalShellProps) {
   const pilotMode = process.env.KSOPS_MODE === "pilot";
-  const activeRoute = portalRouteFor(activePath);
-  const headerPermission = "primaryActionPermission" in activeRoute
-    ? activeRoute.primaryActionPermission
-    : activeRoute.viewPermission;
 
   return (
     <div className={styles.shell}>
@@ -85,9 +78,10 @@ export default function PortalShell({
                 <a href={`/auth/login?returnTo=${encodeURIComponent(activePath)}`}>Đăng nhập</a>
                 <a href={`/auth/logout?returnTo=${encodeURIComponent(activePath)}`}>Đăng xuất</a>
               </nav>
-            ) : (
-              <DemoRoleSwitcher />
-            )}
+            ) : <div className={styles.operatorProfile}>
+              <span><strong>Nhân viên vận hành</strong><small>Ca sáng · Bến Miền Đông</small></span>
+              <b aria-label="Tài khoản nhân viên vận hành">NV</b>
+            </div>}
           </div>
         </header>
 
@@ -97,13 +91,7 @@ export default function PortalShell({
               <h1>{title}</h1>
               {subtitle ? <span>{subtitle}</span> : null}
             </div>
-            {headerActions && pilotMode ? (
-              <div className={styles.headerActionsSlot}>{headerActions}</div>
-            ) : headerActions ? (
-              <Can permission={headerPermission}>
-                <div className={styles.headerActionsSlot}>{headerActions}</div>
-              </Can>
-            ) : null}
+            {headerActions ? <div className={styles.headerActionsSlot}>{headerActions}</div> : null}
           </div>
           {pilotMode ? (
             <div className={activePath === "/don-hang" ? styles.pilotBanner : styles.mockBanner} role="note">
@@ -115,9 +103,7 @@ export default function PortalShell({
                 : "Dữ liệu hiển thị theo quyền truy cập."}</p>
             </div>
           ) : null}
-          {pilotMode
-            ? children
-            : <DemoRouteBoundary activePath={activePath}>{children}</DemoRouteBoundary>}
+          {children}
         </main>
 
         <footer className={styles.footer}>

@@ -58,7 +58,7 @@ test("public copy identifies the transport operations scope", async () => {
   assert.match(shell, /Điều hành vận tải tập trung/);
   assert.match(shell, /Dữ liệu cập nhật liên tục/);
   assert.doesNotMatch(shell, /MOCK DATA|dữ liệu giả lập|không phải hệ thống chính thức/i);
-  assert.match(dashboard, /Tình hình vận hành/);
+  assert.match(dashboard, /Theo dõi bán vé và chuyến xe/);
   assert.match(readme, /đội xe, tài xế, đơn vận chuyển hàng hóa/i);
 });
 
@@ -106,10 +106,10 @@ test("portal navigation exposes every transport module exactly once", async () =
   assert.equal(new Set(PORTAL_ROUTES.map((route) => route.path)).size, routes.length);
   assert.deepEqual(
     PORTAL_ROUTES.map((route) => route.label),
-    ["Tổng quan", "Công việc của tôi", "Đơn hàng", "Điều phối", "Đội xe", "Tài xế", "Vé hành khách", "Hợp đồng xe", "Khách hàng", "Bảo dưỡng", "Tài chính", "Báo cáo"],
+    ["Tổng quan", "Công việc của tôi", "Đơn hàng", "Chuyến xe", "Đội xe", "Tài xế", "Bán vé", "Hợp đồng xe", "Hành khách", "Bảo dưỡng", "Tài chính", "Báo cáo"],
   );
-  assert.match(navigation, /PORTAL_ROUTES\.filter/);
-  assert.match(navigation, /section\.routes\.map/);
+  assert.match(navigation, /OPERATOR_SECTIONS/);
+  assert.match(navigation, /section\.paths\.map/);
 });
 
 test("social preview is a real, transport-specific PNG", async () => {

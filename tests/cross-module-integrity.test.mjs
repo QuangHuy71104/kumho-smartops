@@ -48,11 +48,10 @@ test("dashboard order mapper preserves the canonical id and encodes its deep lin
   assert.equal(createOrderHref, "/don-hang?new=1");
 });
 
-test("order workspace consumes dashboard id and create intents below Suspense", async () => {
-  const [page, workspace, dashboard] = await Promise.all([
+test("order workspace consumes deep-link id and create intents below Suspense", async () => {
+  const [page, workspace] = await Promise.all([
     read("app/don-hang/page.tsx"),
     read("app/don-hang/_components/OrderWorkspace.tsx"),
-    read("app/_components/dashboard/DashboardOverview.tsx"),
   ]);
 
   assert.match(page, /<Suspense[\s\S]*<OrderWorkspace \/>[\s\S]*<\/Suspense>/);
@@ -60,8 +59,6 @@ test("order workspace consumes dashboard id and create intents below Suspense", 
   assert.match(workspace, /searchParams\.get\("id"\)/);
   assert.match(workspace, /searchParams\.get\("new"\) === "1"/);
   assert.match(workspace, /dialog\.showModal\(\)/);
-  assert.match(dashboard, /href=\{order\.href\}/);
-  assert.match(dashboard, /href=\{createOrderHref\}/);
 });
 
 test("dispatch assignments reference canonical fleet and driver resources", () => {

@@ -267,7 +267,8 @@ test("pilot shell is honest and removes demo role gates from the pilot branch", 
 
   assert.match(shell, /process\.env\.KSOPS_MODE === "pilot"/);
   assert.match(shell, /pilotMode\s*\? <PilotNavigation/);
-  assert.match(shell, /pilotMode\s*\? children\s*: <DemoRouteBoundary/);
+  assert.match(shell, /\{children\}/);
+  assert.doesNotMatch(shell, /DemoRoleSwitcher|DemoRouteBoundary/);
   assert.match(shell, /\/auth\/login\?returnTo=/);
   assert.match(shell, /\/auth\/logout\?returnTo=/);
   assert.match(shell, /Dữ liệu đơn hàng đã đồng bộ/);

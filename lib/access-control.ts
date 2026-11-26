@@ -81,7 +81,7 @@ export const PORTAL_ROUTES = [
     path: "/dieu-phoi",
     section: "operations",
     short: "ĐP",
-    label: "Điều phối",
+    label: "Chuyến xe",
     viewPermission: "dispatch:read",
     primaryActionPermission: "dispatch:assign",
   },
@@ -103,7 +103,7 @@ export const PORTAL_ROUTES = [
     path: "/ve-xe",
     section: "commercial",
     short: "VX",
-    label: "Vé hành khách",
+    label: "Bán vé",
     viewPermission: "booking:read",
     primaryActionPermission: "booking:create",
   },
@@ -119,7 +119,7 @@ export const PORTAL_ROUTES = [
     path: "/khach-hang",
     section: "commercial",
     short: "KH",
-    label: "Khách hàng",
+    label: "Hành khách",
     viewPermission: "customer:read",
   },
   {
@@ -290,35 +290,11 @@ export const DEMO_ROLES = {
   },
   "operations-manager": {
     id: "operations-manager",
-    label: "Quản lý vận hành",
-    short: "QL",
-    department: "Phòng Điều hành / Khai thác",
-    scopeLabel: "Khu vực quản lý",
-    permissions: [
-      "dashboard:read",
-      "work-item:read",
-      "work-item:update",
-      "work-item:approve",
-      "cargo-order:read",
-      "cargo-order:transition",
-      "cargo-order:resolve-exception",
-      "dispatch:read",
-      "dispatch:assign",
-      "dispatch:auto-assign",
-      "dispatch:override",
-      "vehicle:read",
-      "driver:read",
-      "booking:read",
-      "contract:read",
-      "contract:transition",
-      "contract:approve-quote",
-      "customer:read",
-      "maintenance:read",
-      "maintenance:block-vehicle",
-      "invoice:read",
-      "report:read",
-      "report:export",
-    ],
+    label: "Nhân viên vận hành",
+    short: "NV",
+    department: "Trung tâm bán vé & điều hành",
+    scopeLabel: "Toàn bộ nghiệp vụ trong ca",
+    permissions: PERMISSIONS,
   },
   auditor: {
     id: "auditor",
@@ -347,7 +323,7 @@ export const DEMO_ROLES = {
   },
 } as const satisfies Record<DemoRoleId, DemoRole>;
 
-export const DEFAULT_DEMO_ROLE: DemoRoleId = "dispatcher";
+export const DEFAULT_DEMO_ROLE: DemoRoleId = "operations-manager";
 export const DEMO_ROLE_STORAGE_KEY = "ksops:transport:demo-role:v1";
 
 export function decodeDemoRole(value: unknown): DemoRoleId | null {

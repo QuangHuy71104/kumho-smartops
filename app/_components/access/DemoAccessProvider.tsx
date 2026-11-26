@@ -10,34 +10,22 @@ import {
 import {
   DEFAULT_DEMO_ROLE,
   DEMO_ROLES,
-  DEMO_ROLE_STORAGE_KEY,
-  decodeDemoRole,
   demoRoleCan,
   type DemoRole,
   type DemoRoleId,
   type Permission,
 } from "../../../lib/access-control";
-import { useLocalStorageState } from "../../_hooks/useLocalStorageState";
 
 type DemoAccessContextValue = {
   roleId: DemoRoleId;
   role: DemoRole;
-  selectRole: (roleId: DemoRoleId) => void;
   can: (permission: Permission) => boolean;
 };
 
 const DemoAccessContext = createContext<DemoAccessContextValue | null>(null);
 
 export default function DemoAccessProvider({ children }: { children: ReactNode }) {
-  const [roleId, setRoleId] = useLocalStorageState({
-    key: DEMO_ROLE_STORAGE_KEY,
-    initialValue: DEFAULT_DEMO_ROLE,
-    decode: decodeDemoRole,
-  });
-
-  const selectRole = useCallback((nextRoleId: DemoRoleId) => {
-    setRoleId(nextRoleId);
-  }, [setRoleId]);
+  const roleId = DEFAULT_DEMO_ROLE;
 
   const can = useCallback(
     (permission: Permission) => demoRoleCan(roleId, permission),
@@ -47,9 +35,8 @@ export default function DemoAccessProvider({ children }: { children: ReactNode }
   const value = useMemo<DemoAccessContextValue>(() => ({
     roleId,
     role: DEMO_ROLES[roleId],
-    selectRole,
     can,
-  }), [can, roleId, selectRole]);
+  }), [can, roleId]);
 
   return <DemoAccessContext.Provider value={value}>{children}</DemoAccessContext.Provider>;
 }

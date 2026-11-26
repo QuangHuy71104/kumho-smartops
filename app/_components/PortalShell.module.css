@@ -123,6 +123,7 @@
 .projectLabel { margin-top: 18px; }
 
 .navScroller { display: block; }
+.navGroup { display: contents; }
 
 .navItem,
 .navItemActive {
@@ -409,72 +410,40 @@
 .pilotSessionControls a:hover { background: #f7f8fa; color: var(--shell-brand); }
 .pilotSessionControls a:focus-visible { position: relative; outline: 3px solid rgba(36, 104, 180, .23); outline-offset: -3px; }
 
-.demoRoleControl {
+.operatorProfile {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding-left: 2px;
 }
 
-.demoRoleSwitcher {
-  min-width: 210px;
+.operatorProfile > span {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2px;
-  padding: 7px 11px;
-  border: 1px solid var(--shell-line);
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, .02);
+  text-align: right;
 }
 
-.demoRoleSwitcher > span {
-  color: #596675;
+.operatorProfile strong {
+  color: #273142;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.operatorProfile small {
+  color: #7b8492;
   font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: .06em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  line-height: 1.35;
 }
 
-.demoRoleSwitcher b {
-  color: var(--shell-brand);
-}
-
-.demoRoleSwitcher select {
-  min-width: 0;
-  padding: 0 20px 0 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--shell-ink);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.demoRoleSwitcher:focus-within {
-  border-color: #a8b2c1;
-  box-shadow: 0 0 0 3px rgba(42, 91, 215, .1);
-}
-
-.demoRoleSwitcher small {
-  color: #667085;
-  font-size: 0.75rem;
-  line-height: 1.25;
-}
-
-.avatar {
-  width: 44px;
-  height: 44px;
+.operatorProfile b {
+  width: 42px;
+  height: 42px;
   display: grid;
   place-items: center;
-  border: 0;
-  border-radius: 10px;
-  background: var(--shell-brand);
+  border-radius: 12px;
+  background: #1d2633;
   color: #fff;
-  box-shadow: 0 6px 14px rgba(201, 21, 36, .16);
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: .02em;
 }
 
 .main {
@@ -537,94 +506,6 @@
 
 .pilotBanner p { margin: 0; font-size: 1rem; line-height: 1.45; }
 
-.accessNotice {
-  min-height: 390px;
-  display: grid;
-  grid-template-columns: auto minmax(0, 620px);
-  align-content: center;
-  justify-content: center;
-  gap: 18px;
-  padding: 42px 24px;
-  border: 1px solid #dfe3e9;
-  border-radius: 16px;
-  background:
-    radial-gradient(circle at 100% 0%, rgba(201, 21, 36, .07), transparent 32%),
-    #fff;
-  box-shadow: 0 10px 30px rgba(20, 29, 44, .04);
-}
-
-.accessNoticeIcon {
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 13px;
-  background: #fff0f1;
-  color: var(--shell-brand);
-  font-family: var(--font-mono), monospace;
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.accessNotice p {
-  margin: 0;
-  color: var(--shell-muted);
-  font-size: 1rem;
-  line-height: 1.65;
-}
-
-.accessNotice div > p:first-child {
-  color: var(--shell-brand);
-  font-size: 0.875rem;
-  font-weight: 800;
-  letter-spacing: .09em;
-  text-transform: uppercase;
-}
-
-.accessNotice h2 {
-  margin: 6px 0 10px;
-  font-size: 1.625rem;
-  letter-spacing: -.035em;
-}
-
-.accessNotice dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 18px 0;
-}
-
-.accessNotice dl > div {
-  padding: 10px 12px;
-  border: 1px solid #eceef2;
-  border-radius: 9px;
-  background: #f8f9fb;
-}
-
-.accessNotice dt {
-  color: #667085;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.accessNotice dd {
-  margin: 4px 0 0;
-  color: #343c49;
-  font-size: 0.9375rem;
-  font-weight: 700;
-}
-
-.accessNotice a {
-  display: inline-flex;
-  padding: 9px 12px;
-  border-radius: 8px;
-  background: var(--shell-brand);
-  color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 700;
-}
-
 .footer {
   display: none;
   align-items: center;
@@ -639,29 +520,6 @@
 
 .footer p { margin: 0; }
 .footer strong { color: #697180; }
-
-@media (min-width: 621px) {
-  .demoRoleSwitcher {
-    min-height: 44px;
-    display: flex;
-    align-items: center;
-    padding-block: 0;
-  }
-
-  .demoRoleSwitcher > span,
-  .demoRoleSwitcher small {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-
-  .demoRoleSwitcher select { min-height: 44px; }
-}
 
 @media (max-width: 900px) {
   .sidebar {
@@ -684,6 +542,7 @@
   }
   .navigation::-webkit-scrollbar { display: none; }
   .navScroller { display: contents; }
+  .navGroup { display: contents; }
   .navigation { display: flex; gap: 4px; }
   .navItem, .navItemActive { flex: 0 0 auto; margin: 0; padding: 8px 12px; font-size: 0.8125rem; }
   .navItem:hover { transform: none; }
@@ -710,16 +569,13 @@
   .headerActionsSlot > * { flex: 1; min-height: 44px; justify-content: center; }
   .pilotSessionControls { width: 100%; }
   .pilotSessionControls a { flex: 1; justify-content: center; }
-  .demoRoleControl { width: 100%; }
-  .demoRoleSwitcher { min-width: 0; flex: 1; }
+  .operatorProfile { margin-left: auto; }
+  .operatorProfile > span { display: none; }
   .main { padding-inline: 16px; }
   .mockBanner { align-items: flex-start; }
   .mockBanner p { font-size: 0.875rem; }
   .pilotBanner { align-items: flex-start; }
   .pilotBanner p { font-size: 0.875rem; }
-  .accessNotice { min-height: 330px; grid-template-columns: 1fr; padding: 28px 18px; }
-  .accessNotice h2 { font-size: 1.375rem; }
-  .accessNotice dl { grid-template-columns: 1fr; }
   .footer { display: none; }
 }
 
