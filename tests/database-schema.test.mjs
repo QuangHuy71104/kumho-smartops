@@ -48,6 +48,7 @@ const expectedMigrations = [
   "0006_relational_operations.sql",
   "0007_role_work_center.sql",
   "0008_live_transport_simulation.sql",
+  "0009_customer_booking_portal.sql",
 ];
 
 async function readMigration(name) {
@@ -75,6 +76,17 @@ test("live transport migration rolls schedules and operational states in Vietnam
   assert.match(sql, /customer_phone varchar\(32\)/);
   assert.match(sql, /payment_method varchar\(24\)/);
   assert.match(sql, /'\*\/5 \* \* \* \*'/);
+});
+
+test("customer portal migration separates Google customers from promoted admins", async () => {
+  const sql = await readMigration(expectedMigrations[8]);
+  for (const table of ["app_user_profiles", "passenger_booking_orders", "passenger_booking_order_items"]) {
+    assert.match(sql, new RegExp(`CREATE TABLE public\\.${table}`));
+  }
+  assert.match(sql, /role IN \('customer', 'admin'\)/);
+  assert.match(sql, /promote_user_to_admin/);
+  assert.match(sql, /ON auth\.users/);
+  assert.match(sql, /FORCE ROW LEVEL SECURITY/g);
 });
 
 test("organization and IAM tables enforce tenant-safe role scopes", async () => {

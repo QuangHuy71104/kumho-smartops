@@ -14,6 +14,7 @@ Apply every file in `migrations/` in lexical order with `ON_ERROR_STOP` enabled:
 6. `0006_relational_operations.sql`
 7. `0007_role_work_center.sql`
 8. `0008_live_transport_simulation.sql`
+9. `0009_customer_booking_portal.sql`
 
 The application must create UUIDv7 identifiers. Database columns deliberately have no random UUID default so identity generation remains explicit and testable. All timestamps use UTC-capable `timestamptz`; the UI is responsible for rendering a branch timezone.
 
@@ -54,6 +55,14 @@ derives trip, dispatch, and fleet states from the current time and Supabase Cron
 runs that function every five minutes when `pg_cron` is available. The relational
 seed also invokes the function, so local and managed databases start in a current
 state even when Cron is unavailable.
+
+Migration `0009_customer_booking_portal.sql` adds Supabase Auth profiles, passenger
+booking orders, and order items for the KumhoGo website. New Google identities are
+created as `customer`; email/password accounts become administrators only after the
+migration owner runs `SELECT public.promote_user_to_admin('admin@example.com');`.
+The application also requires `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Configure Google in Supabase Auth and allow
+`/auth/customer/callback` for the deployed site URL before accepting bookings.
 
 ## Role Work Center
 

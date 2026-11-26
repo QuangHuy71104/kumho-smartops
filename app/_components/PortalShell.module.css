@@ -434,7 +434,8 @@
   line-height: 1.35;
 }
 
-.operatorProfile b {
+.operatorProfile b,
+.operatorProfile form button {
   width: 42px;
   height: 42px;
   display: grid;
@@ -444,6 +445,8 @@
   color: #fff;
   font-size: 0.8125rem;
   letter-spacing: .02em;
+  border: 0;
+  cursor: pointer;
 }
 
 .main {

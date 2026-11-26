@@ -617,6 +617,41 @@ export const relationalTicketTrips = pgTable("ticket_trips", {
   ...mutableTimestamps(),
 });
 
+export const appUserProfiles = pgTable("app_user_profiles", {
+  authUserId: uuid("auth_user_id").primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  displayName: varchar("display_name", { length: 160 }).notNull(),
+  phone: varchar("phone", { length: 32 }),
+  role: varchar("role", { length: 16 }).notNull().default("customer"),
+  identityProvider: varchar("identity_provider", { length: 24 }).notNull().default("google"),
+  ...mutableTimestamps(),
+});
+
+export const passengerBookingOrders = pgTable("passenger_booking_orders", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  authUserId: uuid("auth_user_id").notNull().references(() => appUserProfiles.authUserId),
+  customerName: varchar("customer_name", { length: 100 }).notNull(),
+  customerPhone: varchar("customer_phone", { length: 32 }).notNull(),
+  customerEmail: varchar("customer_email", { length: 320 }).notNull(),
+  status: varchar("status", { length: 24 }).notNull().default("Chờ thanh toán"),
+  paymentMethod: varchar("payment_method", { length: 24 }).notNull().default("Chưa chọn"),
+  totalAmount: bigint("total_amount", { mode: "number" }).notNull(),
+  ...mutableTimestamps(),
+});
+
+export const passengerBookingOrderItems = pgTable("passenger_booking_order_items", {
+  id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+  orderId: varchar("order_id", { length: 32 }).notNull().references(() => passengerBookingOrders.id),
+  tripId: varchar("trip_id", { length: 24 }).notNull().references(() => relationalTicketTrips.id),
+  routeLabel: varchar("route_label", { length: 360 }).notNull(),
+  serviceDate: date("service_date").notNull(),
+  departureTime: time("departure_time").notNull(),
+  seatCodes: varchar("seat_codes", { length: 8 }).array().notNull(),
+  unitPrice: bigint("unit_price", { mode: "number" }).notNull(),
+  lineTotal: bigint("line_total", { mode: "number" }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const relationalTicketBookings = pgTable("ticket_bookings", {
   id: varchar("id", { length: 32 }).primaryKey(),
   tripId: varchar("trip_id", { length: 24 }).notNull().references(() => relationalTicketTrips.id),
@@ -630,6 +665,8 @@ export const relationalTicketBookings = pgTable("ticket_bookings", {
   bookingChannel: varchar("booking_channel", { length: 24 }).notNull(),
   paymentStatus: varchar("payment_status", { length: 24 }).notNull(),
   paymentMethod: varchar("payment_method", { length: 24 }).notNull(),
+  customerAuthUserId: uuid("customer_auth_user_id").references(() => appUserProfiles.authUserId),
+  customerOrderId: varchar("customer_order_id", { length: 32 }).references(() => passengerBookingOrders.id),
   ...mutableTimestamps(),
 });
 

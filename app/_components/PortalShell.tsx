@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { type PortalPath } from "../../lib/access-control";
+import { isCustomerAuthConfigured } from "../../lib/supabase/config.ts";
+import { getCurrentAppUser } from "../../lib/supabase/server.ts";
 import DemoNavigation from "./access/DemoNavigation";
 import PilotNavigation from "./access/PilotNavigation";
 import QuickSearch from "./QuickSearch";
@@ -15,7 +18,7 @@ type PortalShellProps = {
   children: ReactNode;
 };
 
-export default function PortalShell({
+export default async function PortalShell({
   activePath,
   eyebrow,
   title,
@@ -24,6 +27,11 @@ export default function PortalShell({
   children,
 }: PortalShellProps) {
   const pilotMode = process.env.KSOPS_MODE === "pilot";
+  const supabaseAdminAuth = isCustomerAuthConfigured();
+  const appUser = supabaseAdminAuth ? await getCurrentAppUser() : null;
+  if (supabaseAdminAuth && appUser?.role !== "admin") {
+    redirect(`/quan-tri/dang-nhap?next=${encodeURIComponent(activePath)}`);
+  }
 
   return (
     <div className={styles.shell}>
@@ -73,7 +81,12 @@ export default function PortalShell({
             <span className={pilotMode ? styles.pilotFlag : styles.demoFlag}>
               <i aria-hidden="true" /> {pilotMode ? "Đã kết nối" : "Trực tuyến"}
             </span>
-            {pilotMode ? (
+            {supabaseAdminAuth && appUser ? (
+              <div className={styles.operatorProfile}>
+                <span><strong>{appUser.displayName}</strong><small>Quản trị viên · KSOps</small></span>
+                <form action="/auth/admin/signout" method="post"><button type="submit" aria-label="Đăng xuất quản trị">ĐX</button></form>
+              </div>
+            ) : pilotMode ? (
               <nav className={styles.pilotSessionControls} aria-label="Điều khiển phiên đăng nhập">
                 <a href={`/auth/login?returnTo=${encodeURIComponent(activePath)}`}>Đăng nhập</a>
                 <a href={`/auth/logout?returnTo=${encodeURIComponent(activePath)}`}>Đăng xuất</a>
